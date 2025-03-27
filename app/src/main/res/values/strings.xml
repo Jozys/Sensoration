@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sensoration</string>
+    <string name="app_name_debug">Debug-Sensoration</string>
 </resources>
