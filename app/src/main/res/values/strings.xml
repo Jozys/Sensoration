@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">Sensoration</string>
     <string name="app_name_debug">Debug-Sensoration</string>
+    <string name="title">Sensoration</string>
+    <string name="app_icon_desc">App Icon</string>
+    <string name="packageName">de.schuettslaar.sensoration</string>
+    <string name="start_advertising">Start Advertising</string>
+    <string name="start_discovery">Start Discovery</string>
+    <string name="advertising_title">Advertising</string>
+    <string name="stop_advertising">Stop advertising</string>
+    <string name="discovering_title">Discovering</string>
+    <string name="stop_discovering">Stop discovering</string>
 </resources>

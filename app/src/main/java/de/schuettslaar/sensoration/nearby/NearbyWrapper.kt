@@ -1,6 +1,7 @@
-package de.schuettslaar.sensoration
+package de.schuettslaar.sensoration.nearby
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -15,31 +16,44 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
+import de.schuettslaar.sensoration.R
 
-class NearbyWrapper2 {
+class NearbyWrapper {
     private var context: Context
-    private val SERVICE_ID: String = "1234"
+    private var serviceId: String
+    private var status: NearbyStatus = NearbyStatus.STOPPED
 
     private var connectionLifecycleCallback: ConnectionLifecycleCallback? = null
     private var endpointDiscoveryCallback: EndpointDiscoveryCallback? = null
-    private var onEndpointAddCallback : (value: Pair<String, DiscoveredEndpointInfo>) -> Unit
-    private var onEndpointRemoveCallback : (id: String) -> Unit
+    private var onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit
+    private var onEndpointRemoveCallback: (id: String) -> Unit
 
-    constructor(context: Context, onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit, onEndpointRemoveCallback: (id: String) -> Unit) {
+
+    constructor(
+        context: Context,
+        onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit,
+        onEndpointRemoveCallback: (id: String) -> Unit
+    ) {
         this.context = context
         this.onEndpointAddCallback = onEndpointAddCallback
         this.onEndpointRemoveCallback = onEndpointRemoveCallback
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+            serviceId = context.packageName
+        } else {
+            serviceId = context.getString(R.string.packageName)
+        }
     }
 
     private fun createEndpointLifecycleCallback() = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            logE("Found Enpoint: $endpointId ${info.endpointName}")
+            logE("Found Endpoint: $endpointId ${info.endpointName}")
             onEndpointAddCallback(Pair(endpointId, info))
         }
 
         override fun onEndpointLost(endpointId: String) {
-            logE("LOST Enpoint: $endpointId")
-            onEndpointRemoveCallback(endpointId);
+            logE("LOST Endpoint: $endpointId")
+            onEndpointRemoveCallback(endpointId)
         }
 
     }
@@ -50,8 +64,8 @@ class NearbyWrapper2 {
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
-            when (result.getStatus().getStatusCode()) {
-                ConnectionsStatusCodes.STATUS_OK  -> {
+            when (result.status.statusCode) {
+                ConnectionsStatusCodes.STATUS_OK -> {
                     logE("CONNECTION OK")
                 }
                 // We're connected! Can now start sending and receiving data.
@@ -64,7 +78,7 @@ class NearbyWrapper2 {
                 }
                 // The connection broke before it was able to be accepted.
                 else -> {
-                    logE("CONNECTION SIMP")
+                    logE("CONNECTION UNKNOWN")
                 }
                 // Unknown status code
             }
@@ -87,36 +101,71 @@ class NearbyWrapper2 {
 
     }
 
-    fun startAdvertising(localEndpointName: String, callback: (text: String) -> Unit) {
+    fun startAdvertising(
+        localEndpointName: String,
+        callback: (text: String, status: NearbyStatus) -> Unit
+    ) {
+        if (status == NearbyStatus.ADVERTISING || status == NearbyStatus.DISCOVERING) {
+            callback("Already advertising or discovering", status)
+            return
+        }
+
         val strategy = Strategy.P2P_STAR
         val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
 
         connectionLifecycleCallback = createConnectionLifecycleCallback()
 
         Nearby.getConnectionsClient(context).startAdvertising(
-                localEndpointName, SERVICE_ID, connectionLifecycleCallback!!, advertisingOptions
-            ).addOnSuccessListener {
-                callback("successfully started advertising")
-            }.addOnFailureListener {
-                callback("starting advertising failed")
-            }
+            localEndpointName, serviceId, connectionLifecycleCallback!!, advertisingOptions
+        ).addOnSuccessListener {
+            status = NearbyStatus.ADVERTISING
+            callback("successfully started advertising", status)
+        }.addOnFailureListener {
+            status = NearbyStatus.STOPPED
+            callback("starting advertising failed", status)
+        }
 
     }
 
-    fun startDiscovery(callback: (text: String) -> Unit) {
+    fun startDiscovery(callback: (text: String, status: NearbyStatus) -> Unit) {
+        if (status == NearbyStatus.ADVERTISING || status == NearbyStatus.DISCOVERING) {
+            callback("Already advertising or discovering", status)
+            return
+        }
         val discoveryOptions = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
         endpointDiscoveryCallback = createEndpointLifecycleCallback()
 
         Nearby.getConnectionsClient(
             context
         ).startDiscovery(
-            SERVICE_ID, endpointDiscoveryCallback!!, discoveryOptions
+            serviceId, endpointDiscoveryCallback!!, discoveryOptions
         )
-            .addOnSuccessListener { callback("Start Discovery") }
-            .addOnFailureListener { callback("FAILED: Start Discovery") }
+            .addOnSuccessListener {
+                status = NearbyStatus.DISCOVERING
+                callback("SUCCESS: Start Discovery", status)
+            }
+            .addOnFailureListener {
+                callback("FAILED: Start Discovery", status)
+            }
     }
 
-    fun logE(milf: String){
+    fun stopDiscovery(callback: (text: String, status: NearbyStatus) -> Unit) {
+        if (status == NearbyStatus.DISCOVERING) {
+            Nearby.getConnectionsClient(context).stopDiscovery()
+            status = NearbyStatus.STOPPED
+            callback("Discovery stopped", status)
+        }
+    }
+
+    fun stopAdvertising(callback: (text: String, status: NearbyStatus) -> Unit) {
+        if (status == NearbyStatus.ADVERTISING) {
+            Nearby.getConnectionsClient(context).stopAdvertising()
+            status = NearbyStatus.STOPPED
+            callback("Advertising stopped", status)
+        }
+    }
+
+    fun logE(milf: String) {
         Log.e(this.javaClass.simpleName, milf)
     }
 }

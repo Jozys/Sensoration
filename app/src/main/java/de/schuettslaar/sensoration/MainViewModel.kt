@@ -1,46 +1,74 @@
 package de.schuettslaar.sensoration
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import java.util.logging.Logger
 
 @SuppressLint("MutableCollectionMutableState")
 class MainViewModel(private val application: Application) : AndroidViewModel(application) {
 
-    private val nearbyWrapper : NearbyWrapper2 = NearbyWrapper2(
-        context = application, onEndpointAddCallback = {
+    fun requestPermissions(callback: (permissions: Array<String>) -> Unit) {
+        var requiredPermissions: Array<String>
 
-            possibleConnections[it.first] = it.second
-            Logger.getLogger(this.javaClass.simpleName).info(possibleConnections.keys.joinToString(" ,"))
-        },
-        onEndpointRemoveCallback = {
-            possibleConnections.remove(it)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requiredPermissions = arrayOf(
+                android.Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_ADVERTISE,
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.ACCESS_WIFI_STATE,
+                android.Manifest.permission.CHANGE_WIFI_STATE,
+                android.Manifest.permission.NEARBY_WIFI_DEVICES,
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requiredPermissions = arrayOf(
+                android.Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_ADVERTISE,
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.ACCESS_WIFI_STATE,
+                android.Manifest.permission.CHANGE_WIFI_STATE,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requiredPermissions = arrayOf(
+                android.Manifest.permission.BLUETOOTH,
+                android.Manifest.permission.BLUETOOTH_ADMIN,
+                android.Manifest.permission.ACCESS_WIFI_STATE,
+                android.Manifest.permission.CHANGE_WIFI_STATE,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+        } else {
+            requiredPermissions = arrayOf(
+                android.Manifest.permission.BLUETOOTH,
+                android.Manifest.permission.BLUETOOTH_ADMIN,
+                android.Manifest.permission.ACCESS_WIFI_STATE,
+                android.Manifest.permission.CHANGE_WIFI_STATE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
         }
-    )
 
-    var text by mutableStateOf("")
-    var possibleConnections by mutableStateOf(
-        mutableMapOf<String, DiscoveredEndpointInfo>()
-    )
-
-    fun startDiscovering() {
-        nearbyWrapper.startDiscovery {
-            text = it
+        if (!hasPermissions(context = getApplication(), permissions = requiredPermissions)) {
+            callback(requiredPermissions)
         }
     }
 
-    fun startAdvertising() {
-        val bootloaderName = Build.BOOTLOADER
-        val name = android.provider.Settings.Global.getString(application.contentResolver,"device_name")
-        nearbyWrapper.startAdvertising(name + " " + bootloaderName + Build.BRAND) {
-            text = it
+    fun hasPermissions(context: Context, vararg permissions: String): Boolean {
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return false
+            }
         }
+        return true
     }
 
 }
