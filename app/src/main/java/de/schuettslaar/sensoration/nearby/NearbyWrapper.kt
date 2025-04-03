@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.nearby
 
 import android.content.Context
+import android.media.MediaActionSound
 import android.os.Build
 import android.util.Log
 import com.google.android.gms.nearby.Nearby
@@ -17,6 +18,7 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import de.schuettslaar.sensoration.R
+import java.io.DataInputStream
 
 class NearbyWrapper {
     private var context: Context
@@ -30,6 +32,10 @@ class NearbyWrapper {
     private var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
     private var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
     private var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
+
+    private lateinit var payloadCallback: PayloadCallback;
+
+
 
     constructor(
         context: Context,
@@ -105,16 +111,6 @@ class NearbyWrapper {
 
     }
 
-    private val payloadCallback = object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {
-
-        }
-
-        override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-
-        }
-
-    }
 
     fun startAdvertising(
         localEndpointName: String,
@@ -127,6 +123,7 @@ class NearbyWrapper {
 
         val strategy = Strategy.P2P_STAR
         val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
+        payloadCallback = createPayloadCallback()
 
         connectionLifecycleCallback = createConnectionLifecycleCallback()
 
@@ -148,6 +145,7 @@ class NearbyWrapper {
             return
         }
         val discoveryOptions = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
+        payloadCallback = createPayloadCallback()
         endpointDiscoveryCallback = createEndpointLifecycleCallback()
 
         Nearby.getConnectionsClient(
@@ -193,5 +191,26 @@ class NearbyWrapper {
 
     fun logE(milf: String) {
         Log.e(this.javaClass.simpleName, milf)
+    }
+
+    fun sendData(toEndpointId: String, stream: DataInputStream){
+        val payload: Payload = Payload.fromStream(stream)
+        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload);
+    }
+
+}
+
+private fun createPayloadCallback(): PayloadCallback = object : PayloadCallback() {
+    override fun onPayloadReceived(endpointId: String, payload: Payload) {
+        val sound = MediaActionSound()
+        sound.play(MediaActionSound.START_VIDEO_RECORDING)
+        Log.d(this.javaClass.simpleName, "Got message from" + endpointId + payload.asStream())
+    }
+
+    override fun onPayloadTransferUpdate(
+        endpointId: String,
+        update: PayloadTransferUpdate
+    ) {
+
     }
 }

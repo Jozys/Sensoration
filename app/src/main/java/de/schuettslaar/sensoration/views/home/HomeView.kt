@@ -59,7 +59,11 @@ fun HomeView(onBack: () -> Unit) {
             {
                 viewModel.connect(it)
             },
+            {
+                viewModel.sendMessage()
+            },
             viewModel.connectedDevices,
+            viewModel.connectedDevice,
             viewModel.connectedId,
             viewModel.status
         )
@@ -78,6 +82,7 @@ fun HomeContent(
     onStartAdvertising: () -> Unit,
     onStopAdvertising: () -> Unit,
     onDeviceClick: (String) -> Unit,
+    onSendMessage: () -> Unit,
     connectedDevice: Map<String, String>? = null,
     connectedId: String,
     status: NearbyStatus
@@ -106,17 +111,28 @@ fun HomeContent(
                 Advertisement(onStopAdvertising)
             }
 
+        if (status == NearbyStatus.CONNECTED) {
+            Text(
+                text = "Connected to ${connectedDevice?.endpointName}",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(8.dp)
+            )
+            Button(onClick = {
+                onSendMessage()
+            }) {
+                Text("Send Message")
+            }
+        }
 
             if (status == NearbyStatus.DISCOVERING) {
                 Discovering(possibleDevices, connectedId, onDeviceClick, onStopDiscovery)
             }
-
-            if (status == NearbyStatus.STOPPED) {
-                StartActions(
-                    onStartDiscovery = onStartDiscovery,
-                    onStartAdvertising = onStartAdvertising
-                )
-            }
+        if (status == NearbyStatus.STOPPED) {
+            StartActions(
+                onStartDiscovery = onStartDiscovery,
+                onStartAdvertising = onStartAdvertising,
+                onSendMessage = onSendMessage
+            )
         }
     }
 
@@ -126,7 +142,8 @@ fun HomeContent(
 fun StartActions(
     modifier: Modifier = Modifier,
     onStartDiscovery: () -> Unit,
-    onStartAdvertising: () -> Unit
+    onStartAdvertising: () -> Unit,
+    onSendMessage: () -> Unit
 ) {
     Column(modifier = modifier) {
         Button(onClick = {
@@ -139,6 +156,8 @@ fun StartActions(
         }) {
             Text(stringResource(R.string.start_advertising))
         }
+
+
     }
 }
 
