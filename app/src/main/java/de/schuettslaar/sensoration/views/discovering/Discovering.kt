@@ -18,7 +18,7 @@ import de.schuettslaar.sensoration.R
 
 @Composable
 fun Discovering(
-    possibleDevices: MutableMap<String, DiscoveredEndpointInfo>,
+    possibleDevices: Map<String, DiscoveredEndpointInfo>,
     onDeviceClick: (String) -> Unit,
     onDiscoveryStopped: () -> Unit
 ) {

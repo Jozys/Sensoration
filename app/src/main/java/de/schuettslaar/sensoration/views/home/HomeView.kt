@@ -1,5 +1,6 @@
 package de.schuettslaar.sensoration.views.home
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -63,11 +64,12 @@ fun HomeView(onBack: () -> Unit) {
 
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
     text: String,
-    possibleDevices: MutableMap<String, DiscoveredEndpointInfo>,
+    possibleDevices: Map<String, DiscoveredEndpointInfo>,
     onStartDiscovery: () -> Unit,
     onStopDiscovery: () -> Unit,
     onStartAdvertising: () -> Unit,
@@ -75,6 +77,7 @@ fun HomeContent(
     onDeviceClick: (String) -> Unit,
     status: NearbyStatus
 ) {
+
     Column(modifier = modifier.fillMaxSize()) {
         // Debug text to verify the status is changing
         Text(
@@ -82,21 +85,20 @@ fun HomeContent(
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(8.dp)
         )
-        when (status) {
-            NearbyStatus.ADVERTISING -> {
-                return Advertisement(onStopAdvertising)
-            }
+        
+        if (status == NearbyStatus.ADVERTISING) {
+            Advertisement(onStopAdvertising)
+        }
 
-            NearbyStatus.DISCOVERING -> {
-                return Discovering(possibleDevices, onDeviceClick, onStopDiscovery)
-            }
+        if (status == NearbyStatus.DISCOVERING) {
+            Discovering(possibleDevices, onDeviceClick, onStopDiscovery)
+        }
 
-            NearbyStatus.STOPPED -> {
-                return StartActions(
-                    onStartDiscovery = onStartDiscovery,
-                    onStartAdvertising = onStartAdvertising
-                )
-            }
+        if (status == NearbyStatus.STOPPED) {
+            StartActions(
+                onStartDiscovery = onStartDiscovery,
+                onStartAdvertising = onStartAdvertising
+            )
         }
     }
 

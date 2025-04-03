@@ -20,19 +20,21 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val nearbyWrapper: NearbyWrapper = NearbyWrapper(
         context = application, onEndpointAddCallback = {
-            possibleConnections[it.first] = it.second
+            possibleConnections = possibleConnections.plus(it);
             Logger.getLogger(this.javaClass.simpleName)
                 .info(possibleConnections.keys.joinToString(" ,"))
         },
         onEndpointRemoveCallback = {
-            possibleConnections.remove(it)
+            Logger.getLogger(this.javaClass.simpleName).info {
+                it
+            }
         }
     )
 
     var status by mutableStateOf(NearbyStatus.STOPPED)
     var text by mutableStateOf("")
     var possibleConnections by mutableStateOf(
-        mutableMapOf<String, DiscoveredEndpointInfo>()
+        mapOf<String, DiscoveredEndpointInfo>()
     )
 
     fun startDiscovering() {
@@ -68,7 +70,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun connect(endpointId: String) {
-        Logger.getLogger(this.javaClass.simpleName, "Connecting to $endpointId")
+        Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
+
     }
 
 }
