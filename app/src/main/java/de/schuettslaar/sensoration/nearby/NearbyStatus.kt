@@ -4,5 +4,4 @@ enum class NearbyStatus {
     DISCOVERING,
     ADVERTISING,
     STOPPED,
-    CONNECTED
 }

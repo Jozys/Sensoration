@@ -27,21 +27,24 @@ class NearbyWrapper {
     private var endpointDiscoveryCallback: EndpointDiscoveryCallback? = null
     private var onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit
     private var onEndpointRemoveCallback: (id: String) -> Unit
-    private var onConnectionResultCallback: (endpointId: String, nearbyStatus: NearbyStatus) -> Unit
+    private var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
+    private var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
     private var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
 
     constructor(
         context: Context,
         onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit,
         onEndpointRemoveCallback: (id: String) -> Unit,
-        onConnectionResultCallback: (endpointId: String, status: NearbyStatus) -> Unit,
-        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
+        onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
+        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit,
+        onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
     ) {
         this.context = context
         this.onEndpointAddCallback = onEndpointAddCallback
         this.onEndpointRemoveCallback = onEndpointRemoveCallback
         this.onConnectionResultCallback = onConnectionResultCallback
         this.onDisconnectedCallback = onDisconnectedCallback
+        this.onConnectionInitiatedCallback = onConnectionInitiatedCallback
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
             serviceId = context.packageName
@@ -65,15 +68,16 @@ class NearbyWrapper {
 
     private fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, result: ConnectionInfo) {
+            onConnectionInitiatedCallback(endpointId, result)
             Nearby.getConnectionsClient(context).acceptConnection(endpointId, payloadCallback)
+
+
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             when (result.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     logE("CONNECTION OK")
-                    status = NearbyStatus.CONNECTED
-                    onConnectionResultCallback(endpointId, status)
 
                 }
                 // We're connected! Can now start sending and receiving data.
@@ -90,6 +94,7 @@ class NearbyWrapper {
                 }
                 // Unknown status code
             }
+            onConnectionResultCallback(endpointId, result, status)
         }
 
         override fun onDisconnected(endpointId: String) {

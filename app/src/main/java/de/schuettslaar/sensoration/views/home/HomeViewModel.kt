@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.nearby.NearbyStatus
 import de.schuettslaar.sensoration.nearby.NearbyWrapper
@@ -29,22 +30,32 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 it
             }
         },
-        onConnectionResultCallback = { endpointId, status ->
+        onConnectionResultCallback = { endpointId, connectionStatus, status ->
             Logger.getLogger(this.javaClass.simpleName).info {
                 "Connected to $endpointId"
             }
-            connectedDevice = possibleConnections[endpointId]
-            connectedId = endpointId
-            Logger.getLogger(this.javaClass.simpleName).info {
-                "Connected to ${connectedDevice?.endpointName} with $status"
+            if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
+                connectedId = endpointId
+
+            } else {
+                if (connectedDevices.containsKey(endpointId)) {
+                    connectedDevices = connectedDevices.minus(endpointId)
+                }
+                Logger.getLogger(this.javaClass.simpleName).info {
+                    "Connection failed with status code: ${connectionStatus.status.statusCode}"
+                }
             }
             this.status = status
+        },
+        onConnectionInitiatedCallback = { endpointId, result ->
+            connectedDevices = connectedDevices.plus(endpointId to result.endpointName)
+
         },
         onDisconnectedCallback = { endpointId, status ->
             Logger.getLogger(this.javaClass.simpleName).info {
                 "Disconnected from $endpointId"
             }
-            connectedDevice = null
+            connectedDevices.minus(endpointId)
             connectedId = ""
             this.status = status
 
@@ -57,7 +68,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         mapOf<String, DiscoveredEndpointInfo>()
     )
     var connectedId by mutableStateOf("")
-    var connectedDevice by mutableStateOf<DiscoveredEndpointInfo?>(null)
+    var connectedDevices by mutableStateOf(mapOf<String, String>())
 
     fun startDiscovering() {
         nearbyWrapper.startDiscovery { text, status ->

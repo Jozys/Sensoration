@@ -26,6 +26,7 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.nearby.NearbyStatus
 import de.schuettslaar.sensoration.views.advertisment.Advertisement
+import de.schuettslaar.sensoration.views.connected.ConnectedList
 import de.schuettslaar.sensoration.views.discovering.Discovering
 
 @Composable()
@@ -58,7 +59,7 @@ fun HomeView(onBack: () -> Unit) {
             {
                 viewModel.connect(it)
             },
-            viewModel.connectedDevice,
+            viewModel.connectedDevices,
             viewModel.connectedId,
             viewModel.status
         )
@@ -77,42 +78,46 @@ fun HomeContent(
     onStartAdvertising: () -> Unit,
     onStopAdvertising: () -> Unit,
     onDeviceClick: (String) -> Unit,
-    connectedDevice: DiscoveredEndpointInfo? = null,
+    connectedDevice: Map<String, String>? = null,
     connectedId: String,
     status: NearbyStatus
 ) {
-
     Column(modifier = modifier.fillMaxSize()) {
-        // Debug text to verify the status is changing
-        Text(
-            text = "Current status: $status",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(8.dp)
-        )
+        if (connectedDevice != null && connectedDevice.isNotEmpty()) {
+            ConnectedList(connectedDevice = connectedDevice, onConfirmRemove = {
+                onDeviceClick(it)
+            }, onStop = {
+                if (status == NearbyStatus.ADVERTISING) {
+                    onStopAdvertising()
 
-        if (status == NearbyStatus.ADVERTISING) {
-            Advertisement(onStopAdvertising)
-        }
-        if (status == NearbyStatus.CONNECTED) {
+                } else if (status == NearbyStatus.DISCOVERING) {
+                    onStopDiscovery()
+                }
+            })
+        } else {
+            // Debug text to verify the status is changing
             Text(
-                text = "Connected to ${connectedDevice?.endpointName}",
+                text = "Current status: $status",
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(8.dp)
             )
+
+            if (status == NearbyStatus.ADVERTISING) {
+                Advertisement(onStopAdvertising)
+            }
+
+
+            if (status == NearbyStatus.DISCOVERING) {
+                Discovering(possibleDevices, connectedId, onDeviceClick, onStopDiscovery)
+            }
+
+            if (status == NearbyStatus.STOPPED) {
+                StartActions(
+                    onStartDiscovery = onStartDiscovery,
+                    onStartAdvertising = onStartAdvertising
+                )
+            }
         }
-
-        if (status == NearbyStatus.DISCOVERING) {
-            Discovering(possibleDevices, connectedId, onDeviceClick, onStopDiscovery)
-        }
-
-        if (status == NearbyStatus.STOPPED) {
-            StartActions(
-                onStartDiscovery = onStartDiscovery,
-                onStartAdvertising = onStartAdvertising
-            )
-        }
-
-
     }
 
 }
