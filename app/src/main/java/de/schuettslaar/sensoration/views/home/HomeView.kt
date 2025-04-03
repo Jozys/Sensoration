@@ -63,7 +63,6 @@ fun HomeView(onBack: () -> Unit) {
                 viewModel.sendMessage()
             },
             viewModel.connectedDevices,
-            viewModel.connectedDevice,
             viewModel.connectedId,
             viewModel.status
         )
@@ -83,18 +82,19 @@ fun HomeContent(
     onStopAdvertising: () -> Unit,
     onDeviceClick: (String) -> Unit,
     onSendMessage: () -> Unit,
-    connectedDevice: Map<String, String>? = null,
+    connectedDevices: Map<String, String>? = null,
     connectedId: String,
     status: NearbyStatus
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        if (connectedDevice != null && connectedDevice.isNotEmpty()) {
-            ConnectedList(connectedDevice = connectedDevice, onConfirmRemove = {
+        if (connectedDevices != null && connectedDevices.isNotEmpty()) {
+            ConnectedList(connectedDevice = connectedDevices, onConfirmRemove = {
                 onDeviceClick(it)
+            }, onSendMessage = {
+                onSendMessage()
             }, onStop = {
                 if (status == NearbyStatus.ADVERTISING) {
                     onStopAdvertising()
-
                 } else if (status == NearbyStatus.DISCOVERING) {
                     onStopDiscovery()
                 }
@@ -111,31 +111,18 @@ fun HomeContent(
                 Advertisement(onStopAdvertising)
             }
 
-        if (status == NearbyStatus.CONNECTED) {
-            Text(
-                text = "Connected to ${connectedDevice?.endpointName}",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(8.dp)
-            )
-            Button(onClick = {
-                onSendMessage()
-            }) {
-                Text("Send Message")
-            }
-        }
-
             if (status == NearbyStatus.DISCOVERING) {
                 Discovering(possibleDevices, connectedId, onDeviceClick, onStopDiscovery)
             }
-        if (status == NearbyStatus.STOPPED) {
-            StartActions(
-                onStartDiscovery = onStartDiscovery,
-                onStartAdvertising = onStartAdvertising,
-                onSendMessage = onSendMessage
-            )
+            if (status == NearbyStatus.STOPPED) {
+                StartActions(
+                    onStartDiscovery = onStartDiscovery,
+                    onStartAdvertising = onStartAdvertising,
+                    onSendMessage = onSendMessage
+                )
+            }
         }
     }
-
 }
 
 @Composable

@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.views.connected
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -19,42 +20,52 @@ import androidx.compose.ui.Modifier
 @Composable
 fun ConnectedList(
     connectedDevice: Map<String, String>?,
+    onSendMessage: () -> Unit,
     onConfirmRemove: (String) -> Unit,
     onStop: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    LazyColumn {
-        items(connectedDevice?.entries?.toList() ?: emptyList()) { name ->
-            ListItem(
-                modifier = Modifier.clickable(onClick = {
-                    showDialog = true;
-                }),
-                headlineContent = {
-                    Text("Connected to $name")
-                },
-                trailingContent = {
-                    Icon(Icons.Default.Check, "Client status")
-                }
-            )
-            if (showDialog) {
-                RemoveDeviceDialog(
-                    onDismissRequest = { showDialog = false },
-                    onConfirmation = {
-                        print("Removing device")
-                        onConfirmRemove(name.key)
-                        showDialog = false
+    Column {
+        LazyColumn {
+            items(connectedDevice?.entries?.toList() ?: emptyList()) { name ->
+                ListItem(
+                    modifier = Modifier.clickable(onClick = {
+                        showDialog = true;
+                    }),
+                    headlineContent = {
+                        Text("Connected to $name")
                     },
-                    dialogTitle = "Remove Device",
-
-                    dialogText = "Are you sure you want to remove the device?"
+                    trailingContent = {
+                        Icon(Icons.Default.Check, "Client status")
+                    }
                 )
+                if (showDialog) {
+                    RemoveDeviceDialog(
+                        onDismissRequest = { showDialog = false },
+                        onConfirmation = {
+                            print("Removing device")
+                            onConfirmRemove(name.key)
+                            showDialog = false
+                        },
+                        dialogTitle = "Remove Device",
+
+                        dialogText = "Are you sure you want to remove the device?"
+                    )
+                }
             }
         }
-    }
-    Button(onClick = {
-        onStop()
-    }) {
-        Text("Stop")
+
+        Button(onClick = {
+            onSendMessage()
+        }) {
+            Text("Send Message")
+        }
+
+        Button(onClick = {
+            onStop()
+        }) {
+            Text("Stop")
+        }
     }
 }
