@@ -58,6 +58,8 @@ fun HomeView(onBack: () -> Unit) {
             {
                 viewModel.connect(it)
             },
+            viewModel.connectedDevice,
+            viewModel.connectedId,
             viewModel.status
         )
     }
@@ -75,6 +77,8 @@ fun HomeContent(
     onStartAdvertising: () -> Unit,
     onStopAdvertising: () -> Unit,
     onDeviceClick: (String) -> Unit,
+    connectedDevice: DiscoveredEndpointInfo? = null,
+    connectedId: String,
     status: NearbyStatus
 ) {
 
@@ -85,13 +89,20 @@ fun HomeContent(
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(8.dp)
         )
-        
+
         if (status == NearbyStatus.ADVERTISING) {
             Advertisement(onStopAdvertising)
         }
+        if (status == NearbyStatus.CONNECTED) {
+            Text(
+                text = "Connected to ${connectedDevice?.endpointName}",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
 
         if (status == NearbyStatus.DISCOVERING) {
-            Discovering(possibleDevices, onDeviceClick, onStopDiscovery)
+            Discovering(possibleDevices, connectedId, onDeviceClick, onStopDiscovery)
         }
 
         if (status == NearbyStatus.STOPPED) {
@@ -100,6 +111,8 @@ fun HomeContent(
                 onStartAdvertising = onStartAdvertising
             )
         }
+
+
     }
 
 }

@@ -28,6 +28,26 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             Logger.getLogger(this.javaClass.simpleName).info {
                 it
             }
+        },
+        onConnectionResultCallback = { endpointId, status ->
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Connected to $endpointId"
+            }
+            connectedDevice = possibleConnections[endpointId]
+            connectedId = endpointId
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Connected to ${connectedDevice?.endpointName} with $status"
+            }
+            this.status = status
+        },
+        onDisconnectedCallback = { endpointId, status ->
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Disconnected from $endpointId"
+            }
+            connectedDevice = null
+            connectedId = ""
+            this.status = status
+
         }
     )
 
@@ -36,6 +56,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var possibleConnections by mutableStateOf(
         mapOf<String, DiscoveredEndpointInfo>()
     )
+    var connectedId by mutableStateOf("")
+    var connectedDevice by mutableStateOf<DiscoveredEndpointInfo?>(null)
 
     fun startDiscovering() {
         nearbyWrapper.startDiscovery { text, status ->
@@ -71,7 +93,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun connect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
-
+        nearbyWrapper.connect(endpointId);
     }
 
 }

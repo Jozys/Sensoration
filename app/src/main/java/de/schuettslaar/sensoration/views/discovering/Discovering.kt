@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -19,6 +20,7 @@ import de.schuettslaar.sensoration.R
 @Composable
 fun Discovering(
     possibleDevices: Map<String, DiscoveredEndpointInfo>,
+    connectedId: String,
     onDeviceClick: (String) -> Unit,
     onDiscoveryStopped: () -> Unit
 ) {
@@ -27,7 +29,7 @@ fun Discovering(
         Text(stringResource(R.string.discovering_title))
         LazyColumn {
             items(possibleDevices.entries.toList()) { (id, info) ->
-                BuildDeviceEntry(id, info, onDeviceClick)
+                BuildDeviceEntry(id, info, onDeviceClick, id == connectedId)
             }
         }
         Button(onClick = {
@@ -39,11 +41,20 @@ fun Discovering(
 }
 
 @Composable
-fun BuildDeviceEntry(id: String, info: DiscoveredEndpointInfo, onClick: (id: String) -> Unit) {
+fun BuildDeviceEntry(
+    id: String,
+    info: DiscoveredEndpointInfo,
+    onClick: (id: String) -> Unit,
+    checked: Boolean
+) {
     ListItem(modifier = Modifier.clickable {
         onClick(id)
     }, trailingContent = {
-        Icon(Icons.Default.Info, "Info")
+        if (checked) {
+            Icon(Icons.Default.Check, "Connected")
+        } else {
+            Icon(Icons.Default.Info, "Not Connected")
+        }
     }, headlineContent = {
         // TODO: Extract string resources
         Text("Device: ${info.endpointName} (ID: $id)")

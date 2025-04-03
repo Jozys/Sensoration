@@ -27,16 +27,21 @@ class NearbyWrapper {
     private var endpointDiscoveryCallback: EndpointDiscoveryCallback? = null
     private var onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit
     private var onEndpointRemoveCallback: (id: String) -> Unit
-
+    private var onConnectionResultCallback: (endpointId: String, nearbyStatus: NearbyStatus) -> Unit
+    private var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
 
     constructor(
         context: Context,
         onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit,
-        onEndpointRemoveCallback: (id: String) -> Unit
+        onEndpointRemoveCallback: (id: String) -> Unit,
+        onConnectionResultCallback: (endpointId: String, status: NearbyStatus) -> Unit,
+        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
     ) {
         this.context = context
         this.onEndpointAddCallback = onEndpointAddCallback
         this.onEndpointRemoveCallback = onEndpointRemoveCallback
+        this.onConnectionResultCallback = onConnectionResultCallback
+        this.onDisconnectedCallback = onDisconnectedCallback
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
             serviceId = context.packageName
@@ -67,6 +72,9 @@ class NearbyWrapper {
             when (result.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     logE("CONNECTION OK")
+                    status = NearbyStatus.CONNECTED
+                    onConnectionResultCallback(endpointId, status)
+
                 }
                 // We're connected! Can now start sending and receiving data.
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
@@ -84,8 +92,10 @@ class NearbyWrapper {
             }
         }
 
-        override fun onDisconnected(p0: String) {
+        override fun onDisconnected(endpointId: String) {
             logE("CONNECTION DISCONNECTED")
+            status = NearbyStatus.STOPPED
+            onDisconnectedCallback(endpointId, status)
         }
 
     }
@@ -163,6 +173,17 @@ class NearbyWrapper {
             status = NearbyStatus.STOPPED
             callback("Advertising stopped", status)
         }
+    }
+
+    fun connect(endpointId: String) {
+        logE("Connecting to $endpointId")
+
+        connectionLifecycleCallback = createConnectionLifecycleCallback()
+        Nearby.getConnectionsClient(context).requestConnection(
+            serviceId,
+            endpointId,
+            connectionLifecycleCallback!!
+        )
     }
 
     fun logE(milf: String) {
