@@ -58,6 +58,10 @@ fun HomeView(onBack: () -> Unit) {
             {
                 viewModel.connect(it)
             },
+            {
+                viewModel.sendMessage()
+            },
+
             viewModel.connectedDevice,
             viewModel.connectedId,
             viewModel.status
@@ -77,6 +81,7 @@ fun HomeContent(
     onStartAdvertising: () -> Unit,
     onStopAdvertising: () -> Unit,
     onDeviceClick: (String) -> Unit,
+    onSendMessage: () -> Unit,
     connectedDevice: DiscoveredEndpointInfo? = null,
     connectedId: String,
     status: NearbyStatus
@@ -99,6 +104,11 @@ fun HomeContent(
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(8.dp)
             )
+            Button(onClick = {
+                onSendMessage()
+            }) {
+                Text("Send Message")
+            }
         }
 
         if (status == NearbyStatus.DISCOVERING) {
@@ -108,7 +118,8 @@ fun HomeContent(
         if (status == NearbyStatus.STOPPED) {
             StartActions(
                 onStartDiscovery = onStartDiscovery,
-                onStartAdvertising = onStartAdvertising
+                onStartAdvertising = onStartAdvertising,
+                onSendMessage = onSendMessage
             )
         }
 
@@ -121,7 +132,8 @@ fun HomeContent(
 fun StartActions(
     modifier: Modifier = Modifier,
     onStartDiscovery: () -> Unit,
-    onStartAdvertising: () -> Unit
+    onStartAdvertising: () -> Unit,
+    onSendMessage: () -> Unit
 ) {
     Column(modifier = modifier) {
         Button(onClick = {
@@ -134,6 +146,8 @@ fun StartActions(
         }) {
             Text(stringResource(R.string.start_advertising))
         }
+
+
     }
 }
 
