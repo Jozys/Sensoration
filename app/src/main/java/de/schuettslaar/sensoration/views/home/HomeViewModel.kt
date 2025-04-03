@@ -9,15 +9,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.Payload
+import de.schuettslaar.sensoration.ApplicationStatus
+import de.schuettslaar.sensoration.data.WrappedSensorData
 import de.schuettslaar.sensoration.nearby.NearbyStatus
 import de.schuettslaar.sensoration.nearby.NearbyWrapper
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
-import java.io.FileInputStream
-import java.io.InputStream
-import java.io.InputStreamReader
+import java.io.ObjectOutputStream
 import java.util.logging.Logger
+
 
 @SuppressLint("StaticFieldLeak", "MutableCollectionMutableState")
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
@@ -98,13 +99,24 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun sendMessage() {
+        // TODO: REMOVE MOCK VALUES
         val id: String = connectedId
-        val fasid = DataInputStream(ByteArrayInputStream("Hello".toByteArray()))
-
-        nearbyWrapper.sendData(
-            id,
-            fasid
+        val data2: Array<Float> = arrayOf(0.0f)
+        val wrappedSensorData = WrappedSensorData(1337, connectedId, ApplicationStatus.MISSING_SENSOR,
+            data2
         )
+
+        ByteArrayOutputStream().use { bos ->
+            ObjectOutputStream(bos).use { oos ->
+                oos.writeObject(wrappedSensorData)
+            }
+
+            val dataObjectAsByteArray = bos.toByteArray()
+            nearbyWrapper.sendData(
+                id,
+                DataInputStream(ByteArrayInputStream(dataObjectAsByteArray))
+            )
+        }
     }
 
     fun connect(endpointId: String) {
