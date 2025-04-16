@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.ui.theme
+package de.schuettslaar.sensoration.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.nearby
+package de.schuettslaar.sensoration.adapter.nearby
 
 import android.content.Context
 import android.media.MediaActionSound

@@ -8,7 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import de.schuettslaar.sensoration.navigation.SensorationNavigationHost
+import de.schuettslaar.sensoration.presentation.navigation.SensorationNavigationHost
 import de.schuettslaar.sensoration.ui.theme.SensorationTheme
 
 class MainActivity : ComponentActivity() {

@@ -1,6 +1,6 @@
-package de.schuettslaar.sensoration.data
+package de.schuettslaar.sensoration.application.data
 
-import de.schuettslaar.sensoration.ApplicationStatus
+import de.schuettslaar.sensoration.domain.ApplicationStatus
 import java.io.Serializable
 
 class WrappedSensorData(

@@ -1,6 +1,5 @@
 package de.schuettslaar.sensoration.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +9,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import de.schuettslaar.sensoration.presentation.ui.theme.Pink40
+import de.schuettslaar.sensoration.presentation.ui.theme.Pink80
+import de.schuettslaar.sensoration.presentation.ui.theme.Purple40
+import de.schuettslaar.sensoration.presentation.ui.theme.Purple80
+import de.schuettslaar.sensoration.presentation.ui.theme.PurpleGrey40
+import de.schuettslaar.sensoration.presentation.ui.theme.PurpleGrey80
+import de.schuettslaar.sensoration.presentation.ui.theme.Typography
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,

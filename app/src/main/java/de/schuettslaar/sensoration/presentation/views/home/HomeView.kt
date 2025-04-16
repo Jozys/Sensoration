@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.views.home
+package de.schuettslaar.sensoration.presentation.views.home
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -24,10 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
-import de.schuettslaar.sensoration.nearby.NearbyStatus
-import de.schuettslaar.sensoration.views.advertisment.Advertisement
-import de.schuettslaar.sensoration.views.connected.ConnectedList
-import de.schuettslaar.sensoration.views.discovering.Discovering
+import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.presentation.views.advertisment.Advertisement
+import de.schuettslaar.sensoration.presentation.views.connected.ConnectedList
+import de.schuettslaar.sensoration.presentation.views.discovering.Discovering
+import de.schuettslaar.sensoration.views.home.HomeViewModel
 
 @Composable()
 fun HomeView(onBack: () -> Unit) {

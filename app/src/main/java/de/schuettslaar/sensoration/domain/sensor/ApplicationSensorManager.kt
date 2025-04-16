@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.sensor
+package de.schuettslaar.sensoration.domain.sensor
 
 import android.content.Context
 import android.hardware.Sensor

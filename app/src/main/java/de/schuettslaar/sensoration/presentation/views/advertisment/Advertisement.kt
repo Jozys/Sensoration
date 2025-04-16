@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.views.advertisment
+package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button

@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.views.connected
+package de.schuettslaar.sensoration.presentation.views.connected
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

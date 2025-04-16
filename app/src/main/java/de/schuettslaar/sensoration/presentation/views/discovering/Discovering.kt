@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.views.discovering
+package de.schuettslaar.sensoration.presentation.views.discovering
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

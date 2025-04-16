@@ -11,9 +11,9 @@ import androidx.lifecycle.AndroidViewModel
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.ApplicationStatus
-import de.schuettslaar.sensoration.data.WrappedSensorData
-import de.schuettslaar.sensoration.nearby.NearbyStatus
-import de.schuettslaar.sensoration.nearby.NearbyWrapper
+import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream

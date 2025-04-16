@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.navigation
+package de.schuettslaar.sensoration.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -6,8 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
-import de.schuettslaar.sensoration.views.home.HomeOverviewRoute
-import de.schuettslaar.sensoration.views.home.addHomeNavGraph
+import de.schuettslaar.sensoration.presentation.views.home.HomeOverviewRoute
+import de.schuettslaar.sensoration.presentation.views.home.addHomeNavGraph
 
 @Composable()
 fun SensorationNavigationHost(
