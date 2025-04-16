@@ -2,18 +2,15 @@ package de.schuettslaar.sensoration.views.home
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.Context
-import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import de.schuettslaar.sensoration.ApplicationStatus
-import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
-import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
+import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.Device
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
@@ -24,51 +21,6 @@ import java.util.logging.Logger
 @SuppressLint("StaticFieldLeak", "MutableCollectionMutableState")
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val context: Context = (application as Context)
-
-    private val nearbyWrapper: NearbyWrapper = NearbyWrapper(
-        context = application, onEndpointAddCallback = {
-            possibleConnections = possibleConnections.plus(it);
-            Logger.getLogger(this.javaClass.simpleName)
-                .info(possibleConnections.keys.joinToString(" ,"))
-        },
-        onEndpointRemoveCallback = {
-            Logger.getLogger(this.javaClass.simpleName).info {
-                it
-            }
-        },
-        onConnectionResultCallback = { endpointId, connectionStatus, status ->
-            Logger.getLogger(this.javaClass.simpleName).info {
-                "Connected to $endpointId"
-            }
-            if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
-                connectedId = endpointId
-
-            } else {
-                if (connectedDevices.containsKey(endpointId)) {
-                    connectedDevices = connectedDevices.minus(endpointId)
-                }
-                Logger.getLogger(this.javaClass.simpleName).info {
-                    "Connection failed with status code: ${connectionStatus.status.statusCode}"
-                }
-            }
-            this.status = status
-        },
-        onConnectionInitiatedCallback = { endpointId, result ->
-            connectedDevices = connectedDevices.plus(endpointId to result.endpointName)
-
-        },
-        onDisconnectedCallback = { endpointId, status ->
-            Logger.getLogger(this.javaClass.simpleName).info {
-                "Disconnected from $endpointId"
-            }
-            connectedDevices.minus(endpointId)
-            connectedId = ""
-            this.status = status
-
-        }
-    )
-
     var status by mutableStateOf(NearbyStatus.STOPPED)
     var text by mutableStateOf("")
     var possibleConnections by mutableStateOf(
@@ -76,44 +28,56 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     )
     var connectedId by mutableStateOf("")
     var connectedDevices by mutableStateOf(mapOf<String, String>())
+    var device by mutableStateOf<Device?>(null);
 
-    fun startDiscovering() {
-        nearbyWrapper.startDiscovery { text, status ->
-            this.text = text
-            this.status = status
+
+    fun callback(text: String, status: NearbyStatus) {
+        this.text = text
+        this.status = status
+    }
+
+    fun start(device: Device) {
+        this.device = device;
+        if (device != null) {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Starting device service"
+            }
+            device.start { text, status ->
+                callback(text, status);
+            }
+        } else {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "No device selected"
+            }
         }
     }
 
-    fun startAdvertising() {
-        val bootloaderName = Build.BOOTLOADER
-        val name =
-            android.provider.Settings.Global.getString(context.contentResolver, "device_name")
-        Logger.getLogger(this.javaClass.simpleName).info("Advertising as $name")
-        nearbyWrapper.startAdvertising(name + " " + bootloaderName + Build.BRAND) { message, status ->
-            text = message
-            this.status = status
+    fun stop() {
+        if (device != null) {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Stopping device service"
+            }
+            device!!.stop { text, status ->
+                callback(text, status);
+            }
+        } else {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "No device selected"
+            }
         }
     }
 
-    fun stopDiscovering() {
-        nearbyWrapper.stopDiscovery({ newText, newStatus ->
-            text = newText
-            status = newStatus
-        })
-    }
-
-    fun stopAdvertising() {
-        nearbyWrapper.stopAdvertising { newText, newStatus ->
-            text = newText
-            status = newStatus
-        }
+    fun connect(endpointId: String) {
+        Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
+        device?.connect(endpointId);
     }
 
     fun sendMessage() {
         // TODO: REMOVE MOCK VALUES
         val id: String = connectedId
         val data2: Array<Float> = arrayOf(0.0f)
-        val wrappedSensorData = WrappedSensorData(1337, connectedId, ApplicationStatus.MISSING_SENSOR,
+        val wrappedSensorData = WrappedSensorData(
+            1337, connectedId, ApplicationStatus.ERROR,
             data2
         )
 
@@ -123,16 +87,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val dataObjectAsByteArray = bos.toByteArray()
-            nearbyWrapper.sendData(
+            device?.sendData(
                 id,
                 DataInputStream(ByteArrayInputStream(dataObjectAsByteArray))
             )
         }
     }
 
-    fun connect(endpointId: String) {
-        Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
-        nearbyWrapper.connect(endpointId);
-    }
 
 }

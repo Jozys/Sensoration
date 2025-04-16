@@ -17,12 +17,12 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requiredPermissions = arrayOf(
-                android.Manifest.permission.BLUETOOTH_SCAN,
-                android.Manifest.permission.BLUETOOTH_ADVERTISE,
-                android.Manifest.permission.BLUETOOTH_CONNECT,
-                android.Manifest.permission.ACCESS_WIFI_STATE,
-                android.Manifest.permission.CHANGE_WIFI_STATE,
-                android.Manifest.permission.NEARBY_WIFI_DEVICES,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.CHANGE_WIFI_STATE,
+                Manifest.permission.NEARBY_WIFI_DEVICES,
             )
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             requiredPermissions = arrayOf(

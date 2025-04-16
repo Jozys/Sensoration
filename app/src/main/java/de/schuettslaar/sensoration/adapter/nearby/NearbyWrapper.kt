@@ -2,82 +2,67 @@ package de.schuettslaar.sensoration.adapter.nearby
 
 import android.content.Context
 import android.media.MediaActionSound
-import android.os.Build
 import android.util.Log
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.DiscoveryOptions
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
-import com.google.android.gms.nearby.connection.Strategy
-import de.schuettslaar.sensoration.R
 import java.io.DataInputStream
 
-class NearbyWrapper {
-    private var context: Context
-    private var serviceId: String
-    private var status: NearbyStatus = NearbyStatus.STOPPED
+abstract class NearbyWrapper {
+    internal var context: Context
+    internal var serviceId: String
+    internal var status: NearbyStatus = NearbyStatus.STOPPED
 
-    private var connectionLifecycleCallback: ConnectionLifecycleCallback? = null
-    private var endpointDiscoveryCallback: EndpointDiscoveryCallback? = null
-    private var onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit
-    private var onEndpointRemoveCallback: (id: String) -> Unit
-    private var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
-    private var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
-    private var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
+    internal var connectionLifecycleCallback: ConnectionLifecycleCallback? = null
+    internal lateinit var payloadCallback: PayloadCallback;
 
-    private lateinit var payloadCallback: PayloadCallback;
+    internal lateinit var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
+    internal lateinit var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
+    internal lateinit var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
 
-
+    internal lateinit var onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
 
     constructor(
         context: Context,
-        onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit,
-        onEndpointRemoveCallback: (id: String) -> Unit,
-        onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
-        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit,
-        onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
     ) {
         this.context = context
-        this.onEndpointAddCallback = onEndpointAddCallback
-        this.onEndpointRemoveCallback = onEndpointRemoveCallback
-        this.onConnectionResultCallback = onConnectionResultCallback
-        this.onDisconnectedCallback = onDisconnectedCallback
-        this.onConnectionInitiatedCallback = onConnectionInitiatedCallback
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-            serviceId = context.packageName
-        } else {
-            serviceId = context.getString(R.string.packageName)
-        }
-    }
-
-    private fun createEndpointLifecycleCallback() = object : EndpointDiscoveryCallback() {
-        override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            logE("Found Endpoint: $endpointId ${info.endpointName}")
-            onEndpointAddCallback(Pair(endpointId, info))
-        }
-
-        override fun onEndpointLost(endpointId: String) {
-            logE("LOST Endpoint: $endpointId")
-            onEndpointRemoveCallback(endpointId)
-        }
+        serviceId = context.packageName
 
     }
 
-    private fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
+
+    fun logE(milf: String) {
+        Log.e(this.javaClass.simpleName, milf)
+    }
+
+    fun sendData(toEndpointId: String, stream: DataInputStream) {
+        val payload: Payload = Payload.fromStream(stream)
+        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload);
+    }
+
+
+    abstract fun start(callback: (text: String, status: NearbyStatus) -> Unit)
+    abstract fun stop(callback: (text: String, status: NearbyStatus) -> Unit)
+
+    fun connect(endpointId: String) {
+        logE("Connecting to $endpointId")
+        connectionLifecycleCallback = createConnectionLifecycleCallback()
+        Nearby.getConnectionsClient(context).requestConnection(
+            serviceId,
+            endpointId,
+            connectionLifecycleCallback!!
+        )
+    }
+
+    internal fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, result: ConnectionInfo) {
             onConnectionInitiatedCallback(endpointId, result)
             Nearby.getConnectionsClient(context).acceptConnection(endpointId, payloadCallback)
-
-
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
@@ -110,107 +95,21 @@ class NearbyWrapper {
         }
 
     }
-
-
-    fun startAdvertising(
-        localEndpointName: String,
-        callback: (text: String, status: NearbyStatus) -> Unit
-    ) {
-        if (status == NearbyStatus.ADVERTISING || status == NearbyStatus.DISCOVERING) {
-            callback("Already advertising or discovering", status)
-            return
-        }
-
-        val strategy = Strategy.P2P_STAR
-        val advertisingOptions = AdvertisingOptions.Builder().setStrategy(strategy).build()
-        payloadCallback = createPayloadCallback()
-
-        connectionLifecycleCallback = createConnectionLifecycleCallback()
-
-        Nearby.getConnectionsClient(context).startAdvertising(
-            localEndpointName, serviceId, connectionLifecycleCallback!!, advertisingOptions
-        ).addOnSuccessListener {
-            status = NearbyStatus.ADVERTISING
-            callback("successfully started advertising", status)
-        }.addOnFailureListener {
-            status = NearbyStatus.STOPPED
-            callback("starting advertising failed", status)
-        }
-
-    }
-
-    fun startDiscovery(callback: (text: String, status: NearbyStatus) -> Unit) {
-        if (status == NearbyStatus.ADVERTISING || status == NearbyStatus.DISCOVERING) {
-            callback("Already advertising or discovering", status)
-            return
-        }
-        val discoveryOptions = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
-        payloadCallback = createPayloadCallback()
-        endpointDiscoveryCallback = createEndpointLifecycleCallback()
-
-        Nearby.getConnectionsClient(
-            context
-        ).startDiscovery(
-            serviceId, endpointDiscoveryCallback!!, discoveryOptions
-        )
-            .addOnSuccessListener {
-                status = NearbyStatus.DISCOVERING
-                callback("SUCCESS: Start Discovery", status)
-            }
-            .addOnFailureListener {
-                callback("FAILED: Start Discovery", status)
-            }
-    }
-
-    fun stopDiscovery(callback: (text: String, status: NearbyStatus) -> Unit) {
-        if (status == NearbyStatus.DISCOVERING) {
-            Nearby.getConnectionsClient(context).stopDiscovery()
-            status = NearbyStatus.STOPPED
-            callback("Discovery stopped", status)
-        }
-    }
-
-    fun stopAdvertising(callback: (text: String, status: NearbyStatus) -> Unit) {
-        if (status == NearbyStatus.ADVERTISING) {
-            Nearby.getConnectionsClient(context).stopAdvertising()
-            status = NearbyStatus.STOPPED
-            callback("Advertising stopped", status)
-        }
-    }
-
-    fun connect(endpointId: String) {
-        logE("Connecting to $endpointId")
-
-        connectionLifecycleCallback = createConnectionLifecycleCallback()
-        Nearby.getConnectionsClient(context).requestConnection(
-            serviceId,
-            endpointId,
-            connectionLifecycleCallback!!
-        )
-    }
-
-    fun logE(milf: String) {
-        Log.e(this.javaClass.simpleName, milf)
-    }
-
-    fun sendData(toEndpointId: String, stream: DataInputStream){
-        val payload: Payload = Payload.fromStream(stream)
-        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload);
-    }
-
 }
 
-private fun createPayloadCallback(): PayloadCallback = object : PayloadCallback() {
-    override fun onPayloadReceived(endpointId: String, payload: Payload) {
-        val sound = MediaActionSound()
-        sound.play(MediaActionSound.START_VIDEO_RECORDING)
-        Log.d(this.javaClass.simpleName, "Got message from" + endpointId + payload.asStream())
-    }
+internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit): PayloadCallback =
+    object : PayloadCallback() {
+        override fun onPayloadReceived(endpointId: String, payload: Payload) {
+            val sound = MediaActionSound()
+            sound.play(MediaActionSound.START_VIDEO_RECORDING)
+            onPayloadReceivedCallback(endpointId, payload);
+            Log.d(this.javaClass.simpleName, "Got message from" + endpointId + payload.asStream())
+        }
 
-    override fun onPayloadTransferUpdate(
-        endpointId: String,
-        update: PayloadTransferUpdate
-    ) {
+        override fun onPayloadTransferUpdate(
+            endpointId: String,
+            update: PayloadTransferUpdate
+        ) {
 
+        }
     }
-}
