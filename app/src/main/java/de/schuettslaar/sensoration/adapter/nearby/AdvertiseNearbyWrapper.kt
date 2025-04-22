@@ -54,6 +54,7 @@ class AdvertiseNearbyWrapper : NearbyWrapper {
 
     override fun stop(callback: (text: String, status: NearbyStatus) -> Unit) {
         if (status == NearbyStatus.ADVERTISING) {
+            Nearby.getConnectionsClient(context).stopAllEndpoints()
             Nearby.getConnectionsClient(context).stopAdvertising()
             status = NearbyStatus.STOPPED
             callback("Advertising stopped", status)

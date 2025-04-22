@@ -8,7 +8,7 @@ import java.util.logging.Logger
 abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
-    internal val applicationStatus: ApplicationStatus = ApplicationStatus.INIT;
+    internal val applicationStatus: ApplicationStatus = ApplicationStatus.INIT
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -19,7 +19,11 @@ abstract class Device {
     }
 
     fun connect(deviceId: String) {
-        wrapper?.connect(deviceId);
+        wrapper?.connect(deviceId)
+    }
+
+    fun disconnect(deviceId: String) {
+        wrapper?.disconnect(deviceId)
     }
 
     fun sendData(toEndpointId: String, stream: DataInputStream) {

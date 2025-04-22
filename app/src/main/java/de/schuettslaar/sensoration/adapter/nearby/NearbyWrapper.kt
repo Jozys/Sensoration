@@ -19,7 +19,7 @@ abstract class NearbyWrapper {
     internal var status: NearbyStatus = NearbyStatus.STOPPED
 
     internal var connectionLifecycleCallback: ConnectionLifecycleCallback? = null
-    internal lateinit var payloadCallback: PayloadCallback;
+    internal lateinit var payloadCallback: PayloadCallback
 
     internal lateinit var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
     internal lateinit var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
@@ -42,7 +42,7 @@ abstract class NearbyWrapper {
 
     fun sendData(toEndpointId: String, stream: DataInputStream) {
         val payload: Payload = Payload.fromStream(stream)
-        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload);
+        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload)
     }
 
 
@@ -57,6 +57,11 @@ abstract class NearbyWrapper {
             endpointId,
             connectionLifecycleCallback!!
         )
+    }
+
+    fun disconnect(endpointId: String) {
+        logE("Disconnecting from $endpointId")
+        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId)
     }
 
     internal fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
@@ -102,7 +107,7 @@ internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: Strin
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             val sound = MediaActionSound()
             sound.play(MediaActionSound.START_VIDEO_RECORDING)
-            onPayloadReceivedCallback(endpointId, payload);
+            onPayloadReceivedCallback(endpointId, payload)
             Log.d(this.javaClass.simpleName, "Got message from" + endpointId + payload.asStream())
         }
 

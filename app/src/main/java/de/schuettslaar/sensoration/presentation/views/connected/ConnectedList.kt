@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -16,13 +15,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import de.schuettslaar.sensoration.R
 
 @Composable
 fun ConnectedList(
     connectedDevice: Map<String, String>?,
-    onSendMessage: () -> Unit,
     onConfirmRemove: (String) -> Unit,
-    onStop: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -31,10 +30,10 @@ fun ConnectedList(
             items(connectedDevice?.entries?.toList() ?: emptyList()) { name ->
                 ListItem(
                     modifier = Modifier.clickable(onClick = {
-                        showDialog = true;
+                        showDialog = true
                     }),
                     headlineContent = {
-                        Text("Connected to $name")
+                        Text(stringResource(R.string.connected_to, name.key))
                     },
                     trailingContent = {
                         Icon(Icons.Default.Check, "Client status")
@@ -44,28 +43,15 @@ fun ConnectedList(
                     RemoveDeviceDialog(
                         onDismissRequest = { showDialog = false },
                         onConfirmation = {
-                            print("Removing device")
                             onConfirmRemove(name.key)
                             showDialog = false
                         },
-                        dialogTitle = "Remove Device",
+                        dialogTitle = stringResource(R.string.remove_device),
 
-                        dialogText = "Are you sure you want to remove the device?"
+                        dialogText = stringResource(R.string.remove_device_confirm)
                     )
                 }
             }
-        }
-
-        Button(onClick = {
-            onSendMessage()
-        }) {
-            Text("Send Message")
-        }
-
-        Button(onClick = {
-            onStop()
-        }) {
-            Text("Stop")
         }
     }
 }
