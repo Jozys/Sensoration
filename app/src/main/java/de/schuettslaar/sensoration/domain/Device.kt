@@ -8,7 +8,7 @@ import java.util.logging.Logger
 abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
-    internal val applicationStatus: ApplicationStatus = ApplicationStatus.INIT
+    internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)

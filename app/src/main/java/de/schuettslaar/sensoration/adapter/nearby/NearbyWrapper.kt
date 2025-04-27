@@ -51,9 +51,11 @@ abstract class NearbyWrapper {
 
     fun connect(endpointId: String) {
         logE("Connecting to $endpointId")
+        var deviceName =
+            android.provider.Settings.Global.getString(context.contentResolver, "device_name")
         connectionLifecycleCallback = createConnectionLifecycleCallback()
         Nearby.getConnectionsClient(context).requestConnection(
-            serviceId,
+            deviceName,
             endpointId,
             connectionLifecycleCallback!!
         )
@@ -95,7 +97,6 @@ abstract class NearbyWrapper {
 
         override fun onDisconnected(endpointId: String) {
             logE("CONNECTION DISCONNECTED")
-            status = NearbyStatus.STOPPED
             onDisconnectedCallback(endpointId, status)
         }
 

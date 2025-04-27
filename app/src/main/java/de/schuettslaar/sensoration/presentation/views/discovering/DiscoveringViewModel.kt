@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Client
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import java.util.logging.Logger
@@ -36,6 +38,11 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
                     connectionStatus,
                     status
                 )
+                if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
+                    this.device?.applicationStatus = ApplicationStatus.IDLE
+                } else {
+                    Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
+                }
             },
             onDisconnectedCallback = { endpointId, status ->
                 this.onDisconnectedCallback(endpointId, status)

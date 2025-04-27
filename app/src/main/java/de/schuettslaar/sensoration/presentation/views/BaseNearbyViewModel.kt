@@ -24,6 +24,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var status by mutableStateOf(NearbyStatus.STOPPED)
     var text by mutableStateOf("")
     var connectedDevices by mutableStateOf(mapOf<String, String>())
+    var isLoading by mutableStateOf(false)
 
     fun callback(text: String, status: NearbyStatus) {
         this.text = text
@@ -65,6 +66,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     fun connect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
         device?.connect(endpointId)
+        this.isLoading = true
     }
 
     // TODO: Add data model for sensor data
@@ -113,6 +115,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
                 "Connection failed with status code: ${connectionStatus.status.statusCode}"
             }
         }
+        this.isLoading = false
         this.status = status
     }
 
