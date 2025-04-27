@@ -35,10 +35,9 @@ fun RemoveDeviceDialog(
                 ) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete Device",
+                        contentDescription = dialogTitle,
                         modifier = Modifier
                             .padding(start = 8.dp)
-                            .align(Alignment.CenterHorizontally),
                     )
                 }
             }

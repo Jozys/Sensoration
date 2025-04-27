@@ -7,9 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 
 @Composable
@@ -41,46 +45,42 @@ fun Discovering(onBack: () -> Unit) {
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(R.string.current_status, viewModel.status),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(8.dp)
-            )
-            Text(
-                modifier = Modifier.padding(8.dp),
-                text = stringResource(R.string.discovering_title)
-            )
-            LazyColumn {
-                items(viewModel.possibleConnections.entries.toList()) { (id, info) ->
-                    BuildDeviceEntry(id, info, {
-                        viewModel.connect(id)
-                    }, viewModel.connectedDevices.containsKey(id))
-                }
-            }
 
-            if (viewModel.connectedDevices.isEmpty()) Button(onClick = {
-                viewModel.stop()
-                onBack()
-            }) {
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(R.string.stop_discovering)
+            if (viewModel.isLoading) {
+                StatusInformation(
+                    statusText = viewModel.status.name,
                 )
-            }
-
-            if (viewModel.connectedDevices.isNotEmpty()) {
-                Button(onClick = {
-                    viewModel.sendMessage()
-                }) {
-                    Text(
-                        text = stringResource(R.string.debug_send_message)
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                )
+            } else {
+                if (viewModel.connectedDevices.isEmpty()) {
+                    DiscoveringState(
+                        connect = {
+                            viewModel.connect(it)
+                        },
+                        stop = {
+                            viewModel.stop()
+                            onBack()
+                        },
+                        possibleConnections = viewModel.possibleConnections,
+                        status = viewModel.status
                     )
                 }
-                Button(onClick = {
-                    viewModel.disconnect()
-                }) {
-                    Text(
-                        text = stringResource(R.string.disconnect_from_device)
+
+                if (viewModel.connectedDevices.isNotEmpty()) {
+                    ConnectedState(
+                        viewModel.connectedDevices.entries.first(),
+                        sendMessage = {
+                            viewModel.sendMessage()
+                        },
+                        disconnect = {
+                            viewModel.disconnect()
+                        },
+                        deviceStatus = viewModel.device?.applicationStatus
+                            ?: ApplicationStatus.ERROR
                     )
                 }
             }
@@ -93,18 +93,88 @@ fun BuildDeviceEntry(
     id: String,
     info: DiscoveredEndpointInfo,
     onClick: (id: String) -> Unit,
-    checked: Boolean
 ) {
     ListItem(modifier = Modifier.clickable {
         onClick(id)
     }, trailingContent = {
-        if (checked) {
-            Icon(Icons.Default.Check, "Connected")
-        } else {
-            Icon(Icons.Default.Info, "Not Connected")
-        }
+        Icon(Icons.Default.Info, "Not Connected")
     }, headlineContent = {
         Text("Device: ${info.endpointName} (ID: $id)")
     })
 
+}
+
+@Composable
+fun DiscoveringState(
+    connect: (String) -> Unit,
+    stop: () -> Unit,
+    possibleConnections: Map<String, DiscoveredEndpointInfo>,
+    status: NearbyStatus
+) {
+    StatusInformation(
+        statusText = status.name,
+    )
+    Text(
+        modifier = Modifier.padding(8.dp),
+        text = stringResource(R.string.discovering_title)
+    )
+
+    LazyColumn {
+        items(possibleConnections.entries.toList()) { (id, info) ->
+            BuildDeviceEntry(id, info, {
+                connect(id)
+            })
+        }
+    }
+
+}
+
+@Composable
+fun ConnectedState(
+    entry: Map.Entry<String, String>,
+    sendMessage: () -> Unit,
+    disconnect: () -> Unit,
+    deviceStatus: ApplicationStatus
+) {
+    StatusInformation(
+        statusText = deviceStatus.name,
+    )
+
+    ConnectedDevice(
+        entry.value
+    )
+
+    Button(onClick = {
+        sendMessage()
+    }) {
+        Text(
+            text = stringResource(R.string.debug_send_message)
+        )
+    }
+    Button(onClick = {
+        disconnect()
+    }) {
+        Text(
+            text = stringResource(R.string.disconnect_from_device)
+        )
+    }
+}
+
+@Composable
+fun ConnectedDevice(name: String) {
+    Column(modifier = Modifier.padding(8.dp)) {
+        Icon(
+            Icons.Filled.CheckCircle,
+            contentDescription = "Connected",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .align(Alignment.CenterHorizontally),
+        )
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(8.dp)
+        )
+    }
 }
