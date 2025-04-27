@@ -127,6 +127,14 @@ fun DiscoveringState(
         }
     }
 
+    Button(onClick = {
+        stop()
+    }) {
+        Text(
+            text = stringResource(R.string.stop_discovering)
+        )
+    }
+
 }
 
 @Composable
