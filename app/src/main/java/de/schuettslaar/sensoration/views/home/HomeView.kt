@@ -169,7 +169,7 @@ fun HomeAppBar() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 appInfo?.let {
                     Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.ic_launcher_monochrome),
                         contentDescription = stringResource(R.string.app_icon_desc),
                         modifier = Modifier.padding(end = 8.dp)
                     )
