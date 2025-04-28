@@ -9,12 +9,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.views.connected.ConnectedList
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
+import de.schuettslaar.sensoration.utils.getStringResourceByName
 
 @Composable
 fun Advertisement(onBack: () -> Unit) {
@@ -32,7 +34,10 @@ fun Advertisement(onBack: () -> Unit) {
                 .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             StatusInformation(
-                statusText = viewModel.status.name,
+                statusText = getStringResourceByName(
+                    context = LocalContext.current,
+                    resName = viewModel.status.name
+                ).uppercase(),
             )
             ConnectedList(connectedDevices = viewModel.connectedDevices, onConfirmRemove = {
                 viewModel.disconnect(it)
