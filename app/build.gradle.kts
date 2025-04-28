@@ -10,6 +10,12 @@ android {
     namespace = "de.schuettslaar.sensoration"
     compileSdk = 35
 
+    androidResources {
+        //noinspection MissingResourcesProperties
+        generateLocaleConfig = true
+    }
+
+
     defaultConfig {
         applicationId = "de.schuettslaar.sensoration"
         minSdk = 26

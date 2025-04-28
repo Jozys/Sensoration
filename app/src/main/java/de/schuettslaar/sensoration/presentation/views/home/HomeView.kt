@@ -50,7 +50,7 @@ fun HomeContent(
     Column(modifier = modifier.fillMaxSize()) {
         Text(
             text = stringResource(R.string.welcome),
-            style = androidx.compose.material3.MaterialTheme.typography.headlineLarge,
+            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
             modifier = Modifier
                 .padding(8.dp)
                 .align(Alignment.CenterHorizontally)
