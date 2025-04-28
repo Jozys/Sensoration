@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,6 +29,7 @@ import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
+import de.schuettslaar.sensoration.utils.getStringResourceByName
 
 @Composable
 fun Discovering(onBack: () -> Unit) {
@@ -112,7 +114,10 @@ fun DiscoveringState(
     status: NearbyStatus
 ) {
     StatusInformation(
-        statusText = status.name,
+        statusText = getStringResourceByName(
+            context = LocalContext.current,
+            resName = status.name
+        ).uppercase(),
     )
     Text(
         modifier = Modifier.padding(8.dp),
