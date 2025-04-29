@@ -26,6 +26,9 @@
     <string name="DISCOVERING">Discovering</string>
     <string name="ADVERTISING">Advertising</string>
     <string name="STOPPED">Stopped</string>
+    <string name="app_description">Sensoration allows you to connect multiple devices together to share and analyze Sensor Data between them.</string>
+    <string name="discovering_description">Discovery allows you to search for a potential parent device, that can receive and analyze the data send by your device.</string>
+    <string name="advertising_description">Advertising makes your device the parent one. Which allows other devices to connect to your device and send data to your device.</string>
 
 
 </resources>

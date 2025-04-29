@@ -24,4 +24,8 @@
     <string name="DISCOVERING">Suchend</string>
     <string name="ADVERTISING">Werbend</string>
     <string name="STOPPED">Gestoppt</string>
+
+    <string name="app_description">Sensoration ermöglicht es Ihnen, mehrere Geräte miteinander zu verbinden, um Sensordaten zwischen ihnen zu teilen und zu analysieren.</string>
+    <string name="discovering_description">Das Suchen ermöglicht es Ihnen, nach einem potenziellen Hauptgerät zu suchen, das die von Ihrem Gerät gesendeten Daten empfangen und analysieren kann.</string>
+    <string name="advertising_description">Advertising macht Ihr Gerät zum Hauptgerät. Dies ermöglicht anderen Geräten, sich mit Ihrem Gerät zu verbinden und Daten an Ihr Gerät zu senden.</string>
 </resources>

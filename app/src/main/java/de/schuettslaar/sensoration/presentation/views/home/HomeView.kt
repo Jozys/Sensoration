@@ -3,6 +3,7 @@ package de.schuettslaar.sensoration.presentation.views.home
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -22,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.presentation.core.Accordion
 
 @Composable()
 fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit) {
@@ -47,20 +51,68 @@ fun HomeContent(
     onDiscovery: () -> Unit,
     onAdvertising: () -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = stringResource(R.string.welcome),
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
                 .padding(8.dp)
                 .align(Alignment.CenterHorizontally)
         )
+        AppDescription()
         StartActions(
             onStartDiscovery = onDiscovery,
             modifier = Modifier,
             onStartAdvertising = onAdvertising
         )
     }
+}
+
+@Composable
+fun AppDescription() {
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .padding(16.dp),
+        shape = MaterialTheme.shapes.large,
+        shadowElevation = 4.dp,
+        color = MaterialTheme.colorScheme.secondary
+    ) {
+        Column() {
+            Text(
+                text = stringResource(R.string.app_description),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(8.dp),
+            )
+            Accordion(
+                title = stringResource(R.string.discovering_title),
+                {
+                    Text(
+                        text = stringResource(R.string.discovering_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(8.dp),
+                    )
+                },
+            )
+            Accordion(
+                title = stringResource(R.string.advertising_title),
+                {
+                    Text(
+                        text = stringResource(R.string.advertising_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(8.dp),
+                    )
+                },
+            )
+
+
+        }
+    }
+
 }
 
 @Composable
@@ -71,7 +123,7 @@ fun StartActions(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Button(onClick = {
             onStartDiscovery()
