@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import de.schuettslaar.sensoration.presentation.views.advertisment.AdvertisementRoute
 import de.schuettslaar.sensoration.presentation.views.discovering.DiscoveryRoute
+import de.schuettslaar.sensoration.presentation.views.settings.SettingsRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -18,6 +19,9 @@ fun NavGraphBuilder.addHomeNavGraph(navController: NavHostController) {
             },
             onDiscovering = {
                 navController.navigate(DiscoveryRoute)
+            },
+            onSettings = {
+                navController.navigate(SettingsRoute)
             },
         )
 

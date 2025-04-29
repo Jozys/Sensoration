@@ -4,13 +4,18 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -23,16 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.presentation.core.Accordion
 
 @Composable()
-fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit) {
+fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: () -> Unit) {
 
     Scaffold(
         topBar = {
-            HomeAppBar()
+            HomeAppBar(onSettings = onSettings)
         }
     ) { innerPadding ->
         HomeContent(
@@ -70,7 +76,6 @@ fun HomeContent(
 
 @Composable
 fun AppDescription() {
-
     Surface(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -143,7 +148,7 @@ fun StartActions(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeAppBar() {
+fun HomeAppBar(onSettings: () -> Unit = {}) {
     val context = LocalContext.current
     val appInfo = remember {
         try {
@@ -158,15 +163,37 @@ fun HomeAppBar() {
 
     TopAppBar(
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+
+            ) {
                 appInfo?.let {
                     Image(
                         painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                         contentDescription = stringResource(R.string.app_icon_desc),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
+
+                        )
                 }
-                Text(text = stringResource(R.string.title))
+                Text(
+                    text = stringResource(R.string.title), textAlign = TextAlign.Center
+                )
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    IconButton(onClick = {
+                        onSettings()
+                    }) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_desc),
+                            modifier = Modifier
+                                .padding(end = 12.dp),
+                        )
+                    }
+                }
             }
         }
 
