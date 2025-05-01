@@ -12,7 +12,7 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.Client
 import de.schuettslaar.sensoration.domain.Device
-import de.schuettslaar.sensoration.domain.GatherableDeviceDataTypes
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.util.logging.Logger
 
 abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(application) {
@@ -78,7 +78,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         } else {
             Log.e("BaseNearbyViewModel", "Starting sensor collection")
             client?.startSensorCollection(
-                sensorType = GatherableDeviceDataTypes.ACCELEROMETER
+                sensorType = SensorType.ACCELEROMETER
             )
             client?.startPeriodicSending(connectedId)
             isSending = true

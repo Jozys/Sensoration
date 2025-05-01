@@ -39,7 +39,7 @@ class AdvertiseNearbyWrapper : NearbyWrapper {
 
         connectionLifecycleCallback = createConnectionLifecycleCallback()
 
-        Nearby.getConnectionsClient(context).startAdvertising(
+        connectionsClient.startAdvertising(
             localEndpointName, serviceId, connectionLifecycleCallback!!, advertisingOptions
         ).addOnSuccessListener {
             logE("Advertising started")
@@ -54,8 +54,8 @@ class AdvertiseNearbyWrapper : NearbyWrapper {
 
     override fun stop(callback: (text: String, status: NearbyStatus) -> Unit) {
         if (status == NearbyStatus.ADVERTISING) {
-            Nearby.getConnectionsClient(context).stopAllEndpoints()
-            Nearby.getConnectionsClient(context).stopAdvertising()
+            connectionsClient.stopAllEndpoints()
+            connectionsClient.stopAdvertising()
             status = NearbyStatus.STOPPED
             callback("Advertising stopped", status)
         }
