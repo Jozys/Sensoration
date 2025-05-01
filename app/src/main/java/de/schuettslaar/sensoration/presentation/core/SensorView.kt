@@ -17,12 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import de.schuettslaar.sensoration.domain.sensor.Sensor
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 
 @Composable()
 fun SensorView(
-    selectedSensorType: Sensor?,
+    selectedSensorType: SensorType?,
     sensorTypes: List<SensorType>,
     disabled: Boolean,
     modifier: Modifier = Modifier,
@@ -51,7 +50,7 @@ fun SensorView(
         sensorTypes.forEach { sensorType ->
             DropdownMenuItem(onClick = {
                 isDropDownExpanded.value = false
-                if (selectedSensorType != null && selectedSensorType.equals(sensorType)) return@DropdownMenuItem
+                if (selectedSensorType != null && selectedSensorType == sensorType) return@DropdownMenuItem
                 onSensorTypeSelected(sensorType)
             }, text = {
                 SensorItem(sensorType = sensorType);

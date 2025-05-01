@@ -32,7 +32,6 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
-import de.schuettslaar.sensoration.domain.sensor.Sensor
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.SensorIcon
 import de.schuettslaar.sensoration.presentation.core.SensorView
@@ -90,7 +89,7 @@ fun Discovering(onBack: () -> Unit) {
                         disconnect = {
                             viewModel.disconnect()
                         },
-                        sensor = viewModel.device?.currentSensor,
+                        sensorType = SensorType.PRESSURE,
                         deviceStatus = viewModel.device?.applicationStatus
                             ?: ApplicationStatus.ERROR
                     )
@@ -157,7 +156,7 @@ fun ConnectedState(
     entry: Map.Entry<String, String>,
     sendMessage: () -> Unit,
     disconnect: () -> Unit,
-    sensor: Sensor?,
+    sensorType: SensorType?,
     deviceStatus: ApplicationStatus
 ) {
     Column(
@@ -178,7 +177,7 @@ fun ConnectedState(
         )
     }
 
-    CurrentSensor(sensor = sensor)
+    CurrentSensor(sensorType = sensorType)
     Button(onClick = {
         sendMessage()
     }) {
@@ -196,7 +195,7 @@ fun ConnectedState(
 }
 
 @Composable
-fun CurrentSensor(sensor: Sensor?) {
+fun CurrentSensor(sensorType: SensorType?) {
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
@@ -209,7 +208,7 @@ fun CurrentSensor(sensor: Sensor?) {
             modifier = Modifier.padding(8.dp)
         )
         SensorView(
-            selectedSensorType = sensor,
+            selectedSensorType = sensorType,
             sensorTypes = SensorType.entries,
             disabled = true,
             modifier = Modifier.padding(8.dp),
@@ -218,7 +217,7 @@ fun CurrentSensor(sensor: Sensor?) {
                     modifier = Modifier.clickable(enabled = false, onClick = { }),
                     leadingContent = {
                         SensorIcon(
-                            sensorType = sensor?.sensorType,
+                            sensorType = sensorType,
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .padding(4.dp)
@@ -227,7 +226,7 @@ fun CurrentSensor(sensor: Sensor?) {
                     headlineContent = {
                         Text(
                             text = stringResource(
-                                id = sensor?.sensorType?.displayNameId
+                                id = sensorType?.displayNameId
                                     ?: R.string.sensor_type_unknown
                             ),
                             style = MaterialTheme.typography.labelLarge
@@ -236,7 +235,7 @@ fun CurrentSensor(sensor: Sensor?) {
                     supportingContent = {
                         Text(
                             text = stringResource(
-                                id = sensor?.sensorType?.descriptionId
+                                id = sensorType?.descriptionId
                                     ?: R.string.sensor_type_unknown_description
                             ),
                             style = MaterialTheme.typography.labelMedium

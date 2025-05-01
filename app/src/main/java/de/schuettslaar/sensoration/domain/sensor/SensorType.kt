@@ -1,17 +1,18 @@
 package de.schuettslaar.sensoration.domain.sensor
 
 import android.hardware.Sensor
+import de.schuettslaar.sensoration.R
 
 enum class SensorType(val id: Int, val displayNameId: Int, val descriptionId: Int) {
     PRESSURE(
         Sensor.TYPE_PRESSURE,
-        de.schuettslaar.sensoration.R.string.sensor_pressure,
-        de.schuettslaar.sensoration.R.string.sensor_pressure_description
+        R.string.sensor_pressure,
+        R.string.sensor_pressure_description
     ),
     GRAVITY(
         Sensor.TYPE_GRAVITY,
-        de.schuettslaar.sensoration.R.string.sensor_gravity,
-        de.schuettslaar.sensoration.R.string.sensor_gravity_description
+        R.string.sensor_gravity,
+        R.string.sensor_gravity_description
     ), ;
 
     companion object {
