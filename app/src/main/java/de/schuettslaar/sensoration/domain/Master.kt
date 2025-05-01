@@ -50,7 +50,7 @@ class Master : Device {
             MessageType.SENSOR_DATA -> {
                 val sensorData = message as WrappedSensorData
                 Logger.getLogger(this.javaClass.simpleName)
-                    .info("Sensor data received from ${sensorData.deviceId}")
+                    .info("Sensor data received from ${sensorData.senderDeviceId}")
                 sensorDataMap.getOrDefault(
                     endpointId, CircularFifoQueue(
                         PROCESSED_VALUES_CAPACITY

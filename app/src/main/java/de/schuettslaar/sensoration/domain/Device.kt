@@ -3,19 +3,17 @@ package de.schuettslaar.sensoration.domain
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
 import de.schuettslaar.sensoration.application.data.Message
-import de.schuettslaar.sensoration.application.data.MessageType
-import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
-    internal var deviceId: String? = null
+    internal var connectedDeviceId: String? = null
+    internal var ownDeviceId: String? = null
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -25,14 +23,14 @@ abstract class Device {
         wrapper?.stop(callback)
     }
 
-    fun connect(deviceId: String) {
-        wrapper?.connect(deviceId)
-        this.deviceId = deviceId
+    fun connect(deviceIdToConnect: String) {
+        wrapper?.connect(deviceIdToConnect)
+        this.connectedDeviceId = deviceIdToConnect
     }
 
-    open fun disconnect(deviceId: String) {
-        wrapper?.disconnect(deviceId)
-        this.deviceId = null
+    open fun disconnect(connectedDeviceId: String) {
+        wrapper?.disconnect(connectedDeviceId)
+        this.connectedDeviceId = null
     }
 
     fun sendData(toEndpointId: String, stream: DataInputStream) {

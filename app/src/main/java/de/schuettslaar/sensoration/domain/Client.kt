@@ -8,6 +8,7 @@ import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.adapter.nearby.DiscoverNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
@@ -127,7 +128,7 @@ class Client : Device {
         try {
             val wrappedSensorData = WrappedSensorData(
                 messageTimeStamp = System.currentTimeMillis().toLong(),
-                deviceId.toString(),
+                ownDeviceId.toString(),
                 applicationStatus,
                 sensorData
             )
@@ -164,10 +165,18 @@ class Client : Device {
         }
 
         when(message.messageType){
+            MessageType.HANDSHAKE -> handleHandshakeMessage(message)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
+    }
+
+    private fun handleHandshakeMessage(message: Message) {
+        val handshakeMessage = message as HandshakeMessage
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Handshake message received from ${handshakeMessage.senderDeviceId}")
+        ownDeviceId = handshakeMessage.clientId
     }
 }
 
