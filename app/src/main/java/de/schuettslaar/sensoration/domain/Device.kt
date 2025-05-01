@@ -9,6 +9,7 @@ abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
+    internal var deviceId: String? = null
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -20,10 +21,12 @@ abstract class Device {
 
     fun connect(deviceId: String) {
         wrapper?.connect(deviceId)
+        this.deviceId = deviceId
     }
 
     fun disconnect(deviceId: String) {
         wrapper?.disconnect(deviceId)
+        this.deviceId = null
     }
 
     fun sendData(toEndpointId: String, stream: DataInputStream) {
