@@ -58,9 +58,7 @@ class DiscoverNearbyWrapper : NearbyWrapper {
         payloadCallback = createPayloadCallback(onPayloadReceivedCallback)
         endpointDiscoveryCallback = createEndpointLifecycleCallback()
 
-        Nearby.getConnectionsClient(
-            context
-        ).startDiscovery(
+        connectionsClient.startDiscovery(
             serviceId, endpointDiscoveryCallback!!, discoveryOptions
         )
             .addOnSuccessListener {

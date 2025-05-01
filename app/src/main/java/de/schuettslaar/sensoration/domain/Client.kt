@@ -15,6 +15,7 @@ import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -61,7 +62,7 @@ class Client : Device {
         sensorManager = SensorManager(context)
     }
 
-    fun startSensorCollection(sensorType: GatherableDeviceDataTypes) {
+    fun startSensorCollection(sensorType: SensorType) {
         if (applicationStatus != ApplicationStatus.IDLE) {
             Log.d(this.javaClass.simpleName, "Device is not idle, Skipping sensor collection")
             return
@@ -73,15 +74,7 @@ class Client : Device {
             return
         }
 
-        when (sensorType) {
-            GatherableDeviceDataTypes.ACCELEROMETER -> sensorManager.registerSensor(Sensor.TYPE_ACCELEROMETER, RawClientDataProcessing())
-            else -> {
-                Log.d(this.javaClass.simpleName, "Sensor type not supported: $sensorType")
-                applicationStatus = ApplicationStatus.IDLE
-                return
-            }
-        }
-
+        sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
         sensorManager.startListening()
         applicationStatus = ApplicationStatus.ACTIVE
     }
@@ -140,7 +133,7 @@ class Client : Device {
     }
 
 
-    private fun checkDeviceSupportsSensorType(sensorType: GatherableDeviceDataTypes): Boolean {
+    private fun checkDeviceSupportsSensorType(sensorType: SensorType): Boolean {
         return true; // TODO implement checks
     }
 
@@ -170,16 +163,4 @@ class Client : Device {
             .info("Handshake message received from ${handshakeMessage.senderDeviceId}")
         ownDeviceId = handshakeMessage.clientId
     }
-}
-
-enum class GatherableDeviceDataTypes() {
-    RANDOM_DATA(),
-    ACCELEROMETER(),
-    GYROSCOPE(),
-    MAGNETIC_FIELD(),
-    LIGHT(),
-    PROXIMITY(),
-    TEMPERATURE(),
-    HUMIDITY(),
-    PRESSURE()
 }

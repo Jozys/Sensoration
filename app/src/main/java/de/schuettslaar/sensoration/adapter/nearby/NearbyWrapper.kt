@@ -7,6 +7,7 @@ import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
+import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
@@ -27,11 +28,14 @@ abstract class NearbyWrapper {
 
     internal lateinit var onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
 
+    internal val connectionsClient: ConnectionsClient
     constructor(
         context: Context,
     ) {
         this.context = context
         serviceId = context.packageName
+        connectionsClient = Nearby.getConnectionsClient(context)
+
 
     }
 
@@ -42,7 +46,7 @@ abstract class NearbyWrapper {
 
     fun sendData(toEndpointId: String, stream: DataInputStream) {
         val payload: Payload = Payload.fromStream(stream)
-        Nearby.getConnectionsClient(context).sendPayload(toEndpointId, payload)
+        connectionsClient.sendPayload(toEndpointId, payload)
     }
 
 
@@ -54,7 +58,7 @@ abstract class NearbyWrapper {
         var deviceName =
             android.provider.Settings.Global.getString(context.contentResolver, "device_name")
         connectionLifecycleCallback = createConnectionLifecycleCallback()
-        Nearby.getConnectionsClient(context).requestConnection(
+        connectionsClient.requestConnection(
             deviceName,
             endpointId,
             connectionLifecycleCallback!!
@@ -63,13 +67,13 @@ abstract class NearbyWrapper {
 
     fun disconnect(endpointId: String) {
         logE("Disconnecting from $endpointId")
-        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpointId)
+        connectionsClient.disconnectFromEndpoint(endpointId)
     }
 
     internal fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, result: ConnectionInfo) {
             onConnectionInitiatedCallback(endpointId, result)
-            Nearby.getConnectionsClient(context).acceptConnection(endpointId, payloadCallback)
+            connectionsClient.acceptConnection(endpointId, payloadCallback)
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
