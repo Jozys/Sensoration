@@ -23,6 +23,7 @@ class Master : Device {
         onDisconnectedCallback: (String, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit
     ) : super() {
+        this.ownDeviceId = "MASTER"
         this.isMaster = true
         this.wrapper = AdvertiseNearbyWrapper(
             context = context,

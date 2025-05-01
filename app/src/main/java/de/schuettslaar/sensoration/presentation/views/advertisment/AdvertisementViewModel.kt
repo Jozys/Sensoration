@@ -1,8 +1,15 @@
 package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import android.app.Application
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
+import de.schuettslaar.sensoration.application.data.HandshakeMessage
+import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
+import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(application) {
@@ -14,11 +21,39 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
             onConnectionInitiatedCallback = { endpointId, connectionInfo ->
                 this.onConnectionInitiatedCallback(endpointId, connectionInfo)
             },
-            onConnectionResultCallback = { endpointId, connectionResolution, status ->
-                this.onConnectionResultCallback(endpointId, connectionResolution, status)
+            onConnectionResultCallback = { endpointId, connectionStatus, status ->
+                this.onConnectionResultCallback(
+                    endpointId,
+                    connectionStatus, status
+                )
+                if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
+                    // We need to send the id of the device to the client
+                    var handshakeMessage = HandshakeMessage(
+                        messageTimeStamp = System.currentTimeMillis().toLong(),
+                        senderDeviceId = this.device?.ownDeviceId.toString(),
+                        state = ApplicationStatus.IDLE,
+                        clientId = endpointId,
+                    )
+
+                    // TODO: Refactor this to use separate parse function
+                    ByteArrayOutputStream().use { bos ->
+                        ObjectOutputStream(bos).use { oos ->
+                            oos.writeObject(handshakeMessage)
+                        }
+                        val bytes = bos.toByteArray()
+                        this.device?.sendData(
+                            endpointId,
+                            DataInputStream(ByteArrayInputStream(bytes))
+                        )
+
+                    }
+                } else {
+                    Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
+                }
             },
             onDisconnectedCallback = { endpointId, status ->
                 this.onDisconnectedCallback(endpointId, status)
+
             }
         )
         this.device?.start { text, status ->
