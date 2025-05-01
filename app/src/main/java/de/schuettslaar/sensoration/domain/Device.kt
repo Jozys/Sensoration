@@ -2,13 +2,20 @@ package de.schuettslaar.sensoration.domain
 
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
+import de.schuettslaar.sensoration.application.data.Message
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
+    internal var connectedDeviceId: String? = null
+    internal var ownDeviceId: String? = null
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -18,23 +25,57 @@ abstract class Device {
         wrapper?.stop(callback)
     }
 
-    fun connect(deviceId: String) {
-        wrapper?.connect(deviceId)
+    fun connect(deviceIdToConnect: String) {
+        wrapper?.connect(deviceIdToConnect)
+        this.connectedDeviceId = deviceIdToConnect
     }
 
-    fun disconnect(deviceId: String) {
-        wrapper?.disconnect(deviceId)
+    open fun disconnect(connectedDeviceId: String) {
+        wrapper?.disconnect(connectedDeviceId)
+        this.connectedDeviceId = null
     }
 
-    fun sendData(toEndpointId: String, stream: DataInputStream) {
+    private fun sendData(toEndpointId: String, stream: DataInputStream) {
         wrapper?.sendData(toEndpointId, stream)
     }
 
-    fun messageReceived(
+    abstract fun messageReceived(
         endpointId: String,
         payload: ByteArray
+    )
+
+    fun sendMessage(
+        endpointId: String,
+        message: Message
     ) {
+        Logger.getLogger(this.javaClass.simpleName).info("Sending message to $endpointId")
+        // Serialize and send
+        ByteArrayOutputStream().use { bos ->
+            ObjectOutputStream(bos).use { oos ->
+                oos.writeObject(message)
+            }
+            val bytes = bos.toByteArray()
+            sendData(endpointId, DataInputStream(ByteArrayInputStream(bytes)))
+        }
+    }
+
+
+    fun parseMessage(
+        endpointId: String,
+        payload: ByteArray
+    ): Message? {
         Logger.getLogger(this.javaClass.simpleName).warning("Message received from $endpointId")
+        var message: Message?
+        try {
+            val inputStream = ByteArrayInputStream(payload)
+            val objectInputStream = ObjectInputStream(inputStream)
+            message = objectInputStream.readObject() as Message
+            objectInputStream.close()
+        } catch (e: Exception) {
+            Logger.getLogger(this.javaClass.simpleName).warning("Error while reading message: ${e.message}")
+            message = null
+        }
+        return message
     }
 
 

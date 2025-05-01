@@ -1,0 +1,48 @@
+package de.schuettslaar.sensoration.application.data
+
+import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
+import java.io.Serializable
+
+interface Message: Serializable {
+    val messageTimeStamp: Long
+    val senderDeviceId: String
+    val messageType: MessageType
+    val state: ApplicationStatus
+}
+
+/**
+ * MessageType enum class to define the type of message
+ * that is being sent
+ */
+enum class MessageType {
+    SENSOR_DATA,
+    SYNCHRONIZE,
+    HANDSHAKE,
+}
+
+/**
+ * Message designed to be sent from the client to the master
+ * containing the sensor data
+ */
+data class WrappedSensorData(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: String, // ClientId
+    override val state: ApplicationStatus,
+    val sensorData: ProcessedSensorData
+): Message {
+    override val messageType = MessageType.SENSOR_DATA
+}
+
+/**
+ * Message designed to be sent from the master to the client
+ * if the client is freshly connected
+ */
+data class HandshakeMessage(
+    override val messageTimeStamp: Long, // Master
+    override val senderDeviceId: String, // MasterId
+    override val state: ApplicationStatus,
+    val clientId: String // Generated ID for the client
+): Message {
+    override val messageType = MessageType.HANDSHAKE
+}
