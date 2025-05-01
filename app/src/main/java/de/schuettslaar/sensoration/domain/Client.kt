@@ -1,7 +1,6 @@
 package de.schuettslaar.sensoration.domain
 
 import android.content.Context
-import android.hardware.Sensor
 import android.util.Log
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -11,7 +10,7 @@ import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
-import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
+import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
@@ -22,10 +21,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.DataInputStream
-import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 class Client : Device {
@@ -79,7 +74,7 @@ class Client : Device {
         applicationStatus = ApplicationStatus.ACTIVE
     }
 
-    fun stopSensorCollection(){
+    fun stopSensorCollection() {
         if (applicationStatus != ApplicationStatus.ACTIVE) {
             Log.d(this.javaClass.simpleName, "Could not stop Device because Device was not active")
             return
@@ -106,15 +101,19 @@ class Client : Device {
             }
         }
     }
+
     fun stopPeriodicSending() {
         sensorJob?.cancel()
         sensorJob = null
     }
 
 
-    private fun sendSensorData(masterId: String, sensorData: ProcessedSensorData){
+    private fun sendSensorData(masterId: String, sensorData: ProcessedSensorData) {
         if (applicationStatus != ApplicationStatus.ACTIVE) {
-            Log.d(this.javaClass.simpleName, "Could not send SensorData because Device was not active")
+            Log.d(
+                this.javaClass.simpleName,
+                "Could not send SensorData because Device was not active"
+            )
             return
         }
 
@@ -134,7 +133,7 @@ class Client : Device {
 
 
     private fun checkDeviceSupportsSensorType(sensorType: SensorType): Boolean {
-        return true; // TODO implement checks
+        return true // TODO implement checks
     }
 
     override fun disconnect(endpointId: String) {
@@ -149,12 +148,28 @@ class Client : Device {
             return
         }
 
-        when(message.messageType){
+        when (message.messageType) {
             MessageType.HANDSHAKE -> handleHandshakeMessage(message)
+            MessageType.START_MEASUREMENT -> handleMeasurementMessage(message)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
+    }
+
+    private fun handleMeasurementMessage(message: Message) {
+        if (message.senderDeviceId != MASTER_NAME || connectedDeviceId == null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Received measurement message from unknown device: ${message.senderDeviceId}")
+            return
+        }
+
+        val startMeasurementMessage = message as StartMeasurementMessage
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Start measurement message received from ${startMeasurementMessage.senderDeviceId}")
+        val sensorType = startMeasurementMessage.sensorType
+        startSensorCollection(sensorType)
+        startPeriodicSending(connectedDeviceId!!)
     }
 
     private fun handleHandshakeMessage(message: Message) {

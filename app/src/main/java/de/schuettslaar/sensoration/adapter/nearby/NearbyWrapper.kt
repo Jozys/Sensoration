@@ -12,7 +12,6 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
-import java.io.DataInputStream
 
 abstract class NearbyWrapper {
     internal var context: Context
@@ -29,6 +28,7 @@ abstract class NearbyWrapper {
     internal lateinit var onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
 
     internal val connectionsClient: ConnectionsClient
+
     constructor(
         context: Context,
     ) {
@@ -44,8 +44,8 @@ abstract class NearbyWrapper {
         Log.e(this.javaClass.simpleName, milf)
     }
 
-    fun sendData(toEndpointId: String, stream: DataInputStream) {
-        val payload: Payload = Payload.fromStream(stream)
+    fun sendData(toEndpointId: String, bytes: ByteArray) {
+        val payload: Payload = Payload.fromBytes(bytes)
         connectionsClient.sendPayload(toEndpointId, payload)
     }
 
@@ -109,10 +109,11 @@ abstract class NearbyWrapper {
 
 internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit): PayloadCallback =
     object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {val sound = MediaActionSound()
+        override fun onPayloadReceived(endpointId: String, payload: Payload) {
+            val sound = MediaActionSound()
             sound.play(MediaActionSound.START_VIDEO_RECORDING)
+            Log.d(this.javaClass.simpleName, "Got message from $endpointId > ${payload.asBytes()}")
             onPayloadReceivedCallback(endpointId, payload)
-            Log.d(this.javaClass.simpleName, "Got message from" + endpointId + payload.asStream())
         }
 
         override fun onPayloadTransferUpdate(

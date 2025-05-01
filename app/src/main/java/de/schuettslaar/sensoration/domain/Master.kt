@@ -5,16 +5,16 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
-
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
-import org.apache.commons.collections4.queue.CircularFifoQueue
 import de.schuettslaar.sensoration.domain.sensor.SensorType
-
+import org.apache.commons.collections4.queue.CircularFifoQueue
 import java.util.logging.Logger
 
 private const val PROCESSED_VALUES_CAPACITY = 10
+
+const val MASTER_NAME = "MASTER"
 
 class Master : Device {
     private val sensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
@@ -28,7 +28,7 @@ class Master : Device {
         onDisconnectedCallback: (String, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit
     ) : super() {
-        this.ownDeviceId = "MASTER"
+        this.ownDeviceId = MASTER_NAME
         this.isMaster = true
         this.wrapper = AdvertiseNearbyWrapper(
             context = context,
@@ -42,7 +42,7 @@ class Master : Device {
                     Logger.getLogger(this.javaClass.simpleName).info("Payload is null")
                 }
 
-            });
+            })
     }
 
     override fun messageReceived(endpointId: String, payload: ByteArray) {
@@ -56,7 +56,7 @@ class Master : Device {
             MessageType.SENSOR_DATA -> {
                 val sensorData = message as WrappedSensorData
                 Logger.getLogger(this.javaClass.simpleName)
-                    .info("Sensor data received from ${sensorData.senderDeviceId}")
+                    .info("Sensor data received from ${sensorData.senderDeviceId} > ${sensorData.sensorData}")
                 sensorDataMap.getOrDefault(
                     endpointId, CircularFifoQueue(
                         PROCESSED_VALUES_CAPACITY
@@ -68,6 +68,14 @@ class Master : Device {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
+    }
+
+    fun broadcastMessage(message: Message) {
+        connectedDevices.forEach { deviceId ->
+            sendMessage(deviceId, message)
+        }
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Broadcasted message $message to ${connectedDevices.size} devices: $connectedDevices")
     }
 
     fun setSensor(sensor: SensorType) {

@@ -90,7 +90,7 @@ fun Discovering(onBack: () -> Unit) {
                             viewModel.disconnect()
                         },
                         sensorType = SensorType.PRESSURE,
-                        deviceStatus = viewModel.device?.applicationStatus
+                        deviceStatus = viewModel.thisDevice?.applicationStatus
                             ?: ApplicationStatus.ERROR
                     )
                 }

@@ -18,7 +18,7 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
     )
 
     init {
-        this.device = Client(
+        this.thisDevice = Client(
             context = application,
             onEndpointAddCallback = { it ->
                 this.onEndpointAddCallback(it.first, it.second)
@@ -39,7 +39,7 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
                     status
                 )
                 if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
-                    this.device?.applicationStatus = ApplicationStatus.IDLE
+                    this.thisDevice?.applicationStatus = ApplicationStatus.IDLE
                 } else {
                     Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
                 }
@@ -48,7 +48,7 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
                 this.onDisconnectedCallback(endpointId, status)
             }
         )
-        this.device?.start { text, status ->
+        this.thisDevice?.start { text, status ->
             this.callback(text, status)
         }
     }
@@ -63,8 +63,8 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
     }
 
     fun disconnect() {
-        device?.disconnect(connectedDevices.keys.first())
-        device?.stop { text, status ->
+        thisDevice?.disconnect(connectedDevices.keys.first())
+        thisDevice?.stop { text, status ->
             this.callback(text, status)
         }
         connectedDevices = mapOf()

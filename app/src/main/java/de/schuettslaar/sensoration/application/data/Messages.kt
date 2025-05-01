@@ -2,9 +2,10 @@ package de.schuettslaar.sensoration.application.data
 
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.io.Serializable
 
-interface Message: Serializable {
+interface Message : Serializable {
     val messageTimeStamp: Long
     val senderDeviceId: String
     val messageType: MessageType
@@ -19,6 +20,7 @@ enum class MessageType {
     SENSOR_DATA,
     SYNCHRONIZE,
     HANDSHAKE,
+    START_MEASUREMENT,
 }
 
 /**
@@ -30,7 +32,7 @@ data class WrappedSensorData(
     override val senderDeviceId: String, // ClientId
     override val state: ApplicationStatus,
     val sensorData: ProcessedSensorData
-): Message {
+) : Message {
     override val messageType = MessageType.SENSOR_DATA
 }
 
@@ -43,6 +45,15 @@ data class HandshakeMessage(
     override val senderDeviceId: String, // MasterId
     override val state: ApplicationStatus,
     val clientId: String // Generated ID for the client
-): Message {
+) : Message {
     override val messageType = MessageType.HANDSHAKE
+}
+
+data class StartMeasurementMessage(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: String,
+    override val state: ApplicationStatus,
+    val sensorType: SensorType
+) : Message {
+    override val messageType = MessageType.START_MEASUREMENT
 }

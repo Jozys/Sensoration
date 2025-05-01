@@ -49,6 +49,10 @@ fun Advertisement(onBack: () -> Unit) {
             }) {
                 Text(stringResource(R.string.stop_advertising))
             }
+
+            Button(onClick = { viewModel.startDebugMeasurement() }) {
+                Text(stringResource(R.string.start_debug_measurement))
+            }
         }
     }
 }
