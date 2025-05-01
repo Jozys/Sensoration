@@ -28,4 +28,27 @@
     <string name="app_description">Sensoration ermöglicht es Ihnen, mehrere Geräte miteinander zu verbinden, um Sensordaten zwischen ihnen zu teilen und zu analysieren.</string>
     <string name="discovering_description">Das Suchen ermöglicht es Ihnen, nach einem potenziellen Hauptgerät zu suchen, das die von Ihrem Gerät gesendeten Daten empfangen und analysieren kann.</string>
     <string name="advertising_description">Advertising macht Ihr Gerät zum Hauptgerät. Dies ermöglicht anderen Geräten, sich mit Ihrem Gerät zu verbinden und Daten an Ihr Gerät zu senden.</string>
+
+    <string name="settings_desc">Einstellungen</string>
+    <string name="settings_dark_theme_system">System-Design</string>
+    <string name="settings_dark_theme_light">Helles Design</string>
+    <string name="settings_dark_theme_dark">Dunkles Design</string>
+    <string name="settings_about">Über</string>
+    <string name="settings_about_app">Über die App</string>
+    <string name="settings_about_app_desc">Informationen über Sensoration</string>
+    <string name="settings_about_app_dialog_header">Über die App</string>
+    <string name="settings_about_app_dialog_text">Sensoration ist eine Anwendung, die es ermöglicht, verteilte Sensordaten von verschiedenen Geräten zusammenzufassen und die Unterschiede zwischen Sensordaten anzuzeigen</string>
+    <string name="settings_about_devs">Über die Entwickler</string>
+    <string name="settings_about_dev_desc">Informationen über die Entwickler</string>
+    <string name="settings_about_devs_dialog_header">Über die Entwickler</string>
+    <string name="settings_about_devs_dialog_text">Sensoration wurde von Tom Schütt und Joshua Slaar entwickelt.\nEs war Teil ihrer Arbeit im Modul \"Verteilte Systeme\" an der Dualen Hochschule Baden-Württemberg (DHBW) Karlsruhe.</string>
+    <string name="settings_app_version">Version</string>
+    <string name="connected_to_device">"Sie sind derzeit verbunden mit: "</string>
+    <string name="sensor_pressure">Luftdruck</string>
+    <string name="sensor_gravity">Schwerkraft</string>
+    <string name="sensor_type_unknown">Unbekannter Sensor</string>
+    <string name="current_sensor">Aktueller Sensor</string>
+    <string name="sensor_gravity_description">Dieser Sensor wird verwendet, um die relative Ausrichtung des Geräts im Raum zu bestimmen</string>
+    <string name="sensor_pressure_description">Dieser Sensor liefert den von Ihrem Gerät gemessenen Umgebungsluftdruck.</string>
+    <string name="sensor_type_unknown_description">Derzeit ist kein Sensor ausgewählt. Wenn das Master-Gerät einen Sensor auswählt, wird sich dies ändern.</string>
 </resources>
