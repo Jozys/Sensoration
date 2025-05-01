@@ -151,10 +151,16 @@ class Client : Device {
         when (message.messageType) {
             MessageType.HANDSHAKE -> handleHandshakeMessage(message)
             MessageType.START_MEASUREMENT -> handleMeasurementMessage(message)
+            MessageType.STOP_MEASUREMENT -> stopMeasurement(message)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
+    }
+
+    private fun stopMeasurement(message: Message) {
+        stopPeriodicSending()
+        stopSensorCollection()
     }
 
     private fun handleMeasurementMessage(message: Message) {

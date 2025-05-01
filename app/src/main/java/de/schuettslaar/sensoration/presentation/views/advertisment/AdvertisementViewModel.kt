@@ -3,7 +3,6 @@ package de.schuettslaar.sensoration.presentation.views.advertisment
 import android.app.Application
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
-import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -64,21 +63,20 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
 
     fun startDebugMeasurement() {
-        Logger.getLogger(this.javaClass.simpleName).info { "Starting debug measurement" }
         //TODO: rem debug implementation
-        var startMeasurementMessage = StartMeasurementMessage(
-            messageTimeStamp = System.currentTimeMillis().toLong(),
-            senderDeviceId = this.thisDevice?.ownDeviceId.toString(),
-            state = ApplicationStatus.DESTINATION,
-            sensorType = SensorType.ACCELEROMETER
-        )
+        Logger.getLogger(this.javaClass.simpleName).info { "Starting debug measurement" }
 
         val master = this.thisDevice as? Master
         if (master == null) {
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
             return
         }
-        master.broadcastMessage(startMeasurementMessage)
+        master.startMeasurement(SensorType.ACCELEROMETER)
+    }
+
+    fun stopDebugMeasurement() {
+        val master = this.thisDevice as? Master
+        master?.stopMeasurement()
     }
 
 }

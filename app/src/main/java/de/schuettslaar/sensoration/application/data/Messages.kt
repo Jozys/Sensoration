@@ -21,6 +21,7 @@ enum class MessageType {
     SYNCHRONIZE,
     HANDSHAKE,
     START_MEASUREMENT,
+    STOP_MEASUREMENT,
 }
 
 /**
@@ -56,4 +57,12 @@ data class StartMeasurementMessage(
     val sensorType: SensorType
 ) : Message {
     override val messageType = MessageType.START_MEASUREMENT
+}
+
+data class StopMeasurementMessage(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: String,
+    override val state: ApplicationStatus,
+) : Message {
+    override val messageType = MessageType.STOP_MEASUREMENT
 }

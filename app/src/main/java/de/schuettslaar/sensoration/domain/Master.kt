@@ -7,6 +7,8 @@ import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
+import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
+import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import org.apache.commons.collections4.queue.CircularFifoQueue
@@ -76,6 +78,25 @@ class Master : Device {
         }
         Logger.getLogger(this.javaClass.simpleName)
             .info("Broadcasted message $message to ${connectedDevices.size} devices: $connectedDevices")
+    }
+
+    fun startMeasurement(sensorType: SensorType) {
+        var startMeasurementMessage = StartMeasurementMessage(
+            messageTimeStamp = System.currentTimeMillis().toLong(),
+            senderDeviceId = ownDeviceId.toString(),
+            state = ApplicationStatus.DESTINATION,
+            sensorType = sensorType
+        )
+        broadcastMessage(startMeasurementMessage)
+    }
+
+    fun stopMeasurement() {
+        val stopMeasurementMessage = StopMeasurementMessage(
+            messageTimeStamp = System.currentTimeMillis().toLong(),
+            senderDeviceId = ownDeviceId.toString(),
+            state = ApplicationStatus.DESTINATION,
+        )
+        broadcastMessage(stopMeasurementMessage)
     }
 
     fun setSensor(sensor: SensorType) {
