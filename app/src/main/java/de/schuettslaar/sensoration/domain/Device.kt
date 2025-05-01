@@ -37,4 +37,5 @@ abstract class Device {
         Logger.getLogger(this.javaClass.simpleName).warning("Message received from $endpointId")
     }
 
+
 }

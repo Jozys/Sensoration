@@ -5,9 +5,12 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.util.logging.Logger
 
 class Master : Device {
+
+    private var sensorType: SensorType? = null
 
     constructor(
         context: Context,
@@ -30,5 +33,10 @@ class Master : Device {
 
             }
         );
+    }
+
+    fun setSensor(sensor: SensorType) {
+        this.sensorType = sensor
+        // TODO: This needs to send the updated sensor to all connected devices
     }
 }

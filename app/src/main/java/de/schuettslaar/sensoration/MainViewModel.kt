@@ -7,17 +7,27 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
+import de.schuettslaar.sensoration.application.data.datastore.DataStoreServiceProvider
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @SuppressLint("MutableCollectionMutableState")
 class MainViewModel(private val application: Application) : AndroidViewModel(application) {
+
+    fun initialize() {
+        DataStoreServiceProvider.initialize(application)
+    }
 
     fun requestPermissions(callback: (permissions: Array<String>) -> Unit) {
         var requiredPermissions: Array<String>
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requiredPermissions = arrayOf(
-                Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_ADVERTISE,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.ACCESS_WIFI_STATE,

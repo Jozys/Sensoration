@@ -1,3 +1,8 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,22 +11,41 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val localProperties = readProperties(file("$rootDir/local.properties"))
+
+fun readProperties(propertiesFile: File) = Properties().apply {
+    if (propertiesFile.exists()) {
+        propertiesFile.inputStream().use { fis ->
+            load(fis)
+        }
+    }
+}
+
+fun generateVersion(
+    hotfix: Int = localProperties.getProperty("hotfix.id")?.toInt() ?: 0
+): String {
+    val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+    val date = Date()
+    return "${dateFormat.format(date)}.$hotfix"
+}
+
 android {
     namespace = "de.schuettslaar.sensoration"
     compileSdk = 35
+
+    val version = System.getenv("VERSION_CODE") ?: generateVersion()
 
     androidResources {
         //noinspection MissingResourcesProperties
         generateLocaleConfig = true
     }
 
-
     defaultConfig {
         applicationId = "de.schuettslaar.sensoration"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = version.replace(".", "").toInt()
+        versionName = version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,6 +72,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -72,4 +97,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.compose.prefs3)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.material.icons.extended)
 }
