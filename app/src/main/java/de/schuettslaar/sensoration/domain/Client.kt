@@ -132,16 +132,8 @@ class Client : Device {
                 applicationStatus,
                 sensorData
             )
+            sendMessage(masterId, wrappedSensorData)
 
-            // Serialize and send
-            ByteArrayOutputStream().use { bos ->
-                ObjectOutputStream(bos).use { oos ->
-                    oos.writeObject(wrappedSensorData)
-                }
-                val bytes = bos.toByteArray()
-                sendData(masterId, DataInputStream(ByteArrayInputStream(bytes)))
-
-            }
         } catch (e: Exception) {
             Log.d(this.javaClass.simpleName, "Failed to send sensor data: ${e.toString()}")
         }

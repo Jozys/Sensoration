@@ -6,10 +6,6 @@ import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.DataInputStream
-import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(application) {
@@ -34,19 +30,13 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                         state = ApplicationStatus.IDLE,
                         clientId = endpointId,
                     )
-
-                    // TODO: Refactor this to use separate parse function
-                    ByteArrayOutputStream().use { bos ->
-                        ObjectOutputStream(bos).use { oos ->
-                            oos.writeObject(handshakeMessage)
-                        }
-                        val bytes = bos.toByteArray()
-                        this.device?.sendData(
-                            endpointId,
-                            DataInputStream(ByteArrayInputStream(bytes))
-                        )
-
+                    try {
+                        this.device?.sendMessage(endpointId, handshakeMessage)
+                    } catch (_: Exception) {
+                        Logger.getLogger(this.javaClass.simpleName)
+                            .info { "Failed to send handshake message" }
                     }
+
                 } else {
                     Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
                 }

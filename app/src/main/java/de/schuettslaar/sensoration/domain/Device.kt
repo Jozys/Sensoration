@@ -4,8 +4,10 @@ import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
 import de.schuettslaar.sensoration.application.data.Message
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.util.logging.Logger
 
 abstract class Device {
@@ -33,7 +35,7 @@ abstract class Device {
         this.connectedDeviceId = null
     }
 
-    fun sendData(toEndpointId: String, stream: DataInputStream) {
+    private fun sendData(toEndpointId: String, stream: DataInputStream) {
         wrapper?.sendData(toEndpointId, stream)
     }
 
@@ -41,6 +43,22 @@ abstract class Device {
         endpointId: String,
         payload: ByteArray
     )
+
+    fun sendMessage(
+        endpointId: String,
+        message: Message
+    ) {
+        Logger.getLogger(this.javaClass.simpleName).info("Sending message to $endpointId")
+        // Serialize and send
+        ByteArrayOutputStream().use { bos ->
+            ObjectOutputStream(bos).use { oos ->
+                oos.writeObject(message)
+            }
+            val bytes = bos.toByteArray()
+            sendData(endpointId, DataInputStream(ByteArrayInputStream(bytes)))
+        }
+    }
+
 
     fun parseMessage(
         endpointId: String,
