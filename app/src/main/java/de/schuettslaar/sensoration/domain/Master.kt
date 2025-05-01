@@ -5,6 +5,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.sensor.Sensor
 import java.util.logging.Logger
 
 class Master : Device {
@@ -30,5 +31,10 @@ class Master : Device {
 
             }
         );
+    }
+
+    override fun setSensor(sensor: Sensor) {
+        super.setSensor(sensor)
+        // TODO: This needs to send the updated sensor to all connected devices
     }
 }
