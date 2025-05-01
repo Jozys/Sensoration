@@ -47,6 +47,23 @@ class Master : Device {
             })
     }
 
+    override fun cleanUp() {
+        if (connectedDeviceId == null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Disconnect called but no device is connected")
+            return
+        }
+
+        stopMeasurement()
+        connectedDevices.forEach {
+            wrapper?.disconnect(it)
+        }
+        wrapper?.stop { text, status ->
+            Logger.getLogger(this.javaClass.simpleName)
+                .info("Disconnected from all devices")
+        }
+    }
+
     override fun messageReceived(endpointId: String, payload: ByteArray) {
         val message: Message? = parseMessage(endpointId, payload)
         if (message == null) {

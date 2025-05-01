@@ -136,8 +136,18 @@ class Client : Device {
         return true // TODO implement checks
     }
 
-    override fun disconnect(endpointId: String) {
-        super.disconnect(endpointId)
+    override fun cleanUp() {
+        if (connectedDeviceId == null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Disconnect called but no device is connected")
+            return
+        }
+
+        stopPeriodicSending()
+        // Maybe send a disconnect request message to the master before disconnecting
+
+        wrapper?.disconnect(connectedDeviceId!!)
+        this.connectedDeviceId = null
         stopSensorCollection()
     }
 

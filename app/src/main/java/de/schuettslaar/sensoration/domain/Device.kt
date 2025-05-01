@@ -38,6 +38,8 @@ abstract class Device {
         this.connectedDeviceId = null
     }
 
+    abstract fun cleanUp()
+
     private fun sendData(toEndpointId: String, bytes: ByteArray) {
         wrapper?.sendData(toEndpointId, bytes)
     }

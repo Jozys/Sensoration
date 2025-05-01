@@ -122,4 +122,11 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         this.status = status
     }
 
+    override fun onCleared() {
+        Logger.getLogger(this.javaClass.simpleName)
+            .warning { "Clearing ViewModel and terminating Nearby connection" }
+
+        super.onCleared()
+        thisDevice?.cleanUp()
+    }
 }
