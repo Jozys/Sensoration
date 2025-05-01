@@ -85,7 +85,7 @@ fun SettingsContent(
                     title = "Theme",
                     useSelectedAsSummary = true,
                     enabled = true,
-                    key = themeKey.toString(),
+                    key = themeKey.name,
                     defaultValue = theme.toString(),
                     entries = mapOf(
                         ThemeMode.SYSTEM.toString() to stringResource(R.string.settings_dark_theme_system),

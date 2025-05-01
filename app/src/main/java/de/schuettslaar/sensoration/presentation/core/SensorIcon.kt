@@ -20,8 +20,7 @@ fun SensorIcon(
         getIcon(sensorType),
         contentDescription = null,
         modifier = modifier
-            .padding(4.dp)
-            .then(modifier),
+            .padding(4.dp),
         tint = androidx.compose.material3.MaterialTheme.colorScheme.primary
     )
 }
