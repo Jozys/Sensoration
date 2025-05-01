@@ -1,11 +1,14 @@
 package de.schuettslaar.sensoration.presentation.views.discovering
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
@@ -19,14 +22,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.sensor.Sensor
+import de.schuettslaar.sensoration.domain.sensor.SensorType
+import de.schuettslaar.sensoration.presentation.core.SensorIcon
+import de.schuettslaar.sensoration.presentation.core.SensorView
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 import de.schuettslaar.sensoration.utils.getStringResourceByName
@@ -81,6 +90,7 @@ fun Discovering(onBack: () -> Unit) {
                         disconnect = {
                             viewModel.disconnect()
                         },
+                        sensor = viewModel.device?.currentSensor,
                         deviceStatus = viewModel.device?.applicationStatus
                             ?: ApplicationStatus.ERROR
                     )
@@ -147,16 +157,28 @@ fun ConnectedState(
     entry: Map.Entry<String, String>,
     sendMessage: () -> Unit,
     disconnect: () -> Unit,
+    sensor: Sensor?,
     deviceStatus: ApplicationStatus
 ) {
-    StatusInformation(
-        statusText = deviceStatus.name,
-    )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.outlineVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+    ) {
+        StatusInformation(
+            statusText = deviceStatus.name,
+            modifier = Modifier
+                .padding(top = 8.dp)
+        )
 
-    ConnectedDevice(
-        entry.value
-    )
+        ConnectedMaster(
+            entry.value
+        )
+    }
 
+    CurrentSensor(sensor = sensor)
     Button(onClick = {
         sendMessage()
     }) {
@@ -174,20 +196,94 @@ fun ConnectedState(
 }
 
 @Composable
-fun ConnectedDevice(name: String) {
-    Column(modifier = Modifier.padding(8.dp)) {
+fun CurrentSensor(sensor: Sensor?) {
+    Column(
+        horizontalAlignment = Alignment.Start,
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            "Current Sensor",
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(8.dp)
+        )
+        SensorView(
+            selectedSensorType = sensor,
+            sensorTypes = SensorType.entries,
+            disabled = true,
+            modifier = Modifier.padding(8.dp),
+            content = {
+                ListItem(
+                    modifier = Modifier.clickable(enabled = false, onClick = { }),
+                    leadingContent = {
+                        SensorIcon(
+                            sensorType = sensor?.sensorType,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .padding(4.dp)
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            text = stringResource(
+                                id = sensor?.sensorType?.displayNameId
+                                    ?: R.string.sensor_type_unknown
+                            ),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = stringResource(
+                                id = sensor?.sensorType?.descriptionId
+                                    ?: R.string.sensor_type_unknown_description
+                            ),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                )
+
+
+            },
+        )
+    }
+}
+
+@Composable
+fun ConnectedMaster(name: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(12.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .border(1.dp, MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp))
+    ) {
         Icon(
             Icons.Filled.CheckCircle,
             contentDescription = "Connected",
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
-                .padding(start = 8.dp)
+                .padding(top = 8.dp)
                 .align(Alignment.CenterHorizontally),
         )
         Text(
+            text = stringResource(R.string.connected_to_device),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+
+        Text(
             text = name,
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(8.dp)
         )
     }
+
 }
