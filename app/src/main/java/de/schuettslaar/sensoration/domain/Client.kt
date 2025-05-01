@@ -8,6 +8,8 @@ import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.adapter.nearby.DiscoverNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.application.data.Message
+import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
@@ -22,6 +24,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.ObjectOutputStream
+import java.util.logging.Logger
 
 class Client : Device {
     private val sensorManager: SensorManager
@@ -151,6 +154,20 @@ class Client : Device {
     override fun disconnect(endpointId: String) {
         super.disconnect(endpointId)
         stopSensorCollection()
+    }
+
+    override fun messageReceived(endpointId: String, payload: ByteArray) {
+        val message: Message? = parseMessage(endpointId, payload)
+        if (message == null) {
+            Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
+            return
+        }
+
+        when(message.messageType){
+            else -> {
+                Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
+            }
+        }
     }
 }
 
