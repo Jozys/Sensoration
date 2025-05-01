@@ -5,10 +5,13 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import org.apache.commons.collections4.queue.CircularFifoQueue
+import de.schuettslaar.sensoration.domain.sensor.SensorType
+
 import java.util.logging.Logger
 
 private const val PROCESSED_VALUES_CAPACITY = 10
@@ -16,6 +19,8 @@ private const val PROCESSED_VALUES_CAPACITY = 10
 class Master : Device {
     private val sensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
 
+
+    private var sensorType: SensorType? = null
 
     constructor(
         context: Context,
@@ -63,5 +68,10 @@ class Master : Device {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
+    }
+
+    fun setSensor(sensor: SensorType) {
+        this.sensorType = sensor
+        // TODO: This needs to send the updated sensor to all connected devices
     }
 }

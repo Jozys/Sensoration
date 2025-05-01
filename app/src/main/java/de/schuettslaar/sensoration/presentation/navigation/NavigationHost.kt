@@ -8,6 +8,7 @@ import de.schuettslaar.sensoration.presentation.views.advertisment.addAdvertisem
 import de.schuettslaar.sensoration.presentation.views.discovering.addDiscoveryNavGraph
 import de.schuettslaar.sensoration.presentation.views.home.HomeOverviewRoute
 import de.schuettslaar.sensoration.presentation.views.home.addHomeNavGraph
+import de.schuettslaar.sensoration.presentation.views.settings.addSettingsNavGraph
 
 @Composable()
 fun SensorationNavigationHost(
@@ -23,5 +24,6 @@ fun SensorationNavigationHost(
         addHomeNavGraph(navController)
         addDiscoveryNavGraph(navController)
         addAdvertisementNavGraph(navController)
+        addSettingsNavGraph(navController)
     }
 }
