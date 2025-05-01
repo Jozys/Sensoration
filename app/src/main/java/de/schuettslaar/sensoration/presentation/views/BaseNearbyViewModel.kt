@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.presentation.views
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,13 +10,9 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
-import de.schuettslaar.sensoration.application.data.WrappedSensorData
-import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.Client
 import de.schuettslaar.sensoration.domain.Device
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.DataInputStream
-import java.io.ObjectOutputStream
+import de.schuettslaar.sensoration.domain.GatherableDeviceDataTypes
 import java.util.logging.Logger
 
 abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(application) {
@@ -25,6 +22,8 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var text by mutableStateOf("")
     var connectedDevices by mutableStateOf(mapOf<String, String>())
     var isLoading by mutableStateOf(false)
+
+    var isSending: Boolean = false
 
     fun callback(text: String, status: NearbyStatus) {
         this.text = text
@@ -71,37 +70,30 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
 
     // TODO: Add data model for sensor data
     fun sendMessage(connectedId: String) {
-        val id: String = connectedId
-        val data2: Array<Float> = arrayOf(0.0f)
-        val wrappedSensorData = WrappedSensorData(
-            1337, connectedId, ApplicationStatus.ERROR,
-            data2
-        )
-
-        ByteArrayOutputStream().use { bos ->
-            ObjectOutputStream(bos).use { oos ->
-                oos.writeObject(wrappedSensorData)
-            }
-
-            val dataObjectAsByteArray = bos.toByteArray()
-            device?.sendData(
-                id,
-                DataInputStream(ByteArrayInputStream(dataObjectAsByteArray))
+        val client = device as? Client
+        if (isSending) {
+            Log.e("BaseNearbyViewModel", "Stopping sensor collection")
+            client?.stopPeriodicSending()
+            isSending = false
+        } else {
+            Log.e("BaseNearbyViewModel", "Starting sensor collection")
+            client?.startSensorCollection(
+                sensorType = GatherableDeviceDataTypes.ACCELEROMETER
             )
+            client?.startPeriodicSending(connectedId)
+            isSending = true
         }
+
     }
 
     fun onConnectionInitiatedCallback(
-        endpointId: String,
-        info: ConnectionInfo
+        endpointId: String, info: ConnectionInfo
     ) {
         connectedDevices = connectedDevices.plus(Pair(endpointId, info.endpointName))
     }
 
     fun onConnectionResultCallback(
-        endpointId: String,
-        connectionStatus: ConnectionResolution,
-        status: NearbyStatus
+        endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus
     ) {
         if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
             Logger.getLogger(this.javaClass.simpleName).info(

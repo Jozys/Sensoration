@@ -1,13 +1,14 @@
 package de.schuettslaar.sensoration.application.data
 
 import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import java.io.Serializable
 
-class WrappedSensorData(
-    time: Int,
-    deviceId: String,
-    state: ApplicationStatus,
-    value: Array<Float>
+data class WrappedSensorData(
+    val messageTimeStamp: Long,
+    val deviceId: String,
+    val state: ApplicationStatus,
+    val sensorData: ProcessedSensorData
 ): Serializable {
 
 }

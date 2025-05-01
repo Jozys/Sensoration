@@ -13,21 +13,27 @@ open class SensorManager {
 
     private var androidSensorManager: AndroidSensorManager? = null
     private var sensor: Sensor? = null
-    private var processor: ClientDataProcessing
+    private var processor: ClientDataProcessing? = null
 
     private var latestSensorData: ProcessedSensorData? = null
 
     private val TAG = "SensorManager"
 
-    constructor(context: Context, sensorType: Int, processor: ClientDataProcessing = RawClientDataProcessing()) {
+    constructor(context: Context) {
         this.androidSensorManager = context.getSystemService(Context.SENSOR_SERVICE) as AndroidSensorManager
+    }
 
+    fun registerSensor(sensorType: Int, processor: ClientDataProcessing = RawClientDataProcessing()) {
         this.sensor = androidSensorManager?.getDefaultSensor(sensorType)
         this.processor = processor
-
     }
 
     fun startListening() {
+        if (sensor == null || processor == null) {
+            Log.e(TAG, "Sensor or processor not initialized. Call registerSensor() first.")
+            return
+        }
+
         val supportedAndEnabled = androidSensorManager?.registerListener(
             listener,
             sensor,
@@ -56,10 +62,7 @@ open class SensorManager {
                     value = event.values.clone()
                 )
 
-                val deviceId = "TODO-DEVICEID" // TODO: Replace with actual device ID retrieval logic
-                val applicationStatus = ApplicationStatus.ACTIVE // TODO: Replace with actual application status retrieval logic
-
-                val processedSensorData = processor.processData(rawSensorData, applicationStatus, deviceId)
+                val processedSensorData = processor!!.processData(rawSensorData)
                 latestSensorData = processedSensorData
             }
 

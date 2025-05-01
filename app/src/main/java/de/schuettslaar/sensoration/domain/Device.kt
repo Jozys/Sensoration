@@ -24,7 +24,7 @@ abstract class Device {
         this.deviceId = deviceId
     }
 
-    fun disconnect(deviceId: String) {
+    open fun disconnect(deviceId: String) {
         wrapper?.disconnect(deviceId)
         this.deviceId = null
     }
