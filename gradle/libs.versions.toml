@@ -15,6 +15,7 @@ ksp = "2.0.0-1.0.22"
 navigationCompose = "2.8.9"
 composePrefs3 = "1.0.5"
 datastorePreferences = "1.1.1"
+commonsCollections4 = "4.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,6 +38,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "playServicesNearby" }
 compose-prefs3 = { group = "com.github.JamalMulla", name = "ComposePrefs3", version.ref = "composePrefs3" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
+commons-collections4 = { group = "org.apache.commons", name = "commons-collections4", version.ref = "commonsCollections4" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
