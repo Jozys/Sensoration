@@ -2,8 +2,10 @@ package de.schuettslaar.sensoration.presentation.core.icon
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
@@ -20,13 +22,14 @@ import androidx.compose.ui.unit.dp
 fun <T : Enum<T>> BasicIcon(
     enumValue: T?,
     modifier: Modifier = Modifier,
-    getIcon: (T?) -> ImageVector
+    getIcon: (T?) -> ImageVector,
+    tint: Color = MaterialTheme.colorScheme.primary,
 ) {
     Icon(
         getIcon(enumValue),
         contentDescription = null,
         modifier = modifier
             .padding(4.dp),
-        tint = androidx.compose.material3.MaterialTheme.colorScheme.primary
+        tint = tint
     )
 }

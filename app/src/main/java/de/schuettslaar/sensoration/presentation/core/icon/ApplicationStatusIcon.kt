@@ -5,8 +5,9 @@ import androidx.compose.material.icons.filled.DoneOutline
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.IncompleteCircle
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,7 +23,8 @@ fun ApplicationStatusIcon(
         getIcon = {
             getIcon(applicationStatus)
         },
-        modifier = modifier
+        modifier = modifier,
+        tint = MaterialTheme.colorScheme.secondary
     )
 }
 
@@ -35,7 +37,7 @@ fun ApplicationStatusIcon(
 fun getIcon(applicationStatus: ApplicationStatus): ImageVector {
     return when (applicationStatus) {
         ApplicationStatus.INIT -> Icons.Default.RocketLaunch
-        ApplicationStatus.IDLE -> Icons.Default.IncompleteCircle
+        ApplicationStatus.IDLE -> Icons.Default.Pause
         ApplicationStatus.DESTINATION -> Icons.Default.Flag
         ApplicationStatus.ACTIVE -> Icons.Default.FlashOn
         ApplicationStatus.ERROR -> Icons.Default.Error
