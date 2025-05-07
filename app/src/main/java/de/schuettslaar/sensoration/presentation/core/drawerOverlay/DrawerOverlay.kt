@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+
 /**
  * A custom composable that provides a side drawer overlay.
  * This drawer slides in and out from either the left or right side of the screen and can be used to
@@ -55,6 +56,7 @@ import kotlin.math.roundToInt
  * @param cornerRadius Corner radius of the drawer for rounded edges.
  * @param dragThresholdFraction Fraction of the drawer's width that must be dragged to open/close it.
  * @param enableSwipe Boolean indicating whether swipe gestures are enabled to open/close the drawer.
+ * @param offsetMultiplier Multiplier for the offset animation of the drawer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,8 +74,10 @@ fun DrawerOverlay(
     drawerSide: DrawerSide = DrawerSide.RIGHT,
     cornerRadius: Dp = 32.dp,
     dragThresholdFraction: Float = 0.5f,
-    enableSwipe: Boolean = true
+    enableSwipe: Boolean = true,
+    offsetMultiplier: Int = 2
 ) {
+
     // Coroutine scope for managing animations
     val scope = rememberCoroutineScope()
 
@@ -103,9 +107,17 @@ fun DrawerOverlay(
     }
 
     Scaffold(topBar = {
-        DrawerTopBar(title = title, onClose = {
-            onDismiss()
-        }, modifier = Modifier.offset { IntOffset(x = 2 * offsetX.value.roundToInt(), y = 0) })
+        DrawerTopBar(
+            title = title,
+            onClose = {
+                onDismiss()
+            },
+            modifier = Modifier.offset {
+                IntOffset(
+                    x = offsetMultiplier * offsetX.value.roundToInt(),
+                    y = 0
+                )
+            })
     }, modifier = mainContentModifier.pointerInput(Unit) {
         if (enableSwipe) {
             detectDragGestures(
@@ -169,7 +181,7 @@ fun DrawerOverlay(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .offset { IntOffset(x = 2 * offsetX.value.roundToInt(), y = 0) }
+                .offset { IntOffset(x = offsetMultiplier * offsetX.value.roundToInt(), y = 0) }
                 .fillMaxHeight()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
