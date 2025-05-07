@@ -46,7 +46,6 @@ import kotlin.math.roundToInt
  * @param isDrawerOpen Boolean indicating whether the drawer is open.
  * @param onDismiss Callback function that gets called when the drawer should be dismissed.
  * @param drawerContent Composable content that is displayed inside the drawer.
- * @param mainContent Composable content of the main screen.
  * @param modifier Modifier to be applied to the drawer overlay container.
  * @param drawerWidth Width of the drawer in Dp.
  * @param animationDuration Duration of the drawer open/close animation in milliseconds.
@@ -218,7 +217,6 @@ fun DrawerTopBar(
                     )
                 }
                 title()
-
             }
         },
     )
