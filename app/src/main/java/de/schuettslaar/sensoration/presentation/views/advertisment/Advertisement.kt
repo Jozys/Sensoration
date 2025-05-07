@@ -49,6 +49,9 @@ fun Advertisement(onBack: () -> Unit) {
             onDrawerOpen = {
                 viewModel.isDrawerOpen.value = true
             },
+            onStartReceiving = {
+                viewModel.startReceiving()
+            },
             onStop = {
                 viewModel.stop()
             },
@@ -76,6 +79,7 @@ fun AdvertisementContent(
     status: NearbyStatus,
     onDrawerOpen: () -> Unit,
     onBack: () -> Unit,
+    onStartReceiving: () -> Unit,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
 ) {
@@ -118,9 +122,7 @@ fun AdvertisementContent(
         }, noSensorSelectedDescription = R.string.no_sensor_selected, trailingContent = {
             Button(
                 enabled = connectedDevices.isNotEmpty() && sensorType != null,
-                onClick = {
-                    // TODO("Start receiving data")
-                }
+                onClick = onStartReceiving,
             ) {
                 Text(stringResource(R.string.start_receiving_data))
             }

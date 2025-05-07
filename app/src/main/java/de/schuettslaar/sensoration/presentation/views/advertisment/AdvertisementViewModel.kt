@@ -64,6 +64,11 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
         }
     }
 
+    fun startReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Starting receiving" }
+        // TODO: Implement start receiving
+    }
+
     fun disconnect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Disconnecting from $endpointId" }
         device?.disconnect(endpointId)
