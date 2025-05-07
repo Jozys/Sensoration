@@ -10,6 +10,7 @@ import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
+import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
@@ -25,6 +26,7 @@ import java.util.logging.Logger
 
 class Client : Device {
     private val sensorManager: SensorManager
+    private val clientPtpHandler: ClientPTPHandler = ClientPTPHandler()
 
     // For periodic sending
     private var sensorJob: Job? = null
@@ -119,7 +121,7 @@ class Client : Device {
 
         try {
             val wrappedSensorData = WrappedSensorData(
-                messageTimeStamp = System.currentTimeMillis().toLong(),
+                messageTimeStamp = clientPtpHandler.getAdjustedTime(),
                 ownDeviceId.toString(),
                 applicationStatus,
                 sensorData
@@ -162,6 +164,7 @@ class Client : Device {
             MessageType.HANDSHAKE -> handleHandshakeMessage(message)
             MessageType.START_MEASUREMENT -> handleMeasurementMessage(message)
             MessageType.STOP_MEASUREMENT -> stopMeasurement(message)
+            MessageType.PTP_MESSAGE -> clientPtpHandler.handleMessage(message as PTPMessage, this)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
@@ -185,7 +188,7 @@ class Client : Device {
             .info("Start measurement message received from ${startMeasurementMessage.senderDeviceId}")
         val sensorType = startMeasurementMessage.sensorType
         startSensorCollection(sensorType)
-        startPeriodicSending(connectedDeviceId!!)
+        startPeriodicSending(connectedDeviceId!!, sensorType.processingDelay)
     }
 
     private fun handleHandshakeMessage(message: Message) {
@@ -193,5 +196,9 @@ class Client : Device {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Handshake message received from ${handshakeMessage.senderDeviceId}")
         ownDeviceId = handshakeMessage.clientId
+    }
+
+    fun sendDelayRequest(delayRequestMessage: PTPMessage) {
+        sendMessage(connectedDeviceId!!, delayRequestMessage)
     }
 }

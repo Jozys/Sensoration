@@ -110,8 +110,8 @@ abstract class NearbyWrapper {
 internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit): PayloadCallback =
     object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            val sound = MediaActionSound()
-            sound.play(MediaActionSound.START_VIDEO_RECORDING)
+            MediaActionSound()
+//            sound.play(MediaActionSound.STOP_VIDEO_RECORDING)
             Log.d(this.javaClass.simpleName, "Got message from $endpointId > ${payload.asBytes()}")
             onPayloadReceivedCallback(endpointId, payload)
         }

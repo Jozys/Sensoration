@@ -18,10 +18,11 @@ interface Message : Serializable {
  */
 enum class MessageType {
     SENSOR_DATA,
-    SYNCHRONIZE,
     HANDSHAKE,
     START_MEASUREMENT,
     STOP_MEASUREMENT,
+
+    PTP_MESSAGE,
 }
 
 /**
@@ -54,7 +55,8 @@ data class StartMeasurementMessage(
     override val messageTimeStamp: Long,
     override val senderDeviceId: String,
     override val state: ApplicationStatus,
-    val sensorType: SensorType
+    val sensorType: SensorType,
+    val delay: Long
 ) : Message {
     override val messageType = MessageType.START_MEASUREMENT
 }
@@ -66,3 +68,20 @@ data class StopMeasurementMessage(
 ) : Message {
     override val messageType = MessageType.STOP_MEASUREMENT
 }
+
+data class PTPMessage(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: String,
+    override val state: ApplicationStatus,
+    val ptpType: PTPMessageType,
+) : Message {
+    enum class PTPMessageType {
+        SYNC,
+        FOLLOW_UP,
+        DELAY_REQUEST,
+        DELAY_RESPONSE,
+    }
+
+    override val messageType = MessageType.PTP_MESSAGE
+}
+
