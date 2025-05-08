@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_icon_desc">App-Symbol</string>
-    <string name="packageName" translatable="false">de.schuettslaar.sensoration</string>
     <string name="start_advertising">Advertising starten</string>
     <string name="start_discovery">Suche starten</string>
     <string name="advertising_title">Advertising</string>
@@ -51,4 +50,9 @@
     <string name="sensor_gravity_description">Dieser Sensor wird verwendet, um die relative Ausrichtung des Geräts im Raum zu bestimmen</string>
     <string name="sensor_pressure_description">Dieser Sensor liefert den von Ihrem Gerät gemessenen Umgebungsluftdruck.</string>
     <string name="sensor_type_unknown_description">Derzeit ist kein Sensor ausgewählt. Wenn das Master-Gerät einen Sensor auswählt, wird sich dies ändern.</string>
+    <string name="sensor_accelerometer">Beschleunigungssensor</string>
+    <string name="sensor_accelerometer_description">Rohe Daten aus dem Beschleunigungssensor des Gerätes</string>
+    <string name="connected_devices_description">Aktuell sind %1$s Geräte verbunden</string>
+    <string name="no_sensor_selected">Aktuell ist kein Sensor ausgewählt. Wähle einen aus der Liste, um Daten von anderen Geräten zu empfangen</string>
+    <string name="start_receiving_data">Start</string>
 </resources>

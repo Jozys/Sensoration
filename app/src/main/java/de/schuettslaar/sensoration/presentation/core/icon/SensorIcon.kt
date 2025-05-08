@@ -1,34 +1,40 @@
-package de.schuettslaar.sensoration.presentation.core
+package de.schuettslaar.sensoration.presentation.core.icon
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LineWeight
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 
-@Composable()
+@Composable
 fun SensorIcon(
     sensorType: SensorType?,
     modifier: Modifier = Modifier,
 ) {
-    Icon(
-        getIcon(sensorType),
-        contentDescription = null,
-        modifier = modifier
-            .padding(4.dp),
-        tint = androidx.compose.material3.MaterialTheme.colorScheme.primary
+    BasicIcon<SensorType>(
+        enumValue = sensorType,
+        modifier = modifier,
+        getIcon = {
+            getIcon(sensorType)
+        }
     )
 }
 
-fun getIcon(sensorType: SensorType?): androidx.compose.ui.graphics.vector.ImageVector {
+/**
+ * Returns the icon associated with the given [SensorType].
+ *
+ * @param sensorType The application status for which to get the icon.
+ * @return The icon associated with the given application status.
+ */
+fun getIcon(sensorType: SensorType?): ImageVector {
     return when (sensorType) {
         SensorType.GRAVITY -> Icons.Filled.LineWeight
         SensorType.PRESSURE -> Icons.Filled.Compress
+        SensorType.ACCELEROMETER -> Icons.Filled.Speed
 
         else -> {
             Icons.Default.Info
