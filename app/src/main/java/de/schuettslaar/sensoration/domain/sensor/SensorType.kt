@@ -4,6 +4,7 @@ import android.hardware.Sensor
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
+import de.schuettslaar.sensoration.application.data.SoundPressureClientDataProcessing
 
 enum class SensorType(
     val sensorId: Int,
@@ -30,6 +31,13 @@ enum class SensorType(
         R.string.sensor_accelerometer_description,
         RawClientDataProcessing(),
         processingDelay = 500L
+    ),
+    SOUND_PRESSURE(
+        -1000, // Custom ID for microphone
+        R.string.sensor_microphone,
+        R.string.sensor_microphone_description,
+        SoundPressureClientDataProcessing(),
+        processingDelay = 100L
     )
     ;
 
