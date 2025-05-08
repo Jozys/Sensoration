@@ -57,6 +57,12 @@ fun Advertisement(onBack: () -> Unit) {
             },
             onSensorChange = {
                 viewModel.currentSensorType = it
+            },
+            onStartDebugMeasurement = {
+                viewModel.startDebugMeasurement()
+            },
+            onStopDebugMeasurement = {
+                viewModel.stopDebugMeasurement()
             }
         )
     }
@@ -82,6 +88,8 @@ fun AdvertisementContent(
     onStartReceiving: () -> Unit,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
+    onStartDebugMeasurement: () -> Unit = { },
+    onStopDebugMeasurement: () -> Unit = { },
 ) {
     Column(
         modifier = modifier
@@ -136,11 +144,11 @@ fun AdvertisementContent(
         }) {
             Text(stringResource(R.string.stop_advertising))
         }
-        
-        Button(onClick = { viewModel.startDebugMeasurement() }) {
+
+        Button(onClick = { onStartDebugMeasurement() }) {
             Text(stringResource(R.string.start_debug_measurement))
         }
-        Button(onClick = { viewModel.stopDebugMeasurement() }) {
+        Button(onClick = { onStopDebugMeasurement() }) {
             Text(stringResource(R.string.stop_debug_measurement))
         }
     }
