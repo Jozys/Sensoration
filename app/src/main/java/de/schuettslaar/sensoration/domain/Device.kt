@@ -5,7 +5,6 @@ import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
 import de.schuettslaar.sensoration.application.data.Message
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.DataInputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.logging.Logger
@@ -16,6 +15,8 @@ abstract class Device {
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
     internal var connectedDeviceId: String? = null
     internal var ownDeviceId: String? = null
+
+    internal var connectedDevices = mutableSetOf<String>()
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -28,6 +29,8 @@ abstract class Device {
     fun connect(deviceIdToConnect: String) {
         wrapper?.connect(deviceIdToConnect)
         this.connectedDeviceId = deviceIdToConnect
+        Logger.getLogger(this.javaClass.simpleName)
+            .severe("Device is connected to $deviceIdToConnect")
     }
 
     open fun disconnect(connectedDeviceId: String) {
@@ -35,8 +38,10 @@ abstract class Device {
         this.connectedDeviceId = null
     }
 
-    private fun sendData(toEndpointId: String, stream: DataInputStream) {
-        wrapper?.sendData(toEndpointId, stream)
+    abstract fun cleanUp()
+
+    private fun sendData(toEndpointId: String, bytes: ByteArray) {
+        wrapper?.sendData(toEndpointId, bytes)
     }
 
     abstract fun messageReceived(
@@ -55,7 +60,10 @@ abstract class Device {
                 oos.writeObject(message)
             }
             val bytes = bos.toByteArray()
-            sendData(endpointId, DataInputStream(ByteArrayInputStream(bytes)))
+            Logger.getLogger(this.javaClass.simpleName)
+                .info("Sending message of size ${bytes.size} to $endpointId")
+
+            sendData(endpointId, bytes)
         }
     }
 
@@ -72,11 +80,18 @@ abstract class Device {
             message = objectInputStream.readObject() as Message
             objectInputStream.close()
         } catch (e: Exception) {
-            Logger.getLogger(this.javaClass.simpleName).warning("Error while reading message: ${e.message}")
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Error while reading message: ${e.message}")
             message = null
         }
         return message
     }
 
+    fun addConnectedDevice(endpointId: String) {
+        connectedDevices.add(endpointId)
+    }
 
+    fun removeConnectedDevice(endpointId: String) {
+        connectedDevices.remove(endpointId)
+    }
 }

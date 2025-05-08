@@ -22,7 +22,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
     init {
         Logger.getLogger(this.javaClass.simpleName).info("Starting AdvertisementViewModel")
-        this.device = Master(
+        this.thisDevice = Master(
             application,
             onConnectionInitiatedCallback = { endpointId, connectionInfo ->
                 this.onConnectionInitiatedCallback(endpointId, connectionInfo)
@@ -34,21 +34,25 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                 )
                 if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
                     // We need to send the id of the device to the client
+                    val master = this.thisDevice
                     var handshakeMessage = HandshakeMessage(
                         messageTimeStamp = System.currentTimeMillis().toLong(),
-                        senderDeviceId = this.device?.ownDeviceId.toString(),
-                        state = ApplicationStatus.IDLE,
+                        senderDeviceId = master?.ownDeviceId.toString(),
+                        state = ApplicationStatus.DESTINATION,
                         clientId = endpointId,
                     )
                     this.connectionDevicesStatus =
                         this.connectionDevicesStatus.plus(Pair(endpointId, ApplicationStatus.IDLE))
 
                     try {
-                        this.device?.sendMessage(endpointId, handshakeMessage)
+                        master?.sendMessage(endpointId, handshakeMessage)
                     } catch (_: Exception) {
                         Logger.getLogger(this.javaClass.simpleName)
                             .info { "Failed to send handshake message" }
                     }
+                    master?.addConnectedDevice(
+                        endpointId
+                    )
 
                 } else {
                     Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
@@ -59,7 +63,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
             }
         )
-        this.device?.start { text, status ->
+        this.thisDevice?.start { text, status ->
             this.callback(text, status)
         }
     }
@@ -71,8 +75,25 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
     fun disconnect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Disconnecting from $endpointId" }
-        device?.disconnect(endpointId)
+        thisDevice?.disconnect(endpointId)
     }
 
+
+    fun startDebugMeasurement() {
+        //TODO: rem debug implementation
+        Logger.getLogger(this.javaClass.simpleName).info { "Starting debug measurement" }
+
+        val master = this.thisDevice as? Master
+        if (master == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+        master.startMeasurement(SensorType.ACCELEROMETER)
+    }
+
+    fun stopDebugMeasurement() {
+        val master = this.thisDevice as? Master
+        master?.stopMeasurement()
+    }
 
 }

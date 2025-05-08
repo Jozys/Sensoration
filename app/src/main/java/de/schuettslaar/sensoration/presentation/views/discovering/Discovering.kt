@@ -88,7 +88,7 @@ fun Discovering(onBack: () -> Unit) {
                         disconnect = {
                             viewModel.disconnect()
                         },
-                        deviceStatus = viewModel.device?.applicationStatus
+                        deviceStatus = viewModel.thisDevice?.applicationStatus
                             ?: ApplicationStatus.ERROR
                     )
                 }

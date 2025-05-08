@@ -17,7 +17,7 @@ import java.util.logging.Logger
 
 abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(application) {
 
-    var device by mutableStateOf<Device?>(null)
+    var thisDevice by mutableStateOf<Device?>(null)
     var status by mutableStateOf(NearbyStatus.STOPPED)
     var text by mutableStateOf("")
     var connectedDevices by mutableStateOf(mapOf<String, String>())
@@ -31,8 +31,8 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     }
 
     fun start(device: Device) {
-        this.device = device
-        if (this.device != null) {
+        this.thisDevice = device
+        if (this.thisDevice != null) {
             Logger.getLogger(this.javaClass.simpleName).info {
                 "Starting device service"
             }
@@ -47,11 +47,11 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     }
 
     fun stop() {
-        if (device != null) {
+        if (thisDevice != null) {
             Logger.getLogger(this.javaClass.simpleName).info {
                 "Stopping device service"
             }
-            device!!.stop { text, status ->
+            thisDevice!!.stop { text, status ->
                 callback(text, status)
             }
 
@@ -64,13 +64,13 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
 
     fun connect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
-        device?.connect(endpointId)
+        thisDevice?.connect(endpointId)
         this.isLoading = true
     }
 
     // TODO: Add data model for sensor data
     fun sendMessage(connectedId: String) {
-        val client = device as? Client
+        val client = thisDevice as? Client
         if (isSending) {
             Log.e("BaseNearbyViewModel", "Stopping sensor collection")
             client?.stopPeriodicSending()
@@ -115,10 +115,18 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         if (connectedDevices.containsKey(endpointId)) {
             connectedDevices = connectedDevices.minus(endpointId)
         }
+        this.thisDevice?.removeConnectedDevice(endpointId)
         Logger.getLogger(this.javaClass.simpleName).info(
             "Disconnected from endpointId: $endpointId"
         )
         this.status = status
     }
 
+    override fun onCleared() {
+        Logger.getLogger(this.javaClass.simpleName)
+            .warning { "Clearing ViewModel and terminating Nearby connection" }
+
+        super.onCleared()
+        thisDevice?.cleanUp()
+    }
 }

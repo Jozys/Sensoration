@@ -9,7 +9,8 @@ enum class SensorType(
     val sensorId: Int,
     val displayNameId: Int,
     val descriptionId: Int,
-    val clientDataProcessing: ClientDataProcessing
+    val clientDataProcessing: ClientDataProcessing,
+    val processingDelay: Long = 100L, // Delay in milliseconds
 ) {
     PRESSURE(
         Sensor.TYPE_PRESSURE,
@@ -27,7 +28,8 @@ enum class SensorType(
         Sensor.TYPE_ACCELEROMETER,
         R.string.sensor_accelerometer,
         R.string.sensor_accelerometer_description,
-        RawClientDataProcessing()
+        RawClientDataProcessing(),
+        processingDelay = 500L
     )
     ;
 
