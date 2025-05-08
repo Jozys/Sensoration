@@ -1,7 +1,6 @@
 package de.schuettslaar.sensoration.presentation.views.connected
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -27,19 +26,20 @@ fun RemoveDeviceDialog(
 ) {
     AlertDialog(
         title = {
-            Row {
+            Row(
+                modifier = Modifier.padding(8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(text = dialogTitle)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = dialogTitle,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                    )
-                }
+
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = dialogTitle,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                )
+
             }
 
         },

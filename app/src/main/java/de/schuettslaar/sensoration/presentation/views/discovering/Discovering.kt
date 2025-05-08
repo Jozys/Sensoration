@@ -33,9 +33,8 @@ import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.sensor.SensorType
-import de.schuettslaar.sensoration.presentation.core.SensorIcon
-import de.schuettslaar.sensoration.presentation.core.SensorView
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
+import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 
@@ -89,7 +88,6 @@ fun Discovering(onBack: () -> Unit) {
                         disconnect = {
                             viewModel.disconnect()
                         },
-                        sensorType = SensorType.PRESSURE,
                         deviceStatus = viewModel.thisDevice?.applicationStatus
                             ?: ApplicationStatus.ERROR
                     )
@@ -108,7 +106,7 @@ fun BuildDeviceEntry(
     ListItem(modifier = Modifier.clickable {
         onClick(id)
     }, trailingContent = {
-        Icon(Icons.Default.Info, "Not Connected")
+        Icon(Icons.Default.Info, stringResource(R.string.no_connected_devices))
     }, headlineContent = {
         Text("Device: ${info.endpointName} (ID: $id)")
     })
@@ -156,7 +154,7 @@ fun ConnectedState(
     entry: Map.Entry<String, String>,
     sendMessage: () -> Unit,
     disconnect: () -> Unit,
-    sensorType: SensorType?,
+    sensorType: SensorType? = null,
     deviceStatus: ApplicationStatus
 ) {
     Column(
@@ -177,7 +175,7 @@ fun ConnectedState(
         )
     }
 
-    CurrentSensor(sensorType = sensorType)
+    CurrentSensor(sensorType = sensorType, shouldDisableSensorChange = true)
     Button(onClick = {
         sendMessage()
     }) {
@@ -194,60 +192,6 @@ fun ConnectedState(
     }
 }
 
-@Composable
-fun CurrentSensor(sensorType: SensorType?) {
-    Column(
-        horizontalAlignment = Alignment.Start,
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-    ) {
-        Text(
-            "Current Sensor",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(8.dp)
-        )
-        SensorView(
-            selectedSensorType = sensorType,
-            sensorTypes = SensorType.entries,
-            disabled = true,
-            modifier = Modifier.padding(8.dp),
-            content = {
-                ListItem(
-                    modifier = Modifier.clickable(enabled = false, onClick = { }),
-                    leadingContent = {
-                        SensorIcon(
-                            sensorType = sensorType,
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .padding(4.dp)
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            text = stringResource(
-                                id = sensorType?.displayNameId
-                                    ?: R.string.sensor_type_unknown
-                            ),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = stringResource(
-                                id = sensorType?.descriptionId
-                                    ?: R.string.sensor_type_unknown_description
-                            ),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                )
-
-
-            },
-        )
-    }
-}
 
 @Composable
 fun ConnectedMaster(name: String) {
@@ -261,7 +205,7 @@ fun ConnectedMaster(name: String) {
     ) {
         Icon(
             Icons.Filled.CheckCircle,
-            contentDescription = "Connected",
+            contentDescription = stringResource(R.string.connected),
             tint = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
                 .padding(top = 8.dp)

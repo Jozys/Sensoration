@@ -1,9 +1,16 @@
 package de.schuettslaar.sensoration.presentation.views.advertisment
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,8 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
-import de.schuettslaar.sensoration.presentation.views.connected.ConnectedList
+import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
+import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.views.connected.ConnectedDevicesPreview
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 
@@ -25,37 +36,112 @@ fun Advertisement(onBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            HomeAppBar()
+            AnimatedVisibility(!viewModel.isDrawerOpen.value) { HomeAppBar() }
+
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            StatusInformation(
-                statusText = getStringResourceByName(
-                    context = LocalContext.current,
-                    resName = viewModel.status.name
-                ).uppercase(),
-            )
-            ConnectedList(connectedDevices = viewModel.connectedDevices, onConfirmRemove = {
-                viewModel.disconnect(it)
-            })
-
-            Button(onClick = {
+        AdvertisementContent(
+            modifier = Modifier.padding(innerPadding),
+            onBack = onBack,
+            connectedDevices = viewModel.connectedDevices,
+            sensorType = viewModel.currentSensorType,
+            status = viewModel.status,
+            onDrawerOpen = {
+                viewModel.isDrawerOpen.value = true
+            },
+            onStartReceiving = {
+                viewModel.startReceiving()
+            },
+            onStop = {
                 viewModel.stop()
-                onBack()
-            }) {
-                Text(stringResource(R.string.stop_advertising))
+            },
+            onSensorChange = {
+                viewModel.currentSensorType = it
             }
+        )
+    }
+    ConnectedDevicesPreview(
+        isDrawerOpen = viewModel.isDrawerOpen,
+        connectedDevices = viewModel.connectedDevices,
+        connectionDevicesStatus = viewModel.connectionDevicesStatus,
+        onConfirmRemove = {
+            viewModel.disconnect(it)
+        })
 
-            Button(onClick = { viewModel.startDebugMeasurement() }) {
-                Text(stringResource(R.string.start_debug_measurement))
+
+}
+
+@Composable
+fun AdvertisementContent(
+    modifier: Modifier = Modifier,
+    connectedDevices: Map<String, String>,
+    sensorType: SensorType?,
+    status: NearbyStatus,
+    onDrawerOpen: () -> Unit,
+    onBack: () -> Unit,
+    onStartReceiving: () -> Unit,
+    onStop: () -> Unit,
+    onSensorChange: (SensorType) -> Unit = { },
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        StatusInformation(
+            statusText = getStringResourceByName(
+                context = LocalContext.current,
+                resName = status.name
+            ).uppercase(),
+        )
+        ListItem(
+            modifier = Modifier.clickable(onClick = {
+                onDrawerOpen()
+            }),
+            headlineContent = {
+                Text(stringResource(R.string.connected_devices))
+            },
+            supportingContent = {
+                Text(
+                    stringResource(
+                        R.string.connected_devices_description,
+                        connectedDevices.size
+                    )
+                )
+            },
+            trailingContent = {
+                if (connectedDevices.isEmpty()) {
+                    Icon(Icons.Default.Close, stringResource(R.string.no_connected_devices))
+                } else {
+                    Icon(Icons.Default.Check, stringResource(R.string.connected_devices))
+                }
             }
-            Button(onClick = { viewModel.stopDebugMeasurement() }) {
-                Text(stringResource(R.string.stop_debug_measurement))
+        )
+
+        CurrentSensor(sensorType = sensorType, shouldDisableSensorChange = false, onSensorChange = {
+            onSensorChange(it)
+        }, noSensorSelectedDescription = R.string.no_sensor_selected, trailingContent = {
+            Button(
+                enabled = connectedDevices.isNotEmpty() && sensorType != null,
+                onClick = onStartReceiving,
+            ) {
+                Text(stringResource(R.string.start_receiving_data))
             }
+        })
+
+        DataDisplay(sensorType)
+
+        Button(onClick = {
+            onStop()
+            onBack()
+        }) {
+            Text(stringResource(R.string.stop_advertising))
+        }
+        
+        Button(onClick = { viewModel.startDebugMeasurement() }) {
+            Text(stringResource(R.string.start_debug_measurement))
+        }
+        Button(onClick = { viewModel.stopDebugMeasurement() }) {
+            Text(stringResource(R.string.stop_debug_measurement))
         }
     }
 }

@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.core
+package de.schuettslaar.sensoration.presentation.core.sensor
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.domain.sensor.SensorType
+import de.schuettslaar.sensoration.presentation.core.icon.SensorIcon
 
 @Composable()
 fun SensorView(
@@ -60,7 +61,7 @@ fun SensorView(
 }
 
 @Composable
-fun SensorItem(sensorType: SensorType, selected: Boolean = false, modifier: Modifier = Modifier) {
+fun SensorItem(modifier: Modifier = Modifier, sensorType: SensorType, selected: Boolean = false) {
     Row(modifier = modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
         SensorIcon(
             sensorType = sensorType,

@@ -78,9 +78,7 @@ android {
 
 dependencies {
 
-    implementation(libs.kotlinx.serialization.json)
     // Jetpack Compose integration
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -88,17 +86,34 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // Material Design 3
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
+
+    // Nearby Connections
     implementation(libs.play.services.nearby)
-    implementation("org.apache.commons:commons-collections4:4.5.0")
+
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Android Datastore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Preferences / Settings
+    implementation(libs.compose.prefs3)
+
+    // Utility
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.commons.collections4)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.compose.prefs3)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.material.icons.extended)
 }
