@@ -1,14 +1,24 @@
 package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import java.util.logging.Logger
 
 class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(application) {
+
+    val isDrawerOpen = mutableStateOf(false)
+    var connectionDevicesStatus by mutableStateOf(
+        mapOf<String, ApplicationStatus>()
+    )
+    var currentSensorType: SensorType? by mutableStateOf(null)
 
     init {
         Logger.getLogger(this.javaClass.simpleName).info("Starting AdvertisementViewModel")
@@ -30,6 +40,9 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                         state = ApplicationStatus.IDLE,
                         clientId = endpointId,
                     )
+                    this.connectionDevicesStatus =
+                        this.connectionDevicesStatus.plus(Pair(endpointId, ApplicationStatus.IDLE))
+
                     try {
                         this.device?.sendMessage(endpointId, handshakeMessage)
                     } catch (_: Exception) {
@@ -49,6 +62,11 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
         this.device?.start { text, status ->
             this.callback(text, status)
         }
+    }
+
+    fun startReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Starting receiving" }
+        // TODO: Implement start receiving
     }
 
     fun disconnect(endpointId: String) {
