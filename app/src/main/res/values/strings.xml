@@ -63,4 +63,6 @@
   
     <string name="start_debug_measurement">Start DEBUG measurement</string>
     <string name="stop_debug_measurement">Stop DEBUG measurement</string>
+    <string name="sensor_microphone">Microphone</string>
+    <string name="sensor_microphone_description">Min and Max Amplitude of the Audiosignal</string>
 </resources>

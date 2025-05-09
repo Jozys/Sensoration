@@ -88,7 +88,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
             return
         }
-        master.startMeasurement(SensorType.ACCELEROMETER)
+        master.startMeasurement(SensorType.SOUND_PRESSURE)
     }
 
     fun stopDebugMeasurement() {
