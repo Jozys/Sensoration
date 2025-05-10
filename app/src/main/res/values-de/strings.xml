@@ -55,4 +55,15 @@
     <string name="connected_devices_description">Aktuell sind %1$s Geräte verbunden</string>
     <string name="no_sensor_selected">Aktuell ist kein Sensor ausgewählt. Wähle einen aus der Liste, um Daten von anderen Geräten zu empfangen</string>
     <string name="start_receiving_data">Start</string>
+
+    <string name="connected">Verbunden</string>
+    <string name="no_data_available_for_this_sensor_type">Keine Visualisierung für diesen Sensortyp verfügbar.</string>
+
+    <string name="start_debug_measurement">DEBUG-Messung starten</string>
+    <string name="stop_debug_measurement">DEBUG-Messung stoppen</string>
+    <string name="sensor_microphone">Mikrofon</string>
+    <string name="sensor_microphone_description">Min- und Max-Amplitude des Audiosignals</string>
+    <string name="data_display_legend">Legende</string>
+    <string name="data_display_title">Sensordaten</string>
+    <string name="stop_receiving_data">Stoppen</string>
 </resources>

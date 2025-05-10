@@ -94,6 +94,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
 
+    // User Interface
+    implementation(libs.charty)
+
     // Nearby Connections
     implementation(libs.play.services.nearby)
 
