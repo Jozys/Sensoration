@@ -42,6 +42,7 @@ class ClientPTPHandler {
     }
 
     private fun handleFollowUp(message: PTPMessage, client: Client) {
+        if (client.connectedDevices.isEmpty()) return
         t1 = message.messageTimeStamp
 
         var delayRequest = PTPMessage(
