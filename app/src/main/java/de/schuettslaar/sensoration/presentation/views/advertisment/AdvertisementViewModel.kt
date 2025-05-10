@@ -10,21 +10,30 @@ import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
+import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import java.util.logging.Logger
 
 class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(application) {
 
     val isDrawerOpen = mutableStateOf(false)
-    var connectionDevicesStatus by mutableStateOf(
-        mapOf<String, ApplicationStatus>()
-    )
-    var currentSensorType: SensorType? by mutableStateOf(null)
+
+    var connectedDeviceInfos by mutableStateOf(mapOf<String, DeviceInfo>())
+
+    var isReceiving by mutableStateOf(false)
 
     init {
         Logger.getLogger(this.javaClass.simpleName).info("Starting AdvertisementViewModel")
         this.thisDevice = Master(
             application,
             onConnectionInitiatedCallback = { endpointId, connectionInfo ->
+                this.setConnectedDeviceInfo(
+                    endpointId,
+                    DeviceInfo(
+                        deviceName = connectionInfo.endpointName,
+                        sensorData = listOf(),
+                        ApplicationStatus.INIT,
+                    )
+                )
                 this.onConnectionInitiatedCallback(endpointId, connectionInfo)
             },
             onConnectionResultCallback = { endpointId, connectionStatus, status ->
@@ -41,8 +50,10 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                         state = ApplicationStatus.DESTINATION,
                         clientId = endpointId,
                     )
-                    this.connectionDevicesStatus =
-                        this.connectionDevicesStatus.plus(Pair(endpointId, ApplicationStatus.IDLE))
+                    // We need to update the application status here
+                    var deviceInfo = this.connectedDeviceInfos.getValue(endpointId)
+                    deviceInfo.applicationStatus = ApplicationStatus.IDLE
+                    this.setConnectedDeviceInfo(endpointId, deviceInfo)
 
                     try {
                         master?.sendMessage(endpointId, handshakeMessage)
@@ -59,8 +70,23 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                 }
             },
             onDisconnectedCallback = { endpointId, status ->
+                this.connectedDeviceInfos = this.connectedDeviceInfos.minus(endpointId)
                 this.onDisconnectedCallback(endpointId, status)
 
+                if (connectedDeviceInfos.isEmpty()) {
+                    this.stopReceiving()
+                    isReceiving = false
+                }
+            },
+            onSensorDataChangedCallback = { endpointId, sensorData, applicationStatus ->
+                // Replace the sensor data for the endpointId
+                var deviceInfo = this.connectedDeviceInfos.getValue(endpointId)
+                val newDeviceInfo = DeviceInfo(
+                    deviceName = deviceInfo.deviceName,
+                    sensorData = sensorData,
+                    applicationStatus = applicationStatus,
+                )
+                this.setConnectedDeviceInfo(endpointId, newDeviceInfo)
             }
         )
         this.thisDevice?.start { text, status ->
@@ -71,6 +97,31 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
     fun startReceiving() {
         Logger.getLogger(this.javaClass.simpleName).info { "Starting receiving" }
         // TODO: Implement start receiving
+        val master = this.thisDevice as? Master
+        if (master == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+
+        if (currentSensorType == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Sensor type is null" }
+            return
+        }
+        master.startMeasurement(currentSensorType!!)
+
+        isReceiving = true
+
+    }
+
+    fun stopReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Stopping receiving" }
+        val master = this.thisDevice as? Master
+        if (master == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+        master.stopMeasurement()
+        isReceiving = false
     }
 
     fun disconnect(endpointId: String) {
@@ -94,6 +145,15 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
     fun stopDebugMeasurement() {
         val master = this.thisDevice as? Master
         master?.stopMeasurement()
+    }
+
+    fun setConnectedDeviceInfo(
+        endpointId: String,
+        deviceInfo: DeviceInfo
+    ) {
+        this.connectedDeviceInfos = this.connectedDeviceInfos.plus(
+            Pair(endpointId, deviceInfo)
+        )
     }
 
 }

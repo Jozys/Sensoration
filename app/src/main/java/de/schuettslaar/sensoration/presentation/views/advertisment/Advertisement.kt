@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -25,6 +27,7 @@ import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.presentation.views.connected.ConnectedDevicesPreview
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 import de.schuettslaar.sensoration.utils.getStringResourceByName
@@ -43,7 +46,7 @@ fun Advertisement(onBack: () -> Unit) {
         AdvertisementContent(
             modifier = Modifier.padding(innerPadding),
             onBack = onBack,
-            connectedDevices = viewModel.connectedDevices,
+            connectedDeviceInfos = viewModel.connectedDeviceInfos.toMutableMap(),
             sensorType = viewModel.currentSensorType,
             status = viewModel.status,
             onDrawerOpen = {
@@ -52,6 +55,10 @@ fun Advertisement(onBack: () -> Unit) {
             onStartReceiving = {
                 viewModel.startReceiving()
             },
+            onStopReceiving = {
+                viewModel.stopReceiving()
+            },
+            isReceiving = viewModel.isReceiving,
             onStop = {
                 viewModel.stop()
             },
@@ -68,8 +75,7 @@ fun Advertisement(onBack: () -> Unit) {
     }
     ConnectedDevicesPreview(
         isDrawerOpen = viewModel.isDrawerOpen,
-        connectedDevices = viewModel.connectedDevices,
-        connectionDevicesStatus = viewModel.connectionDevicesStatus,
+        connectedDeviceInfos = viewModel.connectedDeviceInfos,
         onConfirmRemove = {
             viewModel.disconnect(it)
         })
@@ -80,12 +86,14 @@ fun Advertisement(onBack: () -> Unit) {
 @Composable
 fun AdvertisementContent(
     modifier: Modifier = Modifier,
-    connectedDevices: Map<String, String>,
+    connectedDeviceInfos: MutableMap<String, DeviceInfo>,
     sensorType: SensorType?,
     status: NearbyStatus,
     onDrawerOpen: () -> Unit,
     onBack: () -> Unit,
     onStartReceiving: () -> Unit,
+    onStopReceiving: () -> Unit,
+    isReceiving: Boolean = false,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
     onStartDebugMeasurement: () -> Unit = { },
@@ -93,7 +101,9 @@ fun AdvertisementContent(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         StatusInformation(
             statusText = getStringResourceByName(
@@ -112,12 +122,12 @@ fun AdvertisementContent(
                 Text(
                     stringResource(
                         R.string.connected_devices_description,
-                        connectedDevices.size
+                        connectedDeviceInfos.size
                     )
                 )
             },
             trailingContent = {
-                if (connectedDevices.isEmpty()) {
+                if (connectedDeviceInfos.isEmpty()) {
                     Icon(Icons.Default.Close, stringResource(R.string.no_connected_devices))
                 } else {
                     Icon(Icons.Default.Check, stringResource(R.string.connected_devices))
@@ -129,14 +139,28 @@ fun AdvertisementContent(
             onSensorChange(it)
         }, noSensorSelectedDescription = R.string.no_sensor_selected, trailingContent = {
             Button(
-                enabled = connectedDevices.isNotEmpty() && sensorType != null,
-                onClick = onStartReceiving,
+                enabled = connectedDeviceInfos.isNotEmpty() && sensorType != null,
+                onClick = {
+                    if (isReceiving) {
+                        onStopReceiving()
+                    } else {
+                        onStartReceiving()
+                    }
+                },
             ) {
-                Text(stringResource(R.string.start_receiving_data))
+                if (isReceiving) {
+                    Text(stringResource(R.string.stop_receiving_data))
+                } else {
+                    Text(stringResource(R.string.start_receiving_data))
+                }
             }
         })
 
-        DataDisplay(sensorType)
+        AnimatedVisibility(sensorType != null) {
+            DataDisplay(
+                sensorType, data = connectedDeviceInfos
+            )
+        }
 
         Button(onClick = {
             onStop()
