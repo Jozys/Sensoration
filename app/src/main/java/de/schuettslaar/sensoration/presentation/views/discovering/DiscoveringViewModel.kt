@@ -17,6 +17,8 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
         mapOf<String, DiscoveredEndpointInfo>()
     )
 
+    var thisApplicationStatus by mutableStateOf(ApplicationStatus.IDLE)
+
     init {
         this.thisDevice = Client(
             context = application,
@@ -46,11 +48,18 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
             },
             onDisconnectedCallback = { endpointId, status ->
                 this.onDisconnectedCallback(endpointId, status)
-            }
+            },
+            onSensorTypeChanged = { sensorType ->
+                this.currentSensorType = sensorType
+            },
+            onApplicationStatusChanged = { applicationStatus ->
+                thisApplicationStatus = applicationStatus
+            },
         )
         this.thisDevice?.start { text, status ->
             this.callback(text, status)
         }
+
     }
 
     fun onEndpointAddCallback(endpointId: String, info: DiscoveredEndpointInfo) {
@@ -67,11 +76,22 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
         thisDevice?.stop { text, status ->
             this.callback(text, status)
         }
-        connectedDevices = mapOf()
+        var client = thisDevice as? Client
+        client?.stopSensorCollection()
+        client?.stopPeriodicSending()
+        cleanUp()
     }
 
     fun sendMessage() {
         this.sendMessage(connectedDevices.keys.first())
+    }
+
+    fun cleanUp() {
+        thisDevice?.cleanUp()
+        possibleConnections = mapOf()
+        connectedDevices = mapOf()
+        thisApplicationStatus = ApplicationStatus.IDLE
+        currentSensorType = null
     }
 
 }

@@ -34,11 +34,11 @@ import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.presentation.core.drawerOverlay.DrawerOverlay
 import de.schuettslaar.sensoration.presentation.core.icon.ApplicationStatusIcon
+import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 
 @Composable
 fun ConnectedDevicesPreview(
-    connectedDevices: Map<String, String>?,
-    connectionDevicesStatus: Map<String, ApplicationStatus>?,
+    connectedDeviceInfos: Map<String, DeviceInfo>?,
     onConfirmRemove: (String) -> Unit,
     isDrawerOpen: MutableState<Boolean>,
 
@@ -80,8 +80,7 @@ fun ConnectedDevicesPreview(
             },
             drawerContent = {
                 ConnectedList(
-                    connectedDevices = connectedDevices,
-                    connectedDevicesStatus = connectionDevicesStatus,
+                    connectedDeviceInfos,
                     onConfirmRemove = onConfirmRemove
                 )
             },
@@ -97,14 +96,13 @@ fun ConnectedDevicesPreview(
 
 @Composable
 fun ConnectedList(
-    connectedDevices: Map<String, String>?,
-    connectedDevicesStatus: Map<String, ApplicationStatus>? = null,
+    connectedDeviceInfos: Map<String, DeviceInfo>?,
     onConfirmRemove: (String) -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
     Column {
-        if (connectedDevices.isNullOrEmpty()) {
+        if (connectedDeviceInfos.isNullOrEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(8.dp)
@@ -126,20 +124,21 @@ fun ConnectedList(
 
         }
         LazyColumn {
-            items(connectedDevices?.entries?.toList() ?: emptyList()) { value ->
+            items(connectedDeviceInfos?.entries?.toList() ?: emptyList()) { value ->
                 ListItem(
                     modifier = Modifier.clickable(onClick = {
                         showDialog = true
                     }),
                     headlineContent = {
-                        Text(value.value)
+                        Text(value.value.deviceName)
                     },
                     supportingContent = {
                         Text(value.key)
                     },
                     trailingContent = {
                         ApplicationStatusIcon(
-                            applicationStatus = connectedDevicesStatus?.get(value.key)
+                            applicationStatus = connectedDeviceInfos?.get(value.key)
+                                ?.applicationStatus
                                 ?: ApplicationStatus.ERROR,
                             modifier = Modifier.padding(8.dp)
                         )

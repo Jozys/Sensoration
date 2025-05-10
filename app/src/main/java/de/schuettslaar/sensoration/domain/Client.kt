@@ -32,13 +32,18 @@ class Client : Device {
     private var sensorJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+    private val onSensorTypeChangedCallback: (SensorType) -> Unit
+    private val onApplicationStatusChangedCallback: (ApplicationStatus) -> Unit
+
     constructor(
         context: Context,
         onEndpointAddCallback: (Pair<String, DiscoveredEndpointInfo>) -> Unit,
         onEndpointRemoveCallback: (String) -> Unit,
         onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit,
         onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
-        onDisconnectedCallback: (String, NearbyStatus) -> Unit
+        onDisconnectedCallback: (String, NearbyStatus) -> Unit,
+        onSensorTypeChanged: (SensorType) -> Unit,
+        onApplicationStatusChanged: (ApplicationStatus) -> Unit,
     ) : super() {
         this.isMaster = false
         this.wrapper = DiscoverNearbyWrapper(
@@ -57,6 +62,9 @@ class Client : Device {
             }
         )
         sensorManager = SensorManager(context)
+
+        onSensorTypeChangedCallback = onSensorTypeChanged
+        onApplicationStatusChangedCallback = onApplicationStatusChanged
     }
 
     fun startSensorCollection(sensorType: SensorType) {
@@ -74,6 +82,10 @@ class Client : Device {
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
         sensorManager.startListening()
         applicationStatus = ApplicationStatus.ACTIVE
+        onApplicationStatusChangedCallback(
+            applicationStatus,
+        )
+        onSensorTypeChangedCallback(sensorType)
     }
 
     fun stopSensorCollection() {

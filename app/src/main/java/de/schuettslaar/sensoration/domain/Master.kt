@@ -32,6 +32,7 @@ class Master : Device {
     private var ptpJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+    private val onSensorDataChangedCallback: (String, List<WrappedSensorData>, ApplicationStatus) -> Unit
 
     private var sensorType: SensorType? = null
 
@@ -39,10 +40,12 @@ class Master : Device {
         context: Context,
         onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
         onDisconnectedCallback: (String, NearbyStatus) -> Unit,
-        onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit
+        onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit,
+        onSensorDataChangedCallback: (String, List<WrappedSensorData>, ApplicationStatus) -> Unit,
     ) : super() {
         this.ownDeviceId = MASTER_NAME
         this.isMaster = true
+        this.onSensorDataChangedCallback = onSensorDataChangedCallback
         this.wrapper = AdvertiseNearbyWrapper(
             context = context,
             onConnectionResultCallback = onConnectionResultCallback,
@@ -99,11 +102,20 @@ class Master : Device {
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Sensor data received from ${sensorData.senderDeviceId} > ${sensorData.sensorData}")
-        sensorDataMap.getOrDefault(
+        var data = sensorDataMap.getOrDefault(
             endpointId, CircularFifoQueue(
                 PROCESSED_VALUES_CAPACITY
             )
-        ).add(sensorData)
+        )
+        data.add(sensorData)
+        sensorDataMap[endpointId] = data
+
+
+        onSensorDataChangedCallback(
+            endpointId,
+            sensorDataMap[endpointId]?.toList() ?: emptyList(),
+            sensorData.state
+        )
     }
 
     fun broadcastMessage(message: Message) {

@@ -22,6 +22,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var text by mutableStateOf("")
     var connectedDevices by mutableStateOf(mapOf<String, String>())
     var isLoading by mutableStateOf(false)
+    var currentSensorType by mutableStateOf<SensorType?>(null)
 
     var isSending: Boolean = false
 
