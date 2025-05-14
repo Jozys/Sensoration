@@ -6,11 +6,33 @@ import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 import de.schuettslaar.sensoration.application.data.SoundPressureClientDataProcessing
 
+/**
+ * A enum class representing different types of sensors used in the application.
+ * */
 enum class SensorType(
+    /**
+     * The ID of the sensor, used for identifying the sensor in the Android system.
+     */
     val sensorId: Int,
+    /**
+     * The display name of the sensor, used for displaying in the UI.
+     */
     val displayNameId: Int,
+    /**
+     * The description of the sensor, used for displaying in the UI.
+     */
     val descriptionId: Int,
+    /**
+     * The client data processing strategy used for processing the sensor data.
+     */
     val clientDataProcessing: ClientDataProcessing,
+    /**
+     * The size of the value array, defined by Androids sensor API.
+     */
+    val valueSize: Int = 1,
+    /**
+     * The delay in milliseconds between sensor updates.
+     */
     val processingDelay: Long = 100L, // Delay in milliseconds
 ) {
     PRESSURE(
@@ -23,14 +45,16 @@ enum class SensorType(
         Sensor.TYPE_GRAVITY,
         R.string.sensor_gravity,
         R.string.sensor_gravity_description,
-        RawClientDataProcessing()
+        RawClientDataProcessing(),
+        valueSize = 3,
     ),
     ACCELEROMETER(
         Sensor.TYPE_ACCELEROMETER,
         R.string.sensor_accelerometer,
         R.string.sensor_accelerometer_description,
         RawClientDataProcessing(),
-        processingDelay = 500L
+        processingDelay = 500L,
+        valueSize = 3
     ),
     SOUND_PRESSURE(
         -1000, // Custom ID for microphone

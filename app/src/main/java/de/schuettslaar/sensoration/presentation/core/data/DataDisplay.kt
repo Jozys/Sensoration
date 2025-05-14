@@ -18,19 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.himanshoe.charty.common.ChartColor
-import com.himanshoe.charty.line.config.LineChartColorConfig
-import com.himanshoe.charty.line.model.LineData
-import com.himanshoe.charty.line.model.MultiLineData
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
-import kotlin.math.roundToLong
 
 @Composable
 fun DataDisplay(
@@ -51,27 +45,28 @@ fun DataDisplay(
             modifier = Modifier.padding(8.dp)
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            var parsedData =
+                DataToMultiLineDataService.parseSensorData(
+                    data,
+                    primaryColor,
+                    sensorType?.valueSize ?: 1
+                )
+            if (parsedData.isNotEmpty()) {
+                when (sensorType) {
+                    SensorType.ACCELEROMETER, SensorType.GRAVITY -> parsedData.map { sensorData ->
+                        StandardDisplay(sensorData)
+                    }
 
-            when (sensorType) {
-                SensorType.PRESSURE -> StandardDisplay(
-                    parseSensorData(
-                        data, primaryColor
+                    SensorType.PRESSURE, SensorType.SOUND_PRESSURE -> StandardDisplay(
+                        parsedData.first()
                     )
-                )
 
-                SensorType.ACCELEROMETER -> AccelerometerDisplay()
-                SensorType.GRAVITY -> GravityDisplay()
-                SensorType.SOUND_PRESSURE -> StandardDisplay(
-                    parseSensorData(data, primaryColor)
-                )
-
-                else -> {
-                    // Handle unknown sensor type
-
-                    NoVisualizationAvailable()
+                    else -> {
+                        // Handle unknown sensor type
+                        NoVisualizationAvailable()
+                    }
 
                 }
-
             }
             if (data.isNotEmpty()) {
                 Legend(title = stringResource(R.string.data_display_legend), data = data)
@@ -80,17 +75,6 @@ fun DataDisplay(
 
 
     }
-}
-
-@Composable
-fun GravityDisplay() {
-    NoVisualizationAvailable()
-}
-
-@Composable
-fun AccelerometerDisplay() {
-    //TODO("Not yet implemented")
-    NoVisualizationAvailable()
 }
 
 @Composable
@@ -166,55 +150,5 @@ fun Legend(
             }
         }
     }
-}
-
-/**
- * We need to parse the data from the sensors
- * Therefore we need to put together a list of MultiLineData grouped by the endPointIds
- * */
-fun parseSensorData(
-    data: Map<String, DeviceInfo>,
-    primaryColor: Color,
-): Map<String, MultiLineData> {
-    var list = mapOf<String, MultiLineData>()
-
-    data.forEach {
-        val entry = it.key
-        val wrappedSensorData = it.value.sensorData
-
-        var localLineData = mutableListOf<LineData>()
-        wrappedSensorData.forEach { sensorDatas ->
-            sensorDatas.sensorData.value.forEach { sensorData ->
-                if (!sensorData.isNaN()) {
-                    // Add the sensor data to the localLineData
-                    // We need to round the value to 2 decimal places
-                    localLineData = localLineData.plus(
-                        LineData(
-                            xValue = wrappedSensorData.indexOf(sensorDatas),
-                            // Rounde that to 2 decimal places
-                            yValue = (sensorData * 100).roundToLong() / 100.0f,
-                        )
-                    ).toMutableList()
-                }
-            }
-        }
-
-        val deviceColor = generateColorBasedOnName(entry)
-        // Create a new MultiLineData object for each entry
-        val multiLineData = MultiLineData(
-            colorConfig = LineChartColorConfig(
-                lineColor = ChartColor.Solid(color = deviceColor),
-                axisColor = ChartColor.Solid(color = primaryColor),
-                gridLineColor = ChartColor.Solid(color = primaryColor),
-                lineFillColor = ChartColor.Solid(color = primaryColor),
-                selectionBarColor = ChartColor.Solid(color = primaryColor),
-            ),
-            data = localLineData
-        )
-        list = list.plus(entry to multiLineData)
-
-    }
-
-    return list;
 }
 
