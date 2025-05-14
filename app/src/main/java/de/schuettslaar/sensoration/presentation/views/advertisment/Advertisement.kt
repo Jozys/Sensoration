@@ -10,6 +10,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -40,7 +42,6 @@ fun Advertisement(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             AnimatedVisibility(!viewModel.isDrawerOpen.value) { HomeAppBar() }
-
         }
     ) { innerPadding ->
         AdvertisementContent(
@@ -65,12 +66,6 @@ fun Advertisement(onBack: () -> Unit) {
             onSensorChange = {
                 viewModel.currentSensorType = it
             },
-            onStartDebugMeasurement = {
-                viewModel.startDebugMeasurement()
-            },
-            onStopDebugMeasurement = {
-                viewModel.stopDebugMeasurement()
-            }
         )
     }
     ConnectedDevicesPreview(
@@ -79,8 +74,6 @@ fun Advertisement(onBack: () -> Unit) {
         onConfirmRemove = {
             viewModel.disconnect(it)
         })
-
-
 }
 
 @Composable
@@ -96,8 +89,6 @@ fun AdvertisementContent(
     isReceiving: Boolean = false,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
-    onStartDebugMeasurement: () -> Unit = { },
-    onStopDebugMeasurement: () -> Unit = { },
 ) {
     Column(
         modifier = modifier
@@ -149,14 +140,20 @@ fun AdvertisementContent(
                 },
             ) {
                 if (isReceiving) {
-                    Text(stringResource(R.string.stop_receiving_data))
+                    Icon(
+                        Icons.Default.Stop,
+                        contentDescription = stringResource(R.string.stop_receiving_data)
+                    )
                 } else {
-                    Text(stringResource(R.string.start_receiving_data))
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = stringResource(R.string.stop_receiving_data)
+                    )
                 }
             }
         })
 
-        AnimatedVisibility(sensorType != null) {
+        AnimatedVisibility(sensorType != null && isReceiving) {
             DataDisplay(
                 sensorType, data = connectedDeviceInfos
             )
@@ -167,13 +164,6 @@ fun AdvertisementContent(
             onBack()
         }) {
             Text(stringResource(R.string.stop_advertising))
-        }
-
-        Button(onClick = { onStartDebugMeasurement() }) {
-            Text(stringResource(R.string.start_debug_measurement))
-        }
-        Button(onClick = { onStopDebugMeasurement() }) {
-            Text(stringResource(R.string.stop_debug_measurement))
         }
     }
 }

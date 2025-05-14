@@ -95,6 +95,9 @@ class Master : Device {
         }
     }
 
+    fun clearSensorData() {
+        sensorDataMap.clear()
+    }
 
     private fun processSensorData(
         sensorData: WrappedSensorData,

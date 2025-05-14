@@ -8,7 +8,6 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
-import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import java.util.logging.Logger
@@ -96,7 +95,6 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
     fun startReceiving() {
         Logger.getLogger(this.javaClass.simpleName).info { "Starting receiving" }
-        // TODO: Implement start receiving
         val master = this.thisDevice as? Master
         if (master == null) {
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
@@ -107,6 +105,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
             Logger.getLogger(this.javaClass.simpleName).info { "Sensor type is null" }
             return
         }
+        master.clearSensorData()
         master.startMeasurement(currentSensorType!!)
 
         isReceiving = true
@@ -127,24 +126,6 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
     fun disconnect(endpointId: String) {
         Logger.getLogger(this.javaClass.simpleName).info { "Disconnecting from $endpointId" }
         thisDevice?.disconnect(endpointId)
-    }
-
-
-    fun startDebugMeasurement() {
-        //TODO: rem debug implementation
-        Logger.getLogger(this.javaClass.simpleName).info { "Starting debug measurement" }
-
-        val master = this.thisDevice as? Master
-        if (master == null) {
-            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
-            return
-        }
-        master.startMeasurement(SensorType.SOUND_PRESSURE)
-    }
-
-    fun stopDebugMeasurement() {
-        val master = this.thisDevice as? Master
-        master?.stopMeasurement()
     }
 
     fun setConnectedDeviceInfo(
