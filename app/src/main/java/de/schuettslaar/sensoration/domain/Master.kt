@@ -227,7 +227,7 @@ class Master : Device {
                 delay(intervalMs)
 
                 val latestSensorData = sensorManager.getLatestSensorData()
-                Log.d(this.javaClass.simpleName, "Latest sensor data: $latestSensorData")
+                Log.d("SensorCollectionOnMaster-Routine", "Latest sensor data: $latestSensorData")
                 if (latestSensorData != null) {
 
                     val wrappedSensorData = WrappedSensorData(
@@ -239,7 +239,7 @@ class Master : Device {
                     processSensorData(wrappedSensorData, MASTER_NAME)
 
                 } else {
-                    Log.d(this.javaClass.simpleName, "No sensor data available")
+                    Log.d("SensorCollectionOnMaster-Routine", "No sensor data available")
                 }
             }
         }
