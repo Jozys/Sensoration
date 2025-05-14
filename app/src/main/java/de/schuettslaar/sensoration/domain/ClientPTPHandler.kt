@@ -8,6 +8,12 @@ interface PTPHandler {
     fun getAdjustedTime(): Long
 }
 
+class MasterPTPHandler : PTPHandler {
+    override fun getAdjustedTime(): Long {
+        return System.currentTimeMillis()
+    }
+}
+
 class ClientPTPHandler : PTPHandler {
     private var t1: Long = 0
     private var t2: Long = 0
