@@ -6,11 +6,13 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.util.Log
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
+import de.schuettslaar.sensoration.domain.PTPHandler
 import android.hardware.SensorManager as AndroidSensorManager
 
 class HardwareSensorHandler(
     private val context: Context,
-    private val sensorType: Int
+    private val sensorType: Int,
+    private val ptpHandler: PTPHandler
 ) : SensorHandler {
 
     private var androidSensorManager =
@@ -56,7 +58,7 @@ class HardwareSensorHandler(
             if (event == null) return
 
             val rawSensorData = RawSensorData(
-                timestamp = System.currentTimeMillis(),
+                timestamp = ptpHandler.getAdjustedTime(),
                 sensorType = event.sensor.type,
                 value = event.values.clone()
             )

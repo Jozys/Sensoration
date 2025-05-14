@@ -4,7 +4,11 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import java.util.Date
 import java.util.logging.Logger
 
-class ClientPTPHandler {
+interface PTPHandler {
+    fun getAdjustedTime(): Long
+}
+
+class ClientPTPHandler : PTPHandler {
     private var t1: Long = 0
     private var t2: Long = 0
     private var t3: Long = 0
@@ -61,7 +65,7 @@ class ClientPTPHandler {
         t4 = 0
     }
 
-    fun getAdjustedTime(): Long {
+    override fun getAdjustedTime(): Long {
         return System.currentTimeMillis() + offset
     }
 }

@@ -4,8 +4,9 @@ import android.content.Context
 import android.util.Log
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
+import de.schuettslaar.sensoration.domain.PTPHandler
 
-class SensorManager(private val context: Context) {
+class SensorManager(private val context: Context, private val ptpHandler: PTPHandler) {
 
     private var currentHandler: SensorHandler? = null
     private val TAG = "SensorManager"
@@ -19,8 +20,8 @@ class SensorManager(private val context: Context) {
 
         // Create appropriate handler based on sensor type
         currentHandler = when (sensorType) {
-            SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context)
-            else -> HardwareSensorHandler(context, sensorType)
+            SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context, ptpHandler)
+            else -> HardwareSensorHandler(context, sensorType, ptpHandler)
         }
 
         // Initialize the handler

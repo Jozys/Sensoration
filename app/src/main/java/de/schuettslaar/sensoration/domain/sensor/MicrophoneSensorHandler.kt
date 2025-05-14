@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
+import de.schuettslaar.sensoration.domain.PTPHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,7 +23,8 @@ private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_FLOAT
 private const val BUFFER_SIZE_FACTOR = 2
 private const val SAMPLE_RATE = 44100
 
-class MicrophoneSensorHandler(private val context: Context) : SensorHandler {
+class MicrophoneSensorHandler(private val context: Context, private val ptpHandler: PTPHandler) :
+    SensorHandler {
     private val TAG = "MicrophoneSensorHandler"
 
     private var processor: ClientDataProcessing? = null
@@ -101,7 +103,7 @@ class MicrophoneSensorHandler(private val context: Context) : SensorHandler {
                     // Check if data was read successfully
                     if (readResult > 0) {
                         val rawData = RawSensorData(
-                            timestamp = System.currentTimeMillis(),
+                            timestamp = ptpHandler.getAdjustedTime(),
                             sensorType = SensorType.SOUND_PRESSURE.sensorId,
                             value = buffer
                         )

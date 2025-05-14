@@ -56,7 +56,7 @@ class Client : Device {
                 }
             }
         )
-        sensorManager = SensorManager(context)
+        sensorManager = SensorManager(context, clientPtpHandler)
     }
 
     fun startSensorCollection(sensorType: SensorType) {
