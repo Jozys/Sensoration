@@ -49,4 +49,13 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
         currentHandler?.cleanup()
         currentHandler = null
     }
+
+    fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
+        currentHandler?.checkDeviceSupportsSensorType(sensorType)?.let {
+            return it
+        } ?: run {
+            Log.e(TAG, "This sensor type is not supported or not registered.")
+            return false
+        }
+    }
 }

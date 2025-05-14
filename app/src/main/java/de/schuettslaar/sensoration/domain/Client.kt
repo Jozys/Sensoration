@@ -65,7 +65,7 @@ class Client : Device {
             return
         }
 
-        if (!checkDeviceSupportsSensorType(sensorType)) {
+        if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
             Log.d(this.javaClass.simpleName, "Device does not support sensor type: $sensorType")
             applicationStatus = ApplicationStatus.IDLE
             return
@@ -133,10 +133,6 @@ class Client : Device {
         }
     }
 
-
-    private fun checkDeviceSupportsSensorType(sensorType: SensorType): Boolean {
-        return true // TODO implement checks
-    }
 
     override fun cleanUp() {
         if (connectedDeviceId == null) {

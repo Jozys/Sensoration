@@ -52,6 +52,11 @@ class HardwareSensorHandler(
     override fun cleanup() {
         stopListening()
     }
+    
+    override fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
+        this.sensor = androidSensorManager.getDefaultSensor(sensorType)
+        return this.sensor != null
+    }
 
     private val listener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {

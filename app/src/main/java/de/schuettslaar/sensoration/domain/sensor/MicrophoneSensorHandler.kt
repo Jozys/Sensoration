@@ -138,4 +138,8 @@ class MicrophoneSensorHandler(private val context: Context, private val ptpHandl
     override fun cleanup() {
         stopListening()
     }
+
+    override fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
+        return true
+    }
 }
