@@ -69,4 +69,8 @@
     <string name="data_display_legend">Legend</string>
     <string name="data_display_title">Sensor Data</string>
     <string name="stop_receiving_data">Stop</string>
+    <string name="sensor_sound_pressure_description">Measurement of the sound pressure recorded by the microphone sensors</string>
+    <string name="sensor_sound_pressure">Sound Pressure</string>
+    <string name="index">Index</string>
+    <string name="sensor_data_unit">Unit</string>
 </resources>

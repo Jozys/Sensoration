@@ -3,6 +3,7 @@ package de.schuettslaar.sensoration.domain.sensor
 import android.hardware.Sensor
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
+import de.schuettslaar.sensoration.application.data.MinMaxClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 import de.schuettslaar.sensoration.application.data.SoundPressureClientDataProcessing
 
@@ -56,10 +57,18 @@ enum class SensorType(
         processingDelay = 500L,
         valueSize = 3
     ),
-    SOUND_PRESSURE(
-        -1000, // Custom ID for microphone
+    MIN_MAX_SOUND_AMPLITUDE(
+        -1001, // Custom ID for microphone
         R.string.sensor_microphone,
         R.string.sensor_microphone_description,
+        MinMaxClientDataProcessing(),
+        processingDelay = 100L,
+        valueSize = 2
+    ),
+    SOUND_PRESSURE(
+        -1000, // Custom ID for microphone
+        R.string.sensor_sound_pressure,
+        R.string.sensor_sound_pressure_description,
         SoundPressureClientDataProcessing(),
         processingDelay = 100L
     )
