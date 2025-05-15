@@ -79,13 +79,19 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
             },
             onSensorDataChangedCallback = { endpointId, sensorData, applicationStatus ->
                 // Replace the sensor data for the endpointId
-                var deviceInfo = this.connectedDeviceInfos.getValue(endpointId)
-                val newDeviceInfo = DeviceInfo(
-                    deviceName = deviceInfo.deviceName,
-                    sensorData = sensorData,
-                    applicationStatus = applicationStatus,
-                )
-                this.setConnectedDeviceInfo(endpointId, newDeviceInfo)
+                try {
+                    var deviceInfo = this.connectedDeviceInfos.getValue(endpointId)
+                    val newDeviceInfo = DeviceInfo(
+                        deviceName = deviceInfo.deviceName,
+                        sensorData = sensorData,
+                        applicationStatus = applicationStatus,
+                    )
+                    this.setConnectedDeviceInfo(endpointId, newDeviceInfo)
+                } catch (e: Exception) {
+                    Logger.getLogger(this.javaClass.simpleName)
+                        .info { "Failed to add sensor data: ${e.toString()}" }
+                }
+
             }
         )
         this.thisDevice?.start { text, status ->
