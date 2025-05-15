@@ -1,45 +1,94 @@
 package de.schuettslaar.sensoration.presentation.core.data
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.himanshoe.charty.common.ChartColor
-import com.himanshoe.charty.common.LabelConfig
-import com.himanshoe.charty.line.MultiLineChart
-import com.himanshoe.charty.line.model.MultiLineData
+import co.yml.charts.axis.AxisData
+import co.yml.charts.common.extensions.formatToSinglePrecision
+import co.yml.charts.ui.linechart.LineChart
+import co.yml.charts.ui.linechart.model.Line
+import co.yml.charts.ui.linechart.model.LineChartData
+import co.yml.charts.ui.linechart.model.LinePlotData
+import de.schuettslaar.sensoration.R
+
+const val AXIS_STEP_SIZE = 5
 
 @Composable
-fun StandardDisplay(
-    data: Map<String, MultiLineData>
+fun YChartDisplay(
+    data: Map<String, Line>,
 ) {
+    var xAxisLabel = stringResource(R.string.index)
+
     if (data.isEmpty()) {
         NoVisualizationAvailable()
         return
     }
-    MultiLineChart(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .padding(16.dp),
-        labelConfig = LabelConfig(
-            showXLabel = true,
-            showYLabel = true,
-            textColor = ChartColor.Solid(color = MaterialTheme.colorScheme.primary),
-            xAxisCharCount = 10,
-            labelTextStyle = TextStyle(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            ),
+
+    var lineChartData = LineChartData(
+        linePlotData = LinePlotData(
+            lines = data.values.toList(),
         ),
-        data = {
-            data.map {
-                it.value
+        xAxisData = AxisData.Builder().steps(AXIS_STEP_SIZE)
+            .labelData { i ->
+                if (i > 0) {
+                    i.toString()
+                } else {
+                    ""
+                }
             }
-        }
+            .axisLabelDescription {
+                xAxisLabel
+            }
+            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
+            .labelAndAxisLinePadding(12.dp).build(),
+        yAxisData = AxisData.Builder()
+            .steps(AXIS_STEP_SIZE)
+            .labelData {
+                val maxValue = data.entries.first().value.dataPoints.maxOf { it.y }
+                val minValue = data.entries.first().value.dataPoints.minOf { it.y }
+
+                val scale = (maxValue - minValue) / AXIS_STEP_SIZE
+                ((it * scale) + minValue).formatToSinglePrecision()
+            }
+            .axisLabelDescription {
+                "db"
+            }
+            .axisLabelColor(MaterialTheme.colorScheme.onSurface)
+            .labelAndAxisLinePadding(12.dp).build(),
+
+        backgroundColor = MaterialTheme.colorScheme.surface,
     )
+
+    Column() {
+        Text(
+            text = stringResource(R.string.sensor_data_unit),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        )
+
+        LineChart(
+            lineChartData = lineChartData,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+        )
+
+        Text(
+            text = stringResource(R.string.index),
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth()
+        )
+    }
+
 }

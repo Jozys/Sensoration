@@ -46,18 +46,17 @@ fun DataDisplay(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             var parsedData =
-                DataToMultiLineDataService.parseSensorData(
+                DataToLineDataService.parseSensorData(
                     data,
-                    primaryColor,
                     sensorType?.valueSize ?: 1
                 )
             if (parsedData.isNotEmpty()) {
                 when (sensorType) {
-                    SensorType.ACCELEROMETER, SensorType.GRAVITY -> parsedData.map { sensorData ->
-                        StandardDisplay(sensorData)
+                    SensorType.ACCELEROMETER, SensorType.GRAVITY, SensorType.MIN_MAX_SOUND_AMPLITUDE -> parsedData.map { sensorData ->
+                        YChartDisplay(sensorData)
                     }
 
-                    SensorType.PRESSURE, SensorType.SOUND_PRESSURE -> StandardDisplay(
+                    SensorType.PRESSURE, SensorType.SOUND_PRESSURE -> YChartDisplay(
                         parsedData.first()
                     )
 
