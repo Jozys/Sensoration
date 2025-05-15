@@ -144,6 +144,8 @@ class Client : Device {
         stopPeriodicSending()
         // Maybe send a disconnect request message to the master before disconnecting
 
+        sensorManager.cleanup()
+
         wrapper?.disconnect(connectedDeviceId!!)
         this.connectedDeviceId = null
         stopSensorCollection()

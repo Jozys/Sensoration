@@ -75,6 +75,8 @@ class Master : Device {
         }
 
         stopMeasurement()
+        sensorManager.cleanup()
+
         connectedDevices.forEach {
             wrapper?.disconnect(it)
         }
