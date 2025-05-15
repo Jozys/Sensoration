@@ -32,7 +32,7 @@ class Master : Device {
 
     // Optional the master can also provide sensor data
     private val sensorManager: SensorManager
-    private var masterDeviceProvidesData: Boolean = false
+    private var masterDeviceProvidesData: Boolean = true
     private var sensorJob: Job? = null
     private val ptpHandler = MasterPTPHandler()
 

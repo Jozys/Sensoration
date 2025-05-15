@@ -19,13 +19,15 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
         currentHandler?.cleanup()
 
         // Create appropriate handler based on sensor type
-        currentHandler = when (sensorType) {
-            SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context, ptpHandler)
-            else -> HardwareSensorHandler(context, sensorType, ptpHandler)
-        }
+        currentHandler = obtainHandlerForSensorType(sensorType)
 
         // Initialize the handler
         currentHandler?.initialize(processor)
+    }
+
+    private fun obtainHandlerForSensorType(sensorType: Int): SensorHandler = when (sensorType) {
+        SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context, ptpHandler)
+        else -> HardwareSensorHandler(context, sensorType, ptpHandler)
     }
 
     fun startListening() {
@@ -51,11 +53,7 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
     }
 
     fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
-        currentHandler?.checkDeviceSupportsSensorType(sensorType)?.let {
-            return it
-        } ?: run {
-            Log.e(TAG, "This sensor type is not supported or not registered.")
-            return false
-        }
+        val handler = obtainHandlerForSensorType(sensorType)
+        return handler.checkDeviceSupportsSensorType(sensorType)
     }
 }
