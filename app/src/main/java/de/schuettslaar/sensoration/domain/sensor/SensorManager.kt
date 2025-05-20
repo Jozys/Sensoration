@@ -4,8 +4,9 @@ import android.content.Context
 import android.util.Log
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
+import de.schuettslaar.sensoration.domain.PTPHandler
 
-class SensorManager(private val context: Context) {
+class SensorManager(private val context: Context, private val ptpHandler: PTPHandler) {
 
     private var currentHandler: SensorHandler? = null
     private val TAG = "SensorManager"
@@ -18,13 +19,15 @@ class SensorManager(private val context: Context) {
         currentHandler?.cleanup()
 
         // Create appropriate handler based on sensor type
-        currentHandler = when (sensorType) {
-            SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context)
-            else -> HardwareSensorHandler(context, sensorType)
-        }
+        currentHandler = obtainHandlerForSensorType(sensorType)
 
         // Initialize the handler
         currentHandler?.initialize(processor)
+    }
+
+    private fun obtainHandlerForSensorType(sensorType: Int): SensorHandler = when (sensorType) {
+        SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context, ptpHandler)
+        else -> HardwareSensorHandler(context, sensorType, ptpHandler)
     }
 
     fun startListening() {
@@ -47,5 +50,19 @@ class SensorManager(private val context: Context) {
     fun cleanup() {
         currentHandler?.cleanup()
         currentHandler = null
+    }
+
+    /**
+     * Checks if the device supports the specified sensor type.
+     *
+     * This function determines whether the device is capable of handling the given
+     * sensor type by delegating the check to the appropriate sensor handler.
+     *
+     * @param sensorType The type of sensor to check, represented as an integer.
+     * @return `true` if the device supports the specified sensor type, `false` otherwise.
+     */
+    fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
+        val handler = obtainHandlerForSensorType(sensorType)
+        return handler.checkDeviceSupportsSensorType(sensorType)
     }
 }

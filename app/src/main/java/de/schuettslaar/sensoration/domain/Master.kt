@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.domain
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import de.schuettslaar.sensoration.adapter.nearby.AdvertiseNearbyWrapper
@@ -11,6 +12,7 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +29,12 @@ const val MASTER_NAME = "MASTER"
 
 class Master : Device {
     private val sensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
+
+    // Optional the master can also provide sensor data
+    private val sensorManager: SensorManager
+    private var masterDeviceProvidesData: Boolean = true
+    private var sensorJob: Job? = null
+    private val ptpHandler = MasterPTPHandler()
 
     // For periodic sending
     private var ptpJob: Job? = null
@@ -56,6 +64,7 @@ class Master : Device {
                 }
 
             })
+        sensorManager = SensorManager(context, ptpHandler)
     }
 
     override fun cleanUp() {
@@ -66,6 +75,8 @@ class Master : Device {
         }
 
         stopMeasurement()
+        sensorManager.cleanup()
+
         connectedDevices.forEach {
             wrapper?.disconnect(it)
         }
@@ -124,6 +135,11 @@ class Master : Device {
         )
         startPTP(1000)
         broadcastMessage(startMeasurementMessage)
+
+        if (masterDeviceProvidesData) {
+            startSensorCollectionOnMaster(sensorType, sensorType.processingDelay)
+
+        }
     }
 
     fun stopMeasurement() {
@@ -133,6 +149,10 @@ class Master : Device {
             state = ApplicationStatus.DESTINATION,
         )
         broadcastMessage(stopMeasurementMessage)
+
+        if (masterDeviceProvidesData) {
+            stopSensorCollectionOnMaster()
+        }
     }
 
     fun setSensor(sensor: SensorType) {
@@ -188,5 +208,53 @@ class Master : Device {
             Logger.getLogger(this.javaClass.simpleName)
                 .info("PTP message type not supported")
         }
+    }
+
+    private fun startSensorCollectionOnMaster(sensorType: SensorType, intervalMs: Long = 100) {
+        if (!masterDeviceProvidesData) {
+            Log.d(this.javaClass.simpleName, "Master Device does not provide sensor data")
+            return
+        }
+
+        if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
+            Log.d(this.javaClass.simpleName, "Master Device does not has sensor type: $sensorType")
+            return
+        }
+
+        sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
+        sensorManager.startListening()
+
+        sensorJob = coroutineScope.launch {
+            while (isActive) {
+                delay(intervalMs)
+
+                val latestSensorData = sensorManager.getLatestSensorData()
+                Log.d("SensorCollectionOnMaster-Routine", "Latest sensor data: $latestSensorData")
+                if (latestSensorData != null) {
+
+                    val wrappedSensorData = WrappedSensorData(
+                        messageTimeStamp = ptpHandler.getAdjustedTime(),
+                        ownDeviceId.toString(),
+                        applicationStatus,
+                        latestSensorData
+                    )
+                    processSensorData(wrappedSensorData, MASTER_NAME)
+
+                } else {
+                    Log.d("SensorCollectionOnMaster-Routine", "No sensor data available")
+                }
+            }
+        }
+    }
+
+    fun stopSensorCollectionOnMaster() {
+        if (!masterDeviceProvidesData) {
+            Log.d(this.javaClass.simpleName, "Master Device does not provide sensor data")
+        }
+
+        sensorManager.stopListening()
+        sensorJob?.cancel()
+        sensorJob = null
+
     }
 }
