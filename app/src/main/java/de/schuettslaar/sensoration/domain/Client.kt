@@ -169,6 +169,8 @@ class Client : Device {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
             return
         }
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Message received from $endpointId of type ${message.messageType}")
 
         when (message.messageType) {
             MessageType.HANDSHAKE -> handleHandshakeMessage(message)
@@ -209,6 +211,9 @@ class Client : Device {
     }
 
     fun sendDelayRequest(delayRequestMessage: PTPMessage) {
+        Log.d(
+            javaClass.simpleName, "sendDelayRequest: $delayRequestMessage"
+        )
         sendMessage(connectedDeviceId!!, delayRequestMessage)
     }
 }

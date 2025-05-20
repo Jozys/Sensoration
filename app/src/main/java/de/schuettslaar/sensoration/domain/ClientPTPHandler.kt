@@ -1,5 +1,6 @@
 package de.schuettslaar.sensoration.domain
 
+import android.util.Log
 import de.schuettslaar.sensoration.application.data.PTPMessage
 import java.util.Date
 import java.util.logging.Logger
@@ -24,6 +25,7 @@ class ClientPTPHandler : PTPHandler {
 
 
     fun handleMessage(ptpMessage: PTPMessage, client: Client) {
+        Log.d(javaClass.simpleName, "PTP message: $ptpMessage")
         when (ptpMessage.ptpType) {
             PTPMessage.PTPMessageType.SYNC -> handleSync(ptpMessage)
             PTPMessage.PTPMessageType.FOLLOW_UP -> handleFollowUp(ptpMessage, client)
@@ -39,20 +41,19 @@ class ClientPTPHandler : PTPHandler {
         t4 = message.messageTimeStamp
 
         offset = ((t2 - t1) - (t4 - t3)) / 2
-        Logger.getLogger(this.javaClass.simpleName)
-            .info("Calculated new Offset: $offset")
-        Logger.getLogger(this.javaClass.simpleName)
-            .info("t1: $t1, t2: $t2, t3: $t3, t4: $t4")
+        Logger.getLogger(this.javaClass.simpleName).info("Calculated new Offset: $offset")
+        Logger.getLogger(this.javaClass.simpleName).info("t1: $t1, t2: $t2, t3: $t3, t4: $t4")
 
-        Date(System.currentTimeMillis() + offset).let {
-            Logger.getLogger(this.javaClass.simpleName)
-                .info("Adjusted time: $it; unadjusted: ${Date(System.currentTimeMillis())}")
-        }
+
+        val ptpDate = Date(System.currentTimeMillis() + offset)
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Adjusted PTP time: $ptpDate; unadjusted: ${Date(System.currentTimeMillis())}")
+
 
     }
 
     private fun handleFollowUp(message: PTPMessage, client: Client) {
-        if (client.connectedDevices.isEmpty()) return
+//        if (client.connectedDevices.isEmpty()) return // TODO check why this is not updated
         t1 = message.messageTimeStamp
 
         var delayRequest = PTPMessage(

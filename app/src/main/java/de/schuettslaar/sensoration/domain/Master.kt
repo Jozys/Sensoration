@@ -12,6 +12,7 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import kotlinx.coroutines.CoroutineScope
@@ -22,13 +23,16 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import java.util.logging.Logger
+import kotlin.math.abs
 
-private const val PROCESSED_VALUES_CAPACITY = 10
+private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
 const val MASTER_NAME = "MASTER"
 
+private const val MAX_TIME_THREASHOLD = 100
+
 class Master : Device {
-    private val sensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
+    private val rawSensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
 
     // Optional the master can also provide sensor data
     private val sensorManager: SensorManager
@@ -40,8 +44,6 @@ class Master : Device {
     private var ptpJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val onSensorDataChangedCallback: (String, List<WrappedSensorData>, ApplicationStatus) -> Unit
-
     private var sensorType: SensorType? = null
 
     constructor(
@@ -49,11 +51,9 @@ class Master : Device {
         onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
         onDisconnectedCallback: (String, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit,
-        onSensorDataChangedCallback: (String, List<WrappedSensorData>, ApplicationStatus) -> Unit,
     ) : super() {
         this.ownDeviceId = MASTER_NAME
         this.isMaster = true
-        this.onSensorDataChangedCallback = onSensorDataChangedCallback
         this.wrapper = AdvertiseNearbyWrapper(
             context = context,
             onConnectionResultCallback = onConnectionResultCallback,
@@ -107,7 +107,7 @@ class Master : Device {
     }
 
     fun clearSensorData() {
-        sensorDataMap.clear()
+        rawSensorDataMap.clear()
     }
 
     private fun processSensorData(
@@ -116,21 +116,17 @@ class Master : Device {
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Sensor data received from ${sensorData.senderDeviceId} > ${sensorData.sensorData}")
-        var data = sensorDataMap.getOrDefault(
+        var data = rawSensorDataMap.getOrDefault(
             endpointId, CircularFifoQueue(
-                PROCESSED_VALUES_CAPACITY
+                RAW_BUFFER_VALUES_CAPACITY
             )
         )
         data.add(sensorData)
-        sensorDataMap[endpointId] = data
-
-
-        onSensorDataChangedCallback(
-            endpointId,
-            sensorDataMap[endpointId]?.toList() ?: emptyList(),
-            sensorData.state
-        )
+        rawSensorDataMap[endpointId] = data
     }
+
+    private fun getCurrentRawData(endpointId: String): List<WrappedSensorData> =
+        rawSensorDataMap[endpointId]?.toList() ?: emptyList()
 
     fun broadcastMessage(message: Message) {
         connectedDevices.forEach { deviceId ->
@@ -155,6 +151,8 @@ class Master : Device {
             startSensorCollectionOnMaster(sensorType, sensorType.processingDelay)
 
         }
+
+
     }
 
     fun stopMeasurement() {
@@ -272,4 +270,67 @@ class Master : Device {
         sensorJob = null
 
     }
+
+    fun getCurrentMasterTime(): Long {
+        return ptpHandler.getAdjustedTime()
+    }
+
+    fun getSensorDataForCurrentTime(
+        currentTime: Long,
+        endpointId: String,
+        sensorType: SensorType,
+        maxTimeThreshold: Long
+    ): ProcessedSensorData? {
+        val sensorDataList: Collection<WrappedSensorData> = rawSensorDataMap[endpointId]
+            ?: emptyList<WrappedSensorData>() // Handle the null case appropriately
+
+
+        val closestData =
+            getClosestSensorData(currentTime, sensorDataList, sensorType) ?: return null
+
+        Logger.getLogger(this.javaClass.simpleName)
+            .info { "Cooking SensorDataForCurrentTime: delta=${abs(closestData.timestamp - currentTime)} endpoint=${endpointId} closedData=${closestData} threshold=${maxTimeThreshold}" }
+
+        // TODO add this check somewhere in the future
+//        // Check if the closest data timestamp is within a certain time threshold
+//        if (abs(closestData.timestamp - currentTime) > maxTimeThreshold) {
+//            return null
+//        }
+        return closestData
+    }
+}
+
+/**
+ * get the closest data out of the collection compared to the reference time
+ */
+fun getClosestSensorData(
+    referenceTime: Long,
+    items: Collection<WrappedSensorData>,
+    sensorType: SensorType
+): ProcessedSensorData? {
+    return getClosest(
+        referenceTime,
+        items
+            .filter { it.state != ApplicationStatus.IDLE }
+            .map { it.sensorData }
+            .filter { it.sensorType == sensorType.sensorId }
+    ) { it.timestamp }
+}
+
+/**
+ * Returns the item from the collection with the property value closest to the reference value.
+ *
+ * @param referenceValue The reference value to compare against
+ * @param items The collection of items to search
+ * @param selector A function that extracts the comparable numeric value from each item
+ * @return The closest item, or null if the collection is empty
+ */
+fun <T> getClosest(referenceValue: Long, items: Collection<T>, selector: (T) -> Long): T? {
+    items.forEach {
+        Log.d(
+            "Master",
+            "getClosest: abs=${abs(selector(it) - referenceValue)} $referenceValue, ${selector(it)}"
+        );
+    }
+    return items.minByOrNull { abs(selector(it) - referenceValue) }
 }

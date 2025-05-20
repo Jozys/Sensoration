@@ -37,7 +37,7 @@ import de.schuettslaar.sensoration.utils.getStringResourceByName
 @Composable
 fun Advertisement(onBack: () -> Unit) {
 
-    var viewModel = viewModel<AdvertisementViewModel>()
+    var viewModel = viewModel<MasterViewModel>()
 
     Scaffold(
         topBar = {

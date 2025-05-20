@@ -2,17 +2,34 @@ package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import android.app.Application
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Master
+import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import org.apache.commons.collections4.queue.CircularFifoQueue
 import java.util.logging.Logger
 
-class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(application) {
+private const val PROCESSED_VALUES_CAPACITY = 100
+
+class MasterViewModel(application: Application) : BaseNearbyViewModel(application) {
+    // processing data to match the sensor type and the correct time
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private val cookedSensorDataMap =
+        mutableStateMapOf<String, CircularFifoQueue<ProcessedSensorData>>()
+    private var cookingDataJob: Job? = null
+
 
     val isDrawerOpen = mutableStateOf(false)
 
@@ -20,8 +37,10 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
 
     var isReceiving by mutableStateOf(false)
 
+    private val logger = Logger.getLogger(this.javaClass.simpleName)
+
     init {
-        Logger.getLogger(this.javaClass.simpleName).info("Starting AdvertisementViewModel")
+        logger.info("Starting AdvertisementViewModel")
         this.thisDevice = Master(
             application,
             onConnectionInitiatedCallback = { endpointId, connectionInfo ->
@@ -57,7 +76,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                     try {
                         master?.sendMessage(endpointId, handshakeMessage)
                     } catch (_: Exception) {
-                        Logger.getLogger(this.javaClass.simpleName)
+                        logger
                             .info { "Failed to send handshake message" }
                     }
                     master?.addConnectedDevice(
@@ -65,7 +84,7 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                     )
 
                 } else {
-                    Logger.getLogger(this.javaClass.simpleName).info { "Connection failed" }
+                    logger.info { "Connection failed" }
                 }
             },
             onDisconnectedCallback = { endpointId, status ->
@@ -76,22 +95,6 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
                     this.stopReceiving()
                     isReceiving = false
                 }
-            },
-            onSensorDataChangedCallback = { endpointId, sensorData, applicationStatus ->
-                // Replace the sensor data for the endpointId
-                try {
-                    var deviceInfo = this.connectedDeviceInfos.getValue(endpointId)
-                    val newDeviceInfo = DeviceInfo(
-                        deviceName = deviceInfo.deviceName,
-                        sensorData = sensorData,
-                        applicationStatus = applicationStatus,
-                    )
-                    this.setConnectedDeviceInfo(endpointId, newDeviceInfo)
-                } catch (e: Exception) {
-                    Logger.getLogger(this.javaClass.simpleName)
-                        .info { "Failed to add sensor data: ${e.toString()}" }
-                }
-
             }
         )
         this.thisDevice?.start { text, status ->
@@ -112,9 +115,79 @@ class AdvertisementViewModel(application: Application) : BaseNearbyViewModel(app
             return
         }
         master.clearSensorData()
+        cookedSensorDataMap.clear()
         master.startMeasurement(currentSensorType!!)
 
         isReceiving = true
+
+        // TODO: maybe adjust this processing delay
+        val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
+
+        suspend fun CoroutineScope.cookingSensorData() {
+            // Needs time to retrieve the sensor data from all clients
+            val proccessingDelay = sensorTimeResolution * 2
+            delay(proccessingDelay)
+            while (isActive) {
+                val sensorTimeResolution: Long = sensorTimeResolution
+                delay(sensorTimeResolution)
+
+                val currentTime: Long =
+                    ((master.getCurrentMasterTime() - proccessingDelay) / 10) * 10 // floor to 10ms resolution
+
+                master.connectedDevices.forEach {
+                    val sensorData =
+                        master.getSensorDataForCurrentTime(
+                            currentTime,
+                            it,
+                            currentSensorType!!,
+                            sensorTimeResolution * 2
+                        )
+
+                    if (sensorData == null) {
+                        Logger.getLogger(this.javaClass.simpleName)
+                            .info { "No sensor data available for $it" }
+                        return@forEach
+                    }
+
+
+                    var data = cookedSensorDataMap.getOrDefault(
+                        it, CircularFifoQueue(
+                            PROCESSED_VALUES_CAPACITY
+                        )
+                    )
+                    data.add(sensorData)
+                    cookedSensorDataMap[it] = data
+                }
+
+                // TODO REMOVE THE FOLLOWING DIRTY CODE
+                // Replace the sensor data for the endpointId
+                master.connectedDevices.forEach { endpointId ->
+
+                    val sensorData: List<ProcessedSensorData> =
+                        cookedSensorDataMap[endpointId]?.toList()
+                            ?: emptyList<ProcessedSensorData>()
+                    try {
+                        var deviceInfo = connectedDeviceInfos.getValue(endpointId)
+                        val newDeviceInfo = DeviceInfo(
+                            deviceName = deviceInfo.deviceName,
+                            sensorData = sensorData,
+                            applicationStatus = deviceInfo.applicationStatus,
+                        )
+                        setConnectedDeviceInfo(endpointId, newDeviceInfo)
+                    } catch (e: Exception) {
+                        Logger.getLogger(this.javaClass.simpleName)
+                            .info { "Failed to add sensor data: ${e.toString()}" }
+                    }
+                    logger.finer { "cookingSensorData: updated infos for $endpointId" }
+                }
+                logger.info { "Updated cooked sensor data!" }
+
+            }
+        }
+
+        cookingDataJob = coroutineScope.launch {
+            cookingSensorData()
+        }
 
     }
 

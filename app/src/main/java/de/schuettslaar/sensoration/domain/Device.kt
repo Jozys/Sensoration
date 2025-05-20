@@ -53,7 +53,7 @@ abstract class Device {
         endpointId: String,
         message: Message
     ) {
-        Logger.getLogger(this.javaClass.simpleName).info("Sending message to $endpointId")
+        Logger.getLogger(this.javaClass.simpleName).info("Sending message $message to $endpointId")
         // Serialize and send
         ByteArrayOutputStream().use { bos ->
             ObjectOutputStream(bos).use { oos ->
@@ -72,7 +72,7 @@ abstract class Device {
         endpointId: String,
         payload: ByteArray
     ): Message? {
-        Logger.getLogger(this.javaClass.simpleName).warning("Message received from $endpointId")
+        Logger.getLogger(this.javaClass.simpleName).info("Message received from $endpointId")
         var message: Message?
         try {
             val inputStream = ByteArrayInputStream(payload)

@@ -62,16 +62,17 @@ class DataToLineDataService {
                 mutableListOf()
             }
             // So now we need to iterate over the sensor data
-            wrappedSensorData.forEach { wrappedSensorDataVal ->
-                wrappedSensorDataVal.sensorData.value.forEach { sensorValue ->
-                    var index = wrappedSensorDataVal.sensorData.value.indexOf(sensorValue)
+            wrappedSensorData.forEach { processedSensorData ->
+                processedSensorData.value.forEach { sensorValue ->
+                    var index = processedSensorData.value.indexOf(sensorValue)
                     if (!sensorValue.isNaN()) {
                         // Add the sensor data to the localLineData
                         // We need to round the value to 2 decimal places
-                        var valueIndex = wrappedSensorData.indexOf(wrappedSensorDataVal)
+                        var valueIndex = wrappedSensorData.indexOf(processedSensorData)
                         try {
                             pointsArray[index] = pointsArray[index].plus(
                                 Point(
+//                                    processedSensorData.timestamp.toFloat(),
                                     valueIndex.toFloat(),
                                     // Round that to 2 decimal places
                                     ((sensorValue * 100).roundToLong() / 100.0f)
