@@ -29,6 +29,11 @@ abstract class Device {
     fun connect(deviceIdToConnect: String) {
         wrapper?.connect(deviceIdToConnect)
         this.connectedDeviceId = deviceIdToConnect
+        this.connectedDevices = if(connectedDevices.contains(deviceIdToConnect)) {
+            connectedDevices
+        } else {
+            connectedDevices.apply { add(deviceIdToConnect) }
+        }
         Logger.getLogger(this.javaClass.simpleName)
             .severe("Device is connected to $deviceIdToConnect")
     }
