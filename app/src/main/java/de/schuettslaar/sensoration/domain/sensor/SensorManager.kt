@@ -52,6 +52,15 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
         currentHandler = null
     }
 
+    /**
+     * Checks if the device supports the specified sensor type.
+     *
+     * This function determines whether the device is capable of handling the given
+     * sensor type by delegating the check to the appropriate sensor handler.
+     *
+     * @param sensorType The type of sensor to check, represented as an integer.
+     * @return `true` if the device supports the specified sensor type, `false` otherwise.
+     */
     fun checkDeviceSupportsSensorType(sensorType: Int): Boolean {
         val handler = obtainHandlerForSensorType(sensorType)
         return handler.checkDeviceSupportsSensorType(sensorType)
