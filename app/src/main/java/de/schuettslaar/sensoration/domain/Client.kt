@@ -61,7 +61,7 @@ class Client : Device {
                 }
             }
         )
-        sensorManager = SensorManager(context)
+        sensorManager = SensorManager(context, clientPtpHandler)
 
         onSensorTypeChangedCallback = onSensorTypeChanged
         onApplicationStatusChangedCallback = onApplicationStatusChanged
@@ -73,7 +73,7 @@ class Client : Device {
             return
         }
 
-        if (!checkDeviceSupportsSensorType(sensorType)) {
+        if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
             Log.d(this.javaClass.simpleName, "Device does not support sensor type: $sensorType")
             applicationStatus = ApplicationStatus.IDLE
             return
@@ -146,10 +146,6 @@ class Client : Device {
     }
 
 
-    private fun checkDeviceSupportsSensorType(sensorType: SensorType): Boolean {
-        return true // TODO implement checks
-    }
-
     override fun cleanUp() {
         if (connectedDeviceId == null) {
             Logger.getLogger(this.javaClass.simpleName)
@@ -159,6 +155,8 @@ class Client : Device {
 
         stopPeriodicSending()
         // Maybe send a disconnect request message to the master before disconnecting
+
+        sensorManager.cleanup()
 
         wrapper?.disconnect(connectedDeviceId!!)
         this.connectedDeviceId = null

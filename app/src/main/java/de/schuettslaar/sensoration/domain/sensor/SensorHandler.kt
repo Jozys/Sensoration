@@ -8,4 +8,5 @@ interface SensorHandler {
     fun stopListening()
     fun getLatestData(): ProcessedSensorData?
     fun cleanup()
+    fun checkDeviceSupportsSensorType(sensorType: Int): Boolean
 }
