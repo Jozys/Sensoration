@@ -73,4 +73,6 @@
     <string name="sensor_sound_pressure">Sound Pressure</string>
     <string name="index">Index</string>
     <string name="sensor_data_unit">Unit</string>
+    <string name="timestamp">Time</string>
+    <string name="no_data">No data available\n</string>
 </resources>

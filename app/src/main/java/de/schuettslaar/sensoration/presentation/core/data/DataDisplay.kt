@@ -16,11 +16,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import co.yml.charts.ui.linechart.model.Line
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -33,6 +36,9 @@ fun DataDisplay(
     data: Map<DeviceId, DeviceInfo>,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val viewMode = remember { mutableStateMapOf<Int, Boolean>() }
+
 
     Column(
         modifier = Modifier
@@ -47,26 +53,35 @@ fun DataDisplay(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // Array of a line with a color
-            var parsedData = DataToLineDataService.parseSensorData(
+            var parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
                 data,
                 sensorType?.valueSize ?: 1
             )
             if (parsedData.isNotEmpty()) {
-                when (sensorType) {
-                    SensorType.ACCELEROMETER, SensorType.GRAVITY, SensorType.MIN_MAX_SOUND_AMPLITUDE -> parsedData.map { sensorData ->
-
-                        YChartDisplay(sensorData)
-                    }
-
-                    SensorType.PRESSURE, SensorType.SOUND_PRESSURE -> YChartDisplay(
-                        parsedData.first()
+                for ((index, dataMap) in parsedData.withIndex()) {
+                    DisplayToggle(
+                        isTableView = viewMode[index] == true,
+                        onToggle = { viewMode[index] = it },
                     )
 
-                    else -> {
-                        // Handle unknown sensor type
-                        NoVisualizationAvailable()
+                    if (viewMode[index] == true) {
+                        TableDisplay(
+                            data = data,
+                            dataValueIndex = index,
+                            // TODO replace to appropriate text and error handling
+                            diagramName = sensorType?.name ?: "Unknown Sensor",
+                            xAxisUnit = stringResource(R.string.index),
+                            yAxisUnit = "Unknown Unit"
+                        )
+                    } else {
+                        YChartDisplay(
+                            data = dataMap,
+                            // TODO replace to appropriate text and error handling
+                            diagramName = sensorType?.name ?: "Unknown Sensor",
+                            xAxisUnit = stringResource(R.string.index),
+                            yAxisUnit = "Unknown Unit"
+                        )
                     }
-
                 }
             }
             if (data.isNotEmpty()) {
@@ -77,6 +92,7 @@ fun DataDisplay(
 
     }
 }
+
 
 @Composable
 fun NoVisualizationAvailable() {
