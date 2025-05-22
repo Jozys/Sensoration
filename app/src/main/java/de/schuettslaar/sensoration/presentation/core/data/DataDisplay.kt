@@ -45,14 +45,15 @@ fun DataDisplay(
             modifier = Modifier.padding(8.dp)
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            var parsedData =
-                DataToLineDataService.parseSensorData(
-                    data,
-                    sensorType?.valueSize ?: 1
-                )
+            // Array of a line with a color
+            var parsedData = DataToLineDataService.parseSensorData(
+                data,
+                sensorType?.valueSize ?: 1
+            )
             if (parsedData.isNotEmpty()) {
                 when (sensorType) {
                     SensorType.ACCELEROMETER, SensorType.GRAVITY, SensorType.MIN_MAX_SOUND_AMPLITUDE -> parsedData.map { sensorData ->
+
                         YChartDisplay(sensorData)
                     }
 
