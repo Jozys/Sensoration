@@ -296,6 +296,10 @@ class Master : Device {
 //        }
         return closestData
     }
+
+    fun isMasterDeviceProvidesData(): Boolean {
+        return masterDeviceProvidesData
+    }
 }
 
 /**

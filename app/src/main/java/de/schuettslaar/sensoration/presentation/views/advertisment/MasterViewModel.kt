@@ -11,6 +11,7 @@ import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import kotlinx.coroutines.CoroutineScope
@@ -124,18 +125,41 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         // TODO: maybe adjust this processing delay
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
 
-        suspend fun CoroutineScope.cookingSensorData() {
+
+
+        cookingDataJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
+//        cookingDataJob?.start()
+
+    }
+
+    private fun getJobForCookingData(
+        sensorTimeResolution: Long,
+        master: Master,
+        currentSensorType: SensorType?
+    ): Job {
+        fun getActiveDevices(): List<DeviceId> {
+            val devices = master.connectedDevices.toList().toMutableList()
+            // If master also provides data, include its device ID
+            if (master.isMasterDeviceProvidesData() && master.ownDeviceId != null) {
+                devices.add(master.ownDeviceId!!)
+            }
+            return devices.toList()
+        }
+
+        var sensorTimeResolution1 = sensorTimeResolution
+        return coroutineScope.launch {
             // Needs time to retrieve the sensor data from all clients
-            val proccessingDelay = sensorTimeResolution * 2
+            val proccessingDelay = sensorTimeResolution1
+            val activeDevices = getActiveDevices()
             delay(proccessingDelay)
             while (isActive) {
-                val sensorTimeResolution: Long = sensorTimeResolution
+                val sensorTimeResolution: Long = sensorTimeResolution1 * 2
                 delay(sensorTimeResolution)
 
                 val currentTime: Long =
                     ((master.getCurrentMasterTime() - proccessingDelay) / 10) * 10 // floor to 10ms resolution
 
-                master.connectedDevices.forEach {
+                activeDevices.forEach {
                     val sensorData =
                         master.getSensorDataForCurrentTime(
                             currentTime,
@@ -145,7 +169,7 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                         )
 
                     if (sensorData == null) {
-                        Logger.getLogger(this.javaClass.simpleName)
+                        Logger.getLogger(javaClass.simpleName)
                             .info { "No sensor data available for $it" }
                         return@forEach
                     }
@@ -162,11 +186,11 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
                 // TODO REMOVE THE FOLLOWING DIRTY CODE
                 // Replace the sensor data for the endpointId
-                master.connectedDevices.forEach { endpointId ->
+                activeDevices.forEach { endpointId ->
 
                     val sensorData: List<ProcessedSensorData> =
                         cookedSensorDataMap[endpointId]?.toList()
-                            ?: emptyList<ProcessedSensorData>()
+                            ?: emptyList()
                     try {
                         var deviceInfo = connectedDeviceInfos.getValue(endpointId)
                         val newDeviceInfo = DeviceInfo(
@@ -176,7 +200,7 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                         )
                         setConnectedDeviceInfo(endpointId, newDeviceInfo)
                     } catch (e: Exception) {
-                        Logger.getLogger(this.javaClass.simpleName)
+                        Logger.getLogger(javaClass.simpleName)
                             .info { "Failed to add sensor data: ${e.toString()}" }
                     }
                     logger.finer { "cookingSensorData: updated infos for $endpointId" }
@@ -185,11 +209,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
             }
         }
-
-        cookingDataJob = coroutineScope.launch {
-            cookingSensorData()
-        }
-
     }
 
     fun stopReceiving() {
