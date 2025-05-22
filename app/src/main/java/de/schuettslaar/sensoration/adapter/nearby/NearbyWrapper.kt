@@ -12,6 +12,7 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import de.schuettslaar.sensoration.domain.DeviceId
 
 abstract class NearbyWrapper {
     internal var context: Context
@@ -21,11 +22,11 @@ abstract class NearbyWrapper {
     internal var connectionLifecycleCallback: ConnectionLifecycleCallback? = null
     internal lateinit var payloadCallback: PayloadCallback
 
-    internal lateinit var onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
-    internal lateinit var onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit
-    internal lateinit var onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit
+    internal lateinit var onConnectionResultCallback: (endpointId: DeviceId, connectionStatus: ConnectionResolution, nearbyStatus: NearbyStatus) -> Unit
+    internal lateinit var onConnectionInitiatedCallback: (endpointId: DeviceId, result: ConnectionInfo) -> Unit
+    internal lateinit var onDisconnectedCallback: (endpointId: DeviceId, status: NearbyStatus) -> Unit
 
-    internal lateinit var onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
+    internal lateinit var onPayloadReceivedCallback: (endPointId: DeviceId, payload: Payload) -> Unit
 
     internal val connectionsClient: ConnectionsClient
 
@@ -44,35 +45,36 @@ abstract class NearbyWrapper {
         Log.e(this.javaClass.simpleName, milf)
     }
 
-    fun sendData(toEndpointId: String, bytes: ByteArray) {
+    fun sendData(toEndpointId: DeviceId, bytes: ByteArray) {
         val payload: Payload = Payload.fromBytes(bytes)
-        connectionsClient.sendPayload(toEndpointId, payload)
+        connectionsClient.sendPayload(toEndpointId.name, payload)
     }
 
 
     abstract fun start(callback: (text: String, status: NearbyStatus) -> Unit)
     abstract fun stop(callback: (text: String, status: NearbyStatus) -> Unit)
 
-    fun connect(endpointId: String) {
+    fun connect(endpointId: DeviceId) {
         logE("Connecting to $endpointId")
         var deviceName =
             android.provider.Settings.Global.getString(context.contentResolver, "device_name")
         connectionLifecycleCallback = createConnectionLifecycleCallback()
         connectionsClient.requestConnection(
             deviceName,
-            endpointId,
+            endpointId.name,
             connectionLifecycleCallback!!
         )
     }
 
-    fun disconnect(endpointId: String) {
+    fun disconnect(endpointId: DeviceId) {
         logE("Disconnecting from $endpointId")
-        connectionsClient.disconnectFromEndpoint(endpointId)
+        connectionsClient.disconnectFromEndpoint(endpointId.name)
     }
 
     internal fun createConnectionLifecycleCallback() = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, result: ConnectionInfo) {
-            onConnectionInitiatedCallback(endpointId, result)
+            val deviceId = DeviceId(endpointId)
+            onConnectionInitiatedCallback(deviceId, result)
             connectionsClient.acceptConnection(endpointId, payloadCallback)
         }
 
@@ -96,24 +98,24 @@ abstract class NearbyWrapper {
                 }
                 // Unknown status code
             }
-            onConnectionResultCallback(endpointId, result, status)
+            onConnectionResultCallback(DeviceId(endpointId), result, status)
         }
 
         override fun onDisconnected(endpointId: String) {
             logE("CONNECTION DISCONNECTED")
-            onDisconnectedCallback(endpointId, status)
+            onDisconnectedCallback(DeviceId(endpointId), status)
         }
 
     }
 }
 
-internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit): PayloadCallback =
+internal fun createPayloadCallback(onPayloadReceivedCallback: (endPointId: DeviceId, payload: Payload) -> Unit): PayloadCallback =
     object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             MediaActionSound()
 //            sound.play(MediaActionSound.STOP_VIDEO_RECORDING)
             Log.d(this.javaClass.simpleName, "Got message from $endpointId > ${payload.asBytes()}")
-            onPayloadReceivedCallback(endpointId, payload)
+            onPayloadReceivedCallback(DeviceId(endpointId), payload)
         }
 
         override fun onPayloadTransferUpdate(

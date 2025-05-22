@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
@@ -79,7 +80,7 @@ fun Advertisement(onBack: () -> Unit) {
 @Composable
 fun AdvertisementContent(
     modifier: Modifier = Modifier,
-    connectedDeviceInfos: MutableMap<String, DeviceInfo>,
+    connectedDeviceInfos: MutableMap<DeviceId, DeviceInfo>,
     sensorType: SensorType?,
     status: NearbyStatus,
     onDrawerOpen: () -> Unit,

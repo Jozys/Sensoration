@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.Master
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
@@ -27,13 +28,13 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     // processing data to match the sensor type and the correct time
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     private val cookedSensorDataMap =
-        mutableStateMapOf<String, CircularFifoQueue<ProcessedSensorData>>()
+        mutableStateMapOf<DeviceId, CircularFifoQueue<ProcessedSensorData>>()
     private var cookingDataJob: Job? = null
 
 
     val isDrawerOpen = mutableStateOf(false)
 
-    var connectedDeviceInfos by mutableStateOf(mapOf<String, DeviceInfo>())
+    var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
 
     var isReceiving by mutableStateOf(false)
 
@@ -64,7 +65,7 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                     val master = this.thisDevice
                     var handshakeMessage = HandshakeMessage(
                         messageTimeStamp = System.currentTimeMillis().toLong(),
-                        senderDeviceId = master?.ownDeviceId.toString(),
+                        senderDeviceId = master?.ownDeviceId!!,
                         state = ApplicationStatus.DESTINATION,
                         clientId = endpointId,
                     )
@@ -74,12 +75,12 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                     this.setConnectedDeviceInfo(endpointId, deviceInfo)
 
                     try {
-                        master?.sendMessage(endpointId, handshakeMessage)
+                        master.sendMessage(endpointId, handshakeMessage)
                     } catch (_: Exception) {
                         logger
                             .info { "Failed to send handshake message" }
                     }
-                    master?.addConnectedDevice(
+                    master.addConnectedDevice(
                         endpointId
                     )
 
@@ -202,13 +203,13 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         isReceiving = false
     }
 
-    fun disconnect(endpointId: String) {
+    fun disconnect(endpointId: DeviceId) {
         Logger.getLogger(this.javaClass.simpleName).info { "Disconnecting from $endpointId" }
         thisDevice?.disconnect(endpointId)
     }
 
     fun setConnectedDeviceInfo(
-        endpointId: String,
+        endpointId: DeviceId,
         deviceInfo: DeviceInfo
     ) {
         this.connectedDeviceInfos = this.connectedDeviceInfos.plus(

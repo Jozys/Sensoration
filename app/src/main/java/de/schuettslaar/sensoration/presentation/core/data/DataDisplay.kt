@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
@@ -29,7 +30,7 @@ import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 @Composable
 fun DataDisplay(
     sensorType: SensorType?,
-    data: Map<String, DeviceInfo>,
+    data: Map<DeviceId, DeviceInfo>,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -110,7 +111,7 @@ fun NoVisualizationAvailable() {
 fun Legend(
     modifier: Modifier = Modifier,
     title: String,
-    data: Map<String, DeviceInfo>,
+    data: Map<DeviceId, DeviceInfo>,
 ) {
     Column(
         modifier = modifier
@@ -135,7 +136,7 @@ fun Legend(
                         .padding(4.dp)
                         .size(16.dp)  // Fixed size for the circle
                         .background(
-                            color = generateColorBasedOnName(it.key),
+                            color = generateColorBasedOnName(it.key.name),
                             shape = CircleShape  // This makes it a perfect circle
                         )
                 ) {

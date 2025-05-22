@@ -13,10 +13,10 @@ abstract class Device {
     internal var wrapper: NearbyWrapper? = null
     internal var isMaster = false
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
-    internal var connectedDeviceId: String? = null
-    internal var ownDeviceId: String? = null
+    internal var connectedDeviceId: DeviceId? = null
+    internal var ownDeviceId: DeviceId? = null
 
-    internal var connectedDevices = mutableSetOf<String>()
+    internal var connectedDevices = mutableSetOf<DeviceId>()
 
     fun start(callback: (text: String, status: NearbyStatus) -> Unit) {
         wrapper?.start(callback)
@@ -26,7 +26,7 @@ abstract class Device {
         wrapper?.stop(callback)
     }
 
-    fun connect(deviceIdToConnect: String) {
+    fun connect(deviceIdToConnect: DeviceId) {
         wrapper?.connect(deviceIdToConnect)
         this.connectedDeviceId = deviceIdToConnect
         this.connectedDevices = if(connectedDevices.contains(deviceIdToConnect)) {
@@ -38,24 +38,24 @@ abstract class Device {
             .severe("Device is connected to $deviceIdToConnect")
     }
 
-    open fun disconnect(connectedDeviceId: String) {
+    open fun disconnect(connectedDeviceId: DeviceId) {
         wrapper?.disconnect(connectedDeviceId)
         this.connectedDeviceId = null
     }
 
     abstract fun cleanUp()
 
-    private fun sendData(toEndpointId: String, bytes: ByteArray) {
+    private fun sendData(toEndpointId: DeviceId, bytes: ByteArray) {
         wrapper?.sendData(toEndpointId, bytes)
     }
 
     abstract fun messageReceived(
-        endpointId: String,
+        endpointId: DeviceId,
         payload: ByteArray
     )
 
     fun sendMessage(
-        endpointId: String,
+        endpointId: DeviceId,
         message: Message
     ) {
         Logger.getLogger(this.javaClass.simpleName).info("Sending message $message to $endpointId")
@@ -74,7 +74,7 @@ abstract class Device {
 
 
     fun parseMessage(
-        endpointId: String,
+        endpointId: DeviceId,
         payload: ByteArray
     ): Message? {
         Logger.getLogger(this.javaClass.simpleName).info("Message received from $endpointId")
@@ -92,11 +92,21 @@ abstract class Device {
         return message
     }
 
-    fun addConnectedDevice(endpointId: String) {
+    fun addConnectedDevice(endpointId: DeviceId) {
         connectedDevices.add(endpointId)
     }
 
-    fun removeConnectedDevice(endpointId: String) {
+    fun removeConnectedDevice(endpointId: DeviceId) {
         connectedDevices.remove(endpointId)
+    }
+}
+
+data class DeviceId(
+    val name: String
+) : java.io.Serializable {
+    init {
+        if (name.isEmpty()) {
+            throw IllegalArgumentException("DeviceId cannot be empty")
+        }
     }
 }

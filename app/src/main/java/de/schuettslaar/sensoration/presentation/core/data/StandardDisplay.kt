@@ -18,12 +18,13 @@ import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineChartData
 import co.yml.charts.ui.linechart.model.LinePlotData
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.domain.DeviceId
 
 const val AXIS_STEP_SIZE = 5
 
 @Composable
 fun YChartDisplay(
-    data: Map<String, Line>,
+    data: Map<DeviceId, Line>,
 ) {
     var xAxisLabel = stringResource(R.string.index)
 

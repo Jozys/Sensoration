@@ -32,14 +32,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.core.drawerOverlay.DrawerOverlay
 import de.schuettslaar.sensoration.presentation.core.icon.ApplicationStatusIcon
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 
 @Composable
 fun ConnectedDevicesPreview(
-    connectedDeviceInfos: Map<String, DeviceInfo>?,
-    onConfirmRemove: (String) -> Unit,
+    connectedDeviceInfos: Map<DeviceId, DeviceInfo>?,
+    onConfirmRemove: (DeviceId) -> Unit,
     isDrawerOpen: MutableState<Boolean>,
 
     ) {
@@ -96,8 +97,8 @@ fun ConnectedDevicesPreview(
 
 @Composable
 fun ConnectedList(
-    connectedDeviceInfos: Map<String, DeviceInfo>?,
-    onConfirmRemove: (String) -> Unit,
+    connectedDeviceInfos: Map<DeviceId, DeviceInfo>?,
+    onConfirmRemove: (DeviceId) -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -133,7 +134,7 @@ fun ConnectedList(
                         Text(value.value.deviceName)
                     },
                     supportingContent = {
-                        Text(value.key)
+                        Text(value.key.name)
                     },
                     trailingContent = {
                         ApplicationStatusIcon(

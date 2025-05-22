@@ -27,12 +27,10 @@ import kotlin.math.abs
 
 private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
-const val MASTER_NAME = "MASTER"
-
-private const val MAX_TIME_THREASHOLD = 100
+val MASTER_NAME = DeviceId("MASTER")
 
 class Master : Device {
-    private val rawSensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
+    private val rawSensorDataMap = mutableMapOf<DeviceId, CircularFifoQueue<WrappedSensorData>>()
 
     // Optional the master can also provide sensor data
     private val sensorManager: SensorManager
@@ -48,9 +46,9 @@ class Master : Device {
 
     constructor(
         context: Context,
-        onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
-        onDisconnectedCallback: (String, NearbyStatus) -> Unit,
-        onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit,
+        onConnectionResultCallback: (DeviceId, ConnectionResolution, NearbyStatus) -> Unit,
+        onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
+        onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
     ) : super() {
         this.ownDeviceId = MASTER_NAME
         this.isMaster = true
@@ -89,7 +87,7 @@ class Master : Device {
         }
     }
 
-    override fun messageReceived(endpointId: String, payload: ByteArray) {
+    override fun messageReceived(endpointId: DeviceId, payload: ByteArray) {
         val message: Message? = parseMessage(endpointId, payload)
         if (message == null) {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
@@ -112,7 +110,7 @@ class Master : Device {
 
     private fun processSensorData(
         sensorData: WrappedSensorData,
-        endpointId: String
+        endpointId: DeviceId
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Sensor data received from ${sensorData.senderDeviceId} > ${sensorData.sensorData}")
@@ -125,7 +123,7 @@ class Master : Device {
         rawSensorDataMap[endpointId] = data
     }
 
-    private fun getCurrentRawData(endpointId: String): List<WrappedSensorData> =
+    private fun getCurrentRawData(endpointId: DeviceId): List<WrappedSensorData> =
         rawSensorDataMap[endpointId]?.toList() ?: emptyList()
 
     fun broadcastMessage(message: Message) {
@@ -139,7 +137,7 @@ class Master : Device {
     fun startMeasurement(sensorType: SensorType) {
         var startMeasurementMessage = StartMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             sensorType = sensorType,
             delay = sensorType.processingDelay
@@ -158,7 +156,7 @@ class Master : Device {
     fun stopMeasurement() {
         val stopMeasurementMessage = StopMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
         )
         broadcastMessage(stopMeasurementMessage)
@@ -187,7 +185,7 @@ class Master : Device {
 
         var ptpSync = PTPMessage(
             messageTimeStamp = t1,
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             ptpType = PTPMessage.PTPMessageType.SYNC,
         )
@@ -195,7 +193,7 @@ class Master : Device {
 
         var ptpFollowup = PTPMessage(
             messageTimeStamp = t1,
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             ptpType = PTPMessage.PTPMessageType.FOLLOW_UP,
         )
@@ -204,7 +202,7 @@ class Master : Device {
 
     private fun processPTPMessage(
         ptpMessage: PTPMessage,
-        endPointId: String
+        endPointId: DeviceId
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("PTP message received from ${ptpMessage.senderDeviceId} > ${ptpMessage.ptpType}")
@@ -212,7 +210,7 @@ class Master : Device {
             var t4 = System.currentTimeMillis().toLong()
             var ptpDelayResponse = PTPMessage(
                 messageTimeStamp = t4,
-                senderDeviceId = ownDeviceId.toString(),
+                senderDeviceId = ownDeviceId!!,
                 state = ApplicationStatus.DESTINATION,
                 ptpType = PTPMessage.PTPMessageType.DELAY_RESPONSE,
             )
@@ -247,7 +245,7 @@ class Master : Device {
 
                     val wrappedSensorData = WrappedSensorData(
                         messageTimeStamp = ptpHandler.getAdjustedTime(),
-                        ownDeviceId.toString(),
+                        ownDeviceId!!,
                         applicationStatus,
                         latestSensorData
                     )
@@ -277,7 +275,7 @@ class Master : Device {
 
     fun getSensorDataForCurrentTime(
         currentTime: Long,
-        endpointId: String,
+        endpointId: DeviceId,
         sensorType: SensorType,
         maxTimeThreshold: Long
     ): ProcessedSensorData? {

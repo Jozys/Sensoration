@@ -1,21 +1,21 @@
 package de.schuettslaar.sensoration.adapter.nearby
 
 import android.content.Context
-import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.Strategy
+import de.schuettslaar.sensoration.domain.DeviceId
 
 class AdvertiseNearbyWrapper : NearbyWrapper {
 
     constructor(
         context: Context,
-        onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
-        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit,
-        onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit,
-        onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
+        onConnectionResultCallback: (endpointId: DeviceId, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
+        onDisconnectedCallback: (endpointId: DeviceId, status: NearbyStatus) -> Unit,
+        onConnectionInitiatedCallback: (endpointId: DeviceId, result: ConnectionInfo) -> Unit,
+        onPayloadReceivedCallback: (endPointId: DeviceId, payload: Payload) -> Unit
     ) : super(context) {
         this.onConnectionResultCallback = onConnectionResultCallback
         this.onDisconnectedCallback = onDisconnectedCallback

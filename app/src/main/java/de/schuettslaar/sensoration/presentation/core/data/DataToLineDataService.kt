@@ -3,6 +3,7 @@ package de.schuettslaar.sensoration.presentation.core.data
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineStyle
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 import java.util.logging.Logger
@@ -19,14 +20,14 @@ class DataToLineDataService {
          *  {List<ProcessedSensorData> -> (Array of data rows for each sensor)} for each client
          * */
         fun parseSensorData(
-            data: Map<String, DeviceInfo>,
+            data: Map<DeviceId, DeviceInfo>,
             valueSize: Int
-        ): Array<Map<String, Line>> {
+        ): Array<Map<DeviceId, Line>> {
             if (data.isEmpty()) {
                 return arrayOf()
             }
             // Is there any reason to create this array in here?
-            var allSensorValues = Array<Map<String, Line>>(valueSize) {
+            var allSensorValues = Array<Map<DeviceId, Line>>(valueSize) {
                 mapOf()
             }
 
@@ -53,9 +54,9 @@ class DataToLineDataService {
          * @return an array of the sensor data in the format of MultiLineData
          * */
         private fun parseDeviceEntry(
-            deviceData: Map.Entry<String, DeviceInfo>,
-            initialValues: Array<Map<String, Line>>,
-        ): Array<Map<String, Line>> {
+            deviceData: Map.Entry<DeviceId, DeviceInfo>,
+            initialValues: Array<Map<DeviceId, Line>>,
+        ): Array<Map<DeviceId, Line>> {
             val values = initialValues.copyOf()
             // So we iterate over every device
             val entry = deviceData.key
@@ -67,8 +68,9 @@ class DataToLineDataService {
             }
             // So now we need to iterate over the sensor data
             processedSensorDataList.forEach { processedSensorData ->
+
                 // Iterate over each sensor value for one datapoint e.g. x, y, z
-                for (dataIndex in 0..processedSensorData.value.size) {
+                for (dataIndex in 0..processedSensorData.value.size - 1) {
                     val sensorValue = processedSensorData.value[dataIndex]
 
                     if (sensorValue.isNaN()) {
@@ -100,7 +102,7 @@ class DataToLineDataService {
             }
 
             // Now we need to create a new MultiLineData object for each entry
-            val deviceColor = generateColorBasedOnName(entry)
+            val deviceColor = generateColorBasedOnName(entry.name)
             for (i in pointListArray.indices) {
                 var line = Line(
                     dataPoints = pointListArray[i],

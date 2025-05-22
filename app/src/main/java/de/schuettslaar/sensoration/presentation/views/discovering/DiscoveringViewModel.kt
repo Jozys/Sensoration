@@ -8,13 +8,14 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.Client
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import java.util.logging.Logger
 
 class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(application) {
 
     var possibleConnections by mutableStateOf(
-        mapOf<String, DiscoveredEndpointInfo>()
+        mapOf<DeviceId, DiscoveredEndpointInfo>()
     )
 
     var thisApplicationStatus by mutableStateOf(ApplicationStatus.IDLE)
@@ -62,11 +63,11 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
 
     }
 
-    fun onEndpointAddCallback(endpointId: String, info: DiscoveredEndpointInfo) {
+    fun onEndpointAddCallback(endpointId: DeviceId, info: DiscoveredEndpointInfo) {
         possibleConnections = possibleConnections.plus(Pair(endpointId, info))
     }
 
-    fun onEndpointRemoveCallback(endpointId: String) {
+    fun onEndpointRemoveCallback(endpointId: DeviceId) {
         Logger.getLogger(this.javaClass.simpleName).info { "Endpoint removed: $endpointId" }
         possibleConnections = possibleConnections.minus(endpointId)
     }
