@@ -2,7 +2,7 @@ package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import android.app.Application
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
@@ -20,7 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.apache.commons.collections4.queue.CircularFifoQueue
 import java.util.logging.Logger
 
 private const val PROCESSED_VALUES_CAPACITY = 100
@@ -28,9 +27,9 @@ private const val PROCESSED_VALUES_CAPACITY = 100
 class MasterViewModel(application: Application) : BaseNearbyViewModel(application) {
     // processing data to match the sensor type and the correct time
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
-    private val cookedSensorDataMap =
-        mutableStateMapOf<DeviceId, CircularFifoQueue<ProcessedSensorData>>()
-    private var cookingDataJob: Job? = null
+    val synchronizedData = mutableStateListOf<TimeBucket>()
+
+    private var dataSynchronizingJob: Job? = null
 
 
     val isDrawerOpen = mutableStateOf(false)
@@ -50,7 +49,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                     endpointId,
                     DeviceInfo(
                         deviceName = connectionInfo.endpointName,
-                        sensorData = listOf(),
                         ApplicationStatus.INIT,
                     )
                 )
@@ -116,8 +114,10 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
             Logger.getLogger(this.javaClass.simpleName).info { "Sensor type is null" }
             return
         }
+
         master.clearSensorData()
-        cookedSensorDataMap.clear()
+        synchronizedData.clear()
+
         master.startMeasurement(currentSensorType!!)
 
         isReceiving = true
@@ -127,9 +127,7 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
 
 
-        cookingDataJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
-//        cookingDataJob?.start()
-
+        dataSynchronizingJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
     }
 
     private fun getJobForCookingData(
@@ -146,68 +144,53 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
             return devices.toList()
         }
 
-        var sensorTimeResolution1 = sensorTimeResolution
         return coroutineScope.launch {
             // Needs time to retrieve the sensor data from all clients
-            val proccessingDelay = sensorTimeResolution1
+            val processingDelay = sensorTimeResolution
             val activeDevices = getActiveDevices()
-            delay(proccessingDelay)
+
+            delay(processingDelay * 2)
+
             while (isActive) {
-                val sensorTimeResolution: Long = sensorTimeResolution1 * 2
-                delay(sensorTimeResolution)
-
-                val currentTime: Long =
-                    ((master.getCurrentMasterTime() - proccessingDelay) / 10) * 10 // floor to 10ms resolution
-
-                activeDevices.forEach {
-                    val sensorData =
-                        master.getSensorDataForCurrentTime(
-                            currentTime,
-                            it,
-                            currentSensorType!!,
-                            sensorTimeResolution * 2
-                        )
-
-                    if (sensorData == null) {
-                        Logger.getLogger(javaClass.simpleName)
-                            .info { "No sensor data available for $it" }
-                        return@forEach
-                    }
+                val currentBucketTime: Long =
+                    ((master.getCurrentMasterTime() - processingDelay) / 10) * 10 // floor to 10ms resolution
+                val bucketData = mutableMapOf<DeviceId, ProcessedSensorData>()
 
 
-                    var data = cookedSensorDataMap.getOrDefault(
-                        it, CircularFifoQueue(
-                            PROCESSED_VALUES_CAPACITY
-                        )
+
+                activeDevices.forEach { deviceId ->
+                    val sensorData = master.getSensorDataForCurrentTime(
+                        currentBucketTime, deviceId, currentSensorType!!, sensorTimeResolution * 10
                     )
-                    data.add(sensorData)
-                    cookedSensorDataMap[it] = data
-                }
 
-                // TODO REMOVE THE FOLLOWING DIRTY CODE
-                // Replace the sensor data for the endpointId
-                activeDevices.forEach { endpointId ->
-
-                    val sensorData: List<ProcessedSensorData> =
-                        cookedSensorDataMap[endpointId]?.toList()
-                            ?: emptyList()
-                    try {
-                        var deviceInfo = connectedDeviceInfos.getValue(endpointId)
-                        val newDeviceInfo = DeviceInfo(
-                            deviceName = deviceInfo.deviceName,
-                            sensorData = sensorData,
-                            applicationStatus = deviceInfo.applicationStatus,
+                    if (sensorData != null) {
+                        bucketData.put(
+                            deviceId,
+                            sensorData
                         )
-                        setConnectedDeviceInfo(endpointId, newDeviceInfo)
-                    } catch (e: Exception) {
-                        Logger.getLogger(javaClass.simpleName)
-                            .info { "Failed to add sensor data: ${e.toString()}" }
+                        bucketData[deviceId] = sensorData
                     }
-                    logger.finer { "cookingSensorData: updated infos for $endpointId" }
                 }
+
+                val bucket = TimeBucket(
+                    referenceTime = currentBucketTime,
+                    deviceData = bucketData
+                )
+
+                addTimeBucket(bucket)
+
+                delay(sensorTimeResolution * 2)
                 logger.info { "Updated cooked sensor data!" }
 
             }
+        }
+    }
+
+
+    private fun addTimeBucket(newBucket: TimeBucket) {
+        synchronizedData.add(newBucket)
+        if (synchronizedData.size > PROCESSED_VALUES_CAPACITY) {
+            synchronizedData.removeAt(0)
         }
     }
 
@@ -220,6 +203,7 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         }
         master.stopMeasurement()
         isReceiving = false
+        dataSynchronizingJob?.cancel()
     }
 
     fun disconnect(endpointId: DeviceId) {
@@ -237,3 +221,9 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     }
 
 }
+
+
+data class TimeBucket(
+    val referenceTime: Long,
+    val deviceData: Map<DeviceId, ProcessedSensorData>
+)

@@ -4,116 +4,74 @@ import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineStyle
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
-import java.util.logging.Logger
 import kotlin.math.roundToLong
 
 class DataToLineDataService {
 
     companion object {
-
         /**
-         * We need to parse the data from the sensors
-         * Therefore we need to put together a list of MultiLineData grouped by the endPointIds
-         *
-         *  {List<ProcessedSensorData> -> (Array of data rows for each sensor)} for each client
-         * */
+         * Parses time-synchronized sensor data into chart-ready format.
+         * Creates a separate line for each value dimension of each device.
+         */
         fun parseSensorData(
-            data: Map<DeviceId, DeviceInfo>,
-            valueSize: Int
+            devices: Map<DeviceId, DeviceInfo>,
+            amountOfValuesPerDevice: Int,
+            timeBuckets: Collection<TimeBucket>
         ): Array<Map<DeviceId, Line>> {
-            if (data.isEmpty()) {
+            if (timeBuckets.isEmpty() || devices.isEmpty()) {
                 return arrayOf()
             }
-            // Is there any reason to create this array in here?
-            var allSensorValues = Array<Map<DeviceId, Line>>(valueSize) {
-                mapOf()
-            }
 
-            // We need a list of maps of the Lines
-            // That is because the different sensors have different values, all provided in an array
-            // But we want to create a graph for each value of them
+            // Initialize array of maps to hold lines for each value dimension
+            val result = Array(amountOfValuesPerDevice) { mapOf<DeviceId, Line>() }
 
-            for (deviceData in data) {
-                val processedSensorData = deviceData.value.sensorData
+            // Sort time buckets chronologically for proper sequencing
+            val sortedBuckets = timeBuckets.sortedBy { it.referenceTime }
 
-                if (processedSensorData.isEmpty()) {
-                    continue
-                }
+            // For each device, extract and plot its data
+            for (deviceId in devices.keys) {
+                // Initialize point arrays for each value dimension
+                val pointArrays = Array(amountOfValuesPerDevice) { mutableListOf<Point>() }
 
-                // So we iterate over every device
-                allSensorValues = parseDeviceEntry(deviceData, allSensorValues)
-            }
+                // Process each time bucket to extract data points
+                sortedBuckets.forEachIndexed { index, bucket ->
+                    // Get data for this device at this time point (if available)
+                    val sensorData = bucket.deviceData[deviceId] ?: return@forEachIndexed
 
-            return allSensorValues
-        }
-
-        /**
-         * Parse the sensor data for a single device
-         * @return an array of the sensor data in the format of MultiLineData
-         * */
-        private fun parseDeviceEntry(
-            deviceData: Map.Entry<DeviceId, DeviceInfo>,
-            initialValues: Array<Map<DeviceId, Line>>,
-        ): Array<Map<DeviceId, Line>> {
-            val values = initialValues.copyOf()
-            // So we iterate over every device
-            val entry = deviceData.key
-            val processedSensorDataList = deviceData.value.sensorData
-
-            // multiple Datasets for each sensor value
-            var pointListArray = Array<List<co.yml.charts.common.model.Point>>(values.size) {
-                mutableListOf()
-            }
-            // So now we need to iterate over the sensor data
-            processedSensorDataList.forEach { processedSensorData ->
-
-                // Iterate over each sensor value for one datapoint e.g. x, y, z
-                for (dataIndex in 0..processedSensorData.value.size - 1) {
-                    val sensorValue = processedSensorData.value[dataIndex]
-
-                    if (sensorValue.isNaN()) {
-                        // If the value is null, we skip it
-                        continue
-                    }
-
-                    // Add the sensor data to the localLineData
-                    // We need to round the value to 2 decimal places
-                    var valueIndex = processedSensorDataList.indexOf(processedSensorData)
-                    try {
-                        pointListArray[dataIndex] = pointListArray[dataIndex].plus(
-                            Point(
-                                // TODO: Change index to actual timestamp
-//                                    processedSensorData.timestamp.toFloat(),
-                                valueIndex.toFloat(),
-                                // Round that to 2 decimal places
-                                ((sensorValue * 100).roundToLong() / 100.0f)
+                    // For each value dimension, add a point
+                    for (i in 0 until minOf(sensorData.value.size, amountOfValuesPerDevice)) {
+                        val value = sensorData.value[i]
+                        if (!value.isNaN()) {
+                            pointArrays[i].add(
+                                Point(
+                                    // X-coordinate is either index or normalized timestamp
+//                                bucket.referenceTime, // TODO: use time as x-axis
+                                    index.toFloat(),
+                                    // Round value to 2 decimal places
+                                    ((value * 100).roundToLong() / 100.0f)
+                                )
                             )
-                        ).toMutableList()
-                    } catch (
-                        e: IndexOutOfBoundsException
-                    ) {
-                        Logger.getLogger("DataDisplay")
-                            .warning("Index out of bounds: $dataIndex")
+                        }
                     }
+                }
 
+                // Create a Line for each value dimension
+                val deviceColor = generateColorBasedOnName(deviceId.name)
+                for (i in 0 until amountOfValuesPerDevice) {
+                    if (pointArrays[i].isNotEmpty()) {
+                        val line = Line(
+                            dataPoints = pointArrays[i],
+                            LineStyle(color = deviceColor)
+                        )
+                        result[i] = result[i] + (deviceId to line)
+                    }
                 }
             }
 
-            // Now we need to create a new MultiLineData object for each entry
-            val deviceColor = generateColorBasedOnName(entry.name)
-            for (i in pointListArray.indices) {
-                var line = Line(
-                    dataPoints = pointListArray[i],
-                    LineStyle(
-                        color = deviceColor
-                    )
-                )
-                values[i] = values[i].plus(entry to line)
-            }
-            return values
+            return result
         }
     }
-
 }

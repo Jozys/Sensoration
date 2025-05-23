@@ -1,5 +1,6 @@
 package de.schuettslaar.sensoration.presentation.core.data
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,13 +28,15 @@ import co.yml.charts.ui.linechart.model.Line
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
+import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
 import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 
 @Composable
 fun DataDisplay(
     sensorType: SensorType?,
-    data: Map<DeviceId, DeviceInfo>,
+    devices: Map<DeviceId, DeviceInfo>,
+    timeBuckets: List<TimeBucket>,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -52,10 +55,25 @@ fun DataDisplay(
             modifier = Modifier.padding(8.dp)
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Check if we have valid data to display
+            if (sensorType == null || timeBuckets.isEmpty()) {
+                Log.i(
+                    "DataDisplay",
+                    "No data available for Type: ${sensorType?.name} or TimeBuckets are empty: ${timeBuckets.size}"
+                )
+                Text(
+                    text = stringResource(R.string.no_data),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+                return@Column
+            }
+
             // Array of a line with a color
             var parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
-                data,
-                sensorType?.valueSize ?: 1
+                devices,
+                sensorType.valueSize,
+                timeBuckets,
             )
             if (parsedData.isNotEmpty()) {
                 for ((index, dataMap) in parsedData.withIndex()) {
@@ -66,7 +84,7 @@ fun DataDisplay(
 
                     if (viewMode[index] == true) {
                         TableDisplay(
-                            data = data,
+                            timeBuckets = timeBuckets,
                             dataValueIndex = index,
                             // TODO replace to appropriate text and error handling
                             diagramName = sensorType?.name ?: "Unknown Sensor",
@@ -84,8 +102,8 @@ fun DataDisplay(
                     }
                 }
             }
-            if (data.isNotEmpty()) {
-                Legend(title = stringResource(R.string.data_display_legend), data = data)
+            if (devices.isNotEmpty()) {
+                Legend(title = stringResource(R.string.data_display_legend), data = devices)
             }
         }
 

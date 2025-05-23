@@ -38,42 +38,43 @@ import de.schuettslaar.sensoration.utils.getStringResourceByName
 @Composable
 fun Advertisement(onBack: () -> Unit) {
 
-    var viewModel = viewModel<MasterViewModel>()
+    var masterViewModel = viewModel<MasterViewModel>()
 
     Scaffold(
         topBar = {
-            AnimatedVisibility(!viewModel.isDrawerOpen.value) { HomeAppBar() }
+            AnimatedVisibility(!masterViewModel.isDrawerOpen.value) { HomeAppBar() }
         }
     ) { innerPadding ->
         AdvertisementContent(
             modifier = Modifier.padding(innerPadding),
             onBack = onBack,
-            connectedDeviceInfos = viewModel.connectedDeviceInfos.toMutableMap(),
-            sensorType = viewModel.currentSensorType,
-            status = viewModel.status,
+            connectedDeviceInfos = masterViewModel.connectedDeviceInfos.toMutableMap(),
+            sensorType = masterViewModel.currentSensorType,
+            status = masterViewModel.status,
             onDrawerOpen = {
-                viewModel.isDrawerOpen.value = true
+                masterViewModel.isDrawerOpen.value = true
             },
             onStartReceiving = {
-                viewModel.startReceiving()
+                masterViewModel.startReceiving()
             },
             onStopReceiving = {
-                viewModel.stopReceiving()
+                masterViewModel.stopReceiving()
             },
-            isReceiving = viewModel.isReceiving,
+            isReceiving = masterViewModel.isReceiving,
             onStop = {
-                viewModel.stop()
+                masterViewModel.stop()
             },
             onSensorChange = {
-                viewModel.currentSensorType = it
+                masterViewModel.currentSensorType = it
             },
+            measurementData = masterViewModel.synchronizedData,
         )
     }
     ConnectedDevicesPreview(
-        isDrawerOpen = viewModel.isDrawerOpen,
-        connectedDeviceInfos = viewModel.connectedDeviceInfos,
+        isDrawerOpen = masterViewModel.isDrawerOpen,
+        connectedDeviceInfos = masterViewModel.connectedDeviceInfos,
         onConfirmRemove = {
-            viewModel.disconnect(it)
+            masterViewModel.disconnect(it)
         })
 }
 
@@ -90,6 +91,7 @@ fun AdvertisementContent(
     isReceiving: Boolean = false,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
+    measurementData: List<TimeBucket>,
 ) {
     Column(
         modifier = modifier
@@ -156,7 +158,9 @@ fun AdvertisementContent(
 
         AnimatedVisibility(sensorType != null && isReceiving) {
             DataDisplay(
-                sensorType, data = connectedDeviceInfos
+                sensorType,
+                devices = connectedDeviceInfos,
+                timeBuckets = measurementData,
             )
         }
 

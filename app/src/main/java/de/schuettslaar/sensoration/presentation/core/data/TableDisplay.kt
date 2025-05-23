@@ -1,6 +1,5 @@
 package de.schuettslaar.sensoration.presentation.core.data
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -21,20 +21,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
 fun TableDisplay(
-    data: Map<DeviceId, DeviceInfo>,
+    timeBuckets: Collection<TimeBucket>,
     dataValueIndex: Int,
     diagramName: String,
     xAxisUnit: String,
     yAxisUnit: String
 ) {
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,9 +42,7 @@ fun TableDisplay(
         shape = RoundedCornerShape(8.dp),
         tonalElevation = 1.dp
     ) {
-        val deviceInfoList = data.values.toList()
-
-        if (deviceInfoList.isEmpty() || deviceInfoList.all { it.sensorData.isEmpty() }) {
+        if (timeBuckets.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -56,20 +53,24 @@ fun TableDisplay(
                 Text(text, style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            Column {
+            // Get all unique device IDs from all buckets
+            val allDeviceIds = timeBuckets.flatMap { it.deviceData.keys }.toSet().toList()
 
-                Header(diagramName, deviceInfoList)
+            // Sort buckets by reference time
+            val sortedBuckets = timeBuckets.sortedBy { it.referenceTime }
+
+            Column {
+                // Display header with device names
+                Header(diagramName, allDeviceIds)
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    val maxDataPoints = deviceInfoList.maxOfOrNull { it.sensorData.size } ?: 0
-                    items(maxDataPoints) { timeIndex ->
-                        RowItem(deviceInfoList, timeIndex, dataValueIndex)
-
+                    items(sortedBuckets) { bucket ->
+                        BucketRow(bucket, allDeviceIds, dataValueIndex)
                     }
-
                 }
             }
         }
@@ -77,48 +78,46 @@ fun TableDisplay(
 }
 
 @Composable
-private fun RowItem(
-    deviceInfoList: List<DeviceInfo>,
-    index: Int,
+private fun BucketRow(
+    bucket: TimeBucket,
+    deviceIds: List<DeviceId>,
     dataValueIndex: Int
 ) {
-    Row {
-        for (deviceInfo in deviceInfoList) {
-            Column(modifier = Modifier.weight(1f)) {
-                if (index < deviceInfo.sensorData.size) {
-                    val sensorData = deviceInfo.sensorData[index]
-                    val timestamp = sensorData.timestamp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        // Time column
+        Text(
+            text = formatTimestamp(bucket.referenceTime),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
 
-                    Text(
-                        text = formatTimestamp(timestamp),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+        // Data column for each device
+        deviceIds.forEach { deviceId ->
+            val sensorData = bucket.deviceData[deviceId]
 
-                    if (dataValueIndex < sensorData.value.size) {
-                        val sensorValue = sensorData.value[dataValueIndex]
-                        Text(
-                            text = "%.2f".format(sensorValue),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    } else {
-                        Log.e(
-                            "TableDisplay",
-                            "False content in data at $timestamp: Detected because to little data values provided"
-                        )
-                        Text(text = "N/A")
-                    }
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Value display
+                Text(
+                    text = if (sensorData != null && dataValueIndex < sensorData.value.size) {
+                        "%.2f".format(sensorData.value[dataValueIndex])
+                    } else "—",
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center
+                )
 
-                    // No data from this device
-                } else {
-                    Text(
-                        text = "—",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "—",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                // Individual timestamp display (smaller text)
+                Text(
+                    text = if (sensorData != null) formatTimestamp(sensorData.timestamp) else "—",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = MaterialTheme.typography.bodySmall.fontSize * 0.8),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
             }
         }
     }
@@ -127,7 +126,7 @@ private fun RowItem(
 @Composable
 private fun Header(
     diagramName: String,
-    data: List<DeviceInfo>
+    deviceIds: List<DeviceId>
 ) {
     Row(
         modifier = Modifier
@@ -135,6 +134,7 @@ private fun Header(
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(8.dp)
     ) {
+        // Time column header
         Text(
             text = diagramName,
             style = MaterialTheme.typography.labelMedium,
@@ -142,10 +142,10 @@ private fun Header(
             modifier = Modifier.weight(1f)
         )
 
-        // Device columns
-        data.forEach { deviceInfo ->
+        // Device column headers
+        deviceIds.forEach { deviceId ->
             Text(
-                text = deviceInfo.deviceName,
+                text = deviceId.name,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
