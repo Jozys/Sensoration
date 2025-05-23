@@ -2,6 +2,7 @@ package de.schuettslaar.sensoration.presentation.views.discovering
 
 import android.app.Application
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
@@ -14,9 +15,7 @@ import java.util.logging.Logger
 
 class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(application) {
 
-    var possibleConnections by mutableStateOf(
-        mapOf<DeviceId, DiscoveredEndpointInfo>()
-    )
+    val possibleConnections = mutableStateMapOf<DeviceId, DiscoveredEndpointInfo>()
 
     var thisApplicationStatus by mutableStateOf(ApplicationStatus.IDLE)
 
@@ -64,12 +63,12 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
     }
 
     fun onEndpointAddCallback(endpointId: DeviceId, info: DiscoveredEndpointInfo) {
-        possibleConnections = possibleConnections.plus(Pair(endpointId, info))
+        possibleConnections.put(endpointId, info)
     }
 
     fun onEndpointRemoveCallback(endpointId: DeviceId) {
         Logger.getLogger(this.javaClass.simpleName).info { "Endpoint removed: $endpointId" }
-        possibleConnections = possibleConnections.minus(endpointId)
+        possibleConnections.remove(endpointId)
     }
 
     fun disconnect() {
@@ -89,7 +88,7 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
 
     fun cleanUp() {
         thisDevice?.cleanUp()
-        possibleConnections = mapOf()
+//        possibleConnections.clear()
         connectedDevices = mapOf()
         thisApplicationStatus = ApplicationStatus.IDLE
         currentSensorType = null

@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -258,13 +259,6 @@ fun DiscoveringState(
             .then(if (!isLandscape) Modifier.verticalScroll(scrollState) else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        StatusInformation(
-            statusText = getStringResourceByName(
-                context = LocalContext.current,
-                resName = status.name
-            ).uppercase(),
-            modifier = Modifier.padding(top = spacing, bottom = spacing / 2)
-        )
 
         if (isLandscape) {
             Row(
@@ -317,6 +311,14 @@ fun DiscoveringState(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+
+                        StatusInformation(
+                            statusText = getStringResourceByName(
+                                context = LocalContext.current,
+                                resName = status.name
+                            ).uppercase(),
+                            modifier = Modifier.padding(top = spacing, bottom = spacing / 2)
+                        )
                         Icon(
                             imageVector = Icons.Default.Sensors,
                             contentDescription = null,
@@ -344,6 +346,14 @@ fun DiscoveringState(
             }
         } else {
             // Portrait layout
+            StatusInformation(
+                statusText = getStringResourceByName(
+                    context = LocalContext.current,
+                    resName = status.name
+                ).uppercase(),
+                modifier = Modifier.padding(top = spacing, bottom = spacing / 2)
+            )
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
@@ -440,14 +450,15 @@ fun ConnectedState(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Left column: Connected device info
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(0.8f),
+                        .fillMaxHeight(1f),
                     shape = MaterialTheme.shapes.large,
                     tonalElevation = 2.dp,
                     shadowElevation = 4.dp
@@ -487,7 +498,7 @@ fun ConnectedState(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(0.8f),
+                        .fillMaxHeight(1f),
                     shape = MaterialTheme.shapes.large,
                     tonalElevation = 2.dp,
                     shadowElevation = 4.dp
