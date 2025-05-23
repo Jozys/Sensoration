@@ -22,6 +22,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.queue.CircularFifoQueue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.logging.Logger
 import kotlin.math.abs
 
@@ -282,18 +285,14 @@ class Master : Device {
         val sensorDataList: Collection<WrappedSensorData> = rawSensorDataMap[endpointId]
             ?: emptyList<WrappedSensorData>() // Handle the null case appropriately
 
-
         val closestData =
-            getClosestSensorData(currentTime, sensorDataList, sensorType) ?: return null
+            getClosestSensorData(currentTime, sensorDataList, sensorType, maxTimeThreshold)
 
-        Logger.getLogger(this.javaClass.simpleName)
-            .info { "Cooking SensorDataForCurrentTime: delta=${abs(closestData.timestamp - currentTime)} endpoint=${endpointId} closedData=${closestData} threshold=${maxTimeThreshold}" }
+        if (closestData != null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .info { "Cooking SensorDataForCurrentTime: delta=${abs(closestData.timestamp - currentTime)} endpoint=${endpointId} closedData=${closestData} threshold=${maxTimeThreshold}" }
+        }
 
-        // TODO add this check somewhere in the future
-//        // Check if the closest data timestamp is within a certain time threshold
-//        if (abs(closestData.timestamp - currentTime) > maxTimeThreshold) {
-//            return null
-//        }
         return closestData
     }
 
@@ -303,20 +302,51 @@ class Master : Device {
 }
 
 /**
- * get the closest data out of the collection compared to the reference time
+ * Get the closest data out of the collection compared to the reference time
  */
 fun getClosestSensorData(
     referenceTime: Long,
     items: Collection<WrappedSensorData>,
-    sensorType: SensorType
+    sensorType: SensorType,
+    maxTimeThreshold: Long
 ): ProcessedSensorData? {
-    return getClosest(
-        referenceTime,
-        items
+    if (items.isEmpty()) {
+        return null
+    }
+
+    var selectedCandidate: ProcessedSensorData? = null
+    try {
+        val candidates = items
+            .asSequence()
             .filter { it.state != ApplicationStatus.IDLE }
-            .map { it.sensorData }
-            .filter { it.sensorType == sensorType.sensorId }
-    ) { it.timestamp }
+            .filter { it.sensorData.sensorType == sensorType.sensorId }
+            .map { it.sensorData }  // Explicitly filter out nulls
+            .toList()
+
+        candidates
+            .minByOrNull { abs(it.timestamp - referenceTime) }
+            ?.let { closest ->
+                // Apply threshold check
+                if (abs(closest.timestamp - referenceTime) <= maxTimeThreshold) {
+                    Log.d(
+                        "SensorData",
+                        "Selected closest: ${closest.timestamp}, diff=${abs(closest.timestamp - referenceTime)}"
+                    )
+                    selectedCandidate = closest
+                } else {
+                    Log.d(
+                        "SensorData",
+                        "Closest value exceeded threshold: diff=${abs(closest.timestamp - referenceTime)}, max=$maxTimeThreshold, " +
+                                "referenceTime=${formatTimestamp(referenceTime)} " +
+                                "-> candidates: ${candidates.map { formatTimestamp(it.timestamp) }}"
+                    )
+                }
+            }
+    } catch (e: Exception) {
+        Log.e("getClosestSensorData", "Error finding closest sensor data: ${e.message}", e)
+        null
+    }
+    return selectedCandidate
 }
 
 /**
@@ -335,4 +365,11 @@ fun <T> getClosest(referenceValue: Long, items: Collection<T>, selector: (T) -> 
         );
     }
     return items.minByOrNull { abs(selector(it) - referenceValue) }
+}
+
+// Helper function to format timestamp
+private fun formatTimestamp(timestamp: Long): String {
+    val date = Date(timestamp)
+    val format = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+    return format.format(date)
 }
