@@ -37,6 +37,7 @@ fun DataDisplay(
     sensorType: SensorType?,
     devices: Map<DeviceId, DeviceInfo>,
     timeBuckets: List<TimeBucket>,
+    activeDevices: List<DeviceId>,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -71,9 +72,9 @@ fun DataDisplay(
 
             // Array of a line with a color
             var parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
-                devices,
                 sensorType.valueSize,
                 timeBuckets,
+                activeDevices,
             )
             if (parsedData.isNotEmpty()) {
                 for ((index, dataMap) in parsedData.withIndex()) {

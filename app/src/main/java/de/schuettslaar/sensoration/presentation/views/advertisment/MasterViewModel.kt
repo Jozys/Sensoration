@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.presentation.views.advertisment
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -130,19 +131,27 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         dataSynchronizingJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
     }
 
+    fun getActiveDevices(): List<DeviceId> {
+        val master = this.thisDevice as? Master
+        if (master == null) {
+            Log.e(this.javaClass.simpleName, "Master is null")
+            return emptyList()
+        }
+
+
+        val devices = master.connectedDevices.toList().toMutableList()
+        // If master also provides data, include its device ID
+        if (master.isMasterDeviceProvidesData() && master.ownDeviceId != null) {
+            devices.add(master.ownDeviceId!!)
+        }
+        return devices.toList()
+    }
+
     private fun getJobForCookingData(
         sensorTimeResolution: Long,
         master: Master,
         currentSensorType: SensorType?
     ): Job {
-        fun getActiveDevices(): List<DeviceId> {
-            val devices = master.connectedDevices.toList().toMutableList()
-            // If master also provides data, include its device ID
-            if (master.isMasterDeviceProvidesData() && master.ownDeviceId != null) {
-                devices.add(master.ownDeviceId!!)
-            }
-            return devices.toList()
-        }
 
         return coroutineScope.launch {
             // Needs time to retrieve the sensor data from all clients

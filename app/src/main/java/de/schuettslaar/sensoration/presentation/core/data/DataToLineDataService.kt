@@ -5,7 +5,6 @@ import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineStyle
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 import kotlin.math.roundToLong
 
@@ -17,11 +16,11 @@ class DataToLineDataService {
          * Creates a separate line for each value dimension of each device.
          */
         fun parseSensorData(
-            devices: Map<DeviceId, DeviceInfo>,
             amountOfValuesPerDevice: Int,
-            timeBuckets: Collection<TimeBucket>
+            timeBuckets: Collection<TimeBucket>,
+            activeDevices: List<DeviceId>
         ): Array<Map<DeviceId, Line>> {
-            if (timeBuckets.isEmpty() || devices.isEmpty()) {
+            if (timeBuckets.isEmpty() || activeDevices.isEmpty()) {
                 return arrayOf()
             }
 
@@ -32,7 +31,7 @@ class DataToLineDataService {
             val sortedBuckets = timeBuckets.sortedBy { it.referenceTime }
 
             // For each device, extract and plot its data
-            for (deviceId in devices.keys) {
+            for (deviceId in activeDevices) {
                 // Initialize point arrays for each value dimension
                 val pointArrays = Array(amountOfValuesPerDevice) { mutableListOf<Point>() }
 

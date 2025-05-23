@@ -68,6 +68,7 @@ fun Advertisement(onBack: () -> Unit) {
                 masterViewModel.currentSensorType = it
             },
             measurementData = masterViewModel.synchronizedData,
+            activeDevices = masterViewModel.getActiveDevices(),
         )
     }
     ConnectedDevicesPreview(
@@ -92,6 +93,7 @@ fun AdvertisementContent(
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
     measurementData: List<TimeBucket>,
+    activeDevices: List<DeviceId>,
 ) {
     Column(
         modifier = modifier
@@ -161,6 +163,7 @@ fun AdvertisementContent(
                 sensorType,
                 devices = connectedDeviceInfos,
                 timeBuckets = measurementData,
+                activeDevices = activeDevices,
             )
         }
 
