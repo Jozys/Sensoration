@@ -46,7 +46,7 @@ fun Discovering(onBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            HomeAppBar()
+            HomeAppBar(onSettings = { /* Not required for this screen */ })
         }
     ) { innerPadding ->
         Column(

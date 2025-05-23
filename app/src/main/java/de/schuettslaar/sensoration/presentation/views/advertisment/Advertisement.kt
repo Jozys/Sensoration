@@ -40,9 +40,12 @@ fun Advertisement(onBack: () -> Unit) {
 
     var masterViewModel = viewModel<MasterViewModel>()
 
+
     Scaffold(
         topBar = {
-            AnimatedVisibility(!masterViewModel.isDrawerOpen.value) { HomeAppBar() }
+            AnimatedVisibility(!masterViewModel.isDrawerOpen.value) {
+                HomeAppBar(onSettings = { /* Not required for this screen */ })
+            }
         }
     ) { innerPadding ->
         AdvertisementContent(
