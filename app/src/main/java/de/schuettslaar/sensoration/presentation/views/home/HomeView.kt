@@ -1,9 +1,13 @@
 package de.schuettslaar.sensoration.presentation.views.home
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +31,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -36,45 +41,110 @@ import de.schuettslaar.sensoration.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: () -> Unit) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
+    // Dynamic spacing based on screen size
+    val verticalSpacing = (screenHeight * 0.02f).coerceIn(8.dp, 16.dp)
+    val horizontalPadding = (screenWidth * 0.04f).coerceIn(12.dp, 24.dp)
+
+    // Calculate if we have enough space to show the welcome text
+    val showWelcomeText = screenHeight > 200.dp
+    val showDetailedWelcomeText = screenHeight > 500.dp
+
     Scaffold(
         topBar = {
             HomeAppBar(onSettings = onSettings)
-        }
-    ) { innerPadding ->
+        }) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .then(if (!isLandscape) Modifier.verticalScroll(rememberScrollState()) else Modifier),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = if (isLandscape && showDetailedWelcomeText) Arrangement.Center else Arrangement.Top
         ) {
+            if (showWelcomeText || showDetailedWelcomeText) {
+                Text(
+                    text = stringResource(R.string.welcome),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(
+                        top = verticalSpacing, bottom = verticalSpacing / 2
+                    )
+                )
 
-            Text(
-                text = stringResource(R.string.app_description),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-            )
+                if (showDetailedWelcomeText) {
+                    Text(
+                        text = stringResource(R.string.app_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(
+                            horizontal = horizontalPadding, vertical = verticalSpacing / 2
+                        )
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(verticalSpacing))
+            }
+            if (isLandscape) {
+                // Landscape: Cards side by side
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalPadding)
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(horizontalPadding / 2)
+                ) {
+                    DeviceRoleCard(
+                        title = stringResource(R.string.advertising_title),
+                        description = stringResource(R.string.advertising_description),
+                        icon = Icons.Default.Hub,
+                        buttonText = stringResource(R.string.start_advertising),
+                        onClick = onAdvertising,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        compact = screenHeight < 500.dp
+                    )
 
-            DeviceRoleCard(
-                title = stringResource(R.string.advertising_title),
-                description = stringResource(R.string.advertising_description),
-                icon = Icons.Default.Hub,
-                buttonText = stringResource(R.string.start_advertising),
-                onClick = onAdvertising
-            )
+                    DeviceRoleCard(
+                        title = stringResource(R.string.discovering_title),
+                        description = stringResource(R.string.discovering_description),
+                        icon = Icons.Default.Sensors,
+                        buttonText = stringResource(R.string.start_discovery),
+                        onClick = onDiscovering,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        compact = screenHeight < 500.dp
+                    )
+                }
+            } else {
+                // Portrait: Cards stacked
+                DeviceRoleCard(
+                    title = stringResource(R.string.advertising_title),
+                    description = stringResource(R.string.advertising_description),
+                    icon = Icons.Default.Hub,
+                    buttonText = stringResource(R.string.start_advertising),
+                    onClick = onAdvertising,
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    compact = screenHeight < 600.dp
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(verticalSpacing))
 
-            DeviceRoleCard(
-                title = stringResource(R.string.discovering_title),
-                description = stringResource(R.string.discovering_description),
-                icon = Icons.Default.Sensors,
-                buttonText = stringResource(R.string.start_discovery),
-                onClick = onDiscovering
-            )
+                DeviceRoleCard(
+                    title = stringResource(R.string.discovering_title),
+                    description = stringResource(R.string.discovering_description),
+                    icon = Icons.Default.Sensors,
+                    buttonText = stringResource(R.string.start_discovery),
+                    onClick = onDiscovering,
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    compact = screenHeight < 600.dp
+                )
+            }
         }
     }
 }
@@ -85,46 +155,47 @@ fun DeviceRoleCard(
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     buttonText: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(0.9f),
+        modifier = modifier,
         shape = MaterialTheme.shapes.large,
         tonalElevation = 2.dp,
         shadowElevation = 4.dp
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(if (compact) 12.dp else 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier
-                    .size(72.dp)
-                    .padding(8.dp),
+                    .size(if (compact) 56.dp else 72.dp)
+                    .padding(if (compact) 6.dp else 8.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(vertical = 8.dp)
+                style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = if (compact) 4.dp else 8.dp)
             )
 
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodyMedium,
+                style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(vertical = if (compact) 4.dp else 8.dp)
             )
 
             Button(
                 onClick = onClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .padding(top = if (compact) 8.dp else 16.dp)
             ) {
                 Text(text = buttonText)
             }
@@ -138,8 +209,7 @@ fun HomeAppBar(onSettings: () -> Unit) {
     TopAppBar(
         title = {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
             ) {
                 Image(
                     painter = painterResource(id = R.mipmap.ic_launcher_foreground),
@@ -162,6 +232,5 @@ fun HomeAppBar(onSettings: () -> Unit) {
                     )
                 }
             }
-        }
-    )
+        })
 }
