@@ -70,7 +70,7 @@
     <string name="timestamp">Time</string>
     <string name="no_data">No data available\n</string>
 
-    <!-- Updated role descriptions -->
+
     <string name="advertising_title">Main Device (Hub)</string>
     <string name="advertising_description">Set this device as the main hub that collects and analyzes sensor data from all connected devices in the network.</string>
     <string name="discovering_title">Client Device (Sensor)</string>
@@ -79,4 +79,19 @@
     <!-- Updated button texts -->
     <string name="start_advertising">Start as Main Device</string>
     <string name="start_discovery">Start as Client Device</string>
+
+    <string name="devices_title">Available Devices</string>
+    <string name="no_devices_found">No devices found</string>
+    <string name="searching_devices">Searching for nearby devices…</string>
+    <string name="device_id_format">ID: %1$s</string>
+    <string name="connect_button_description">Connect</string>
+    <string name="device_entry_format">Device: %1$s</string>
+    <string name="back_button_description">Back</string>
+    <string name="device_info_title">Device Information</string>
+    <string name="connection_controls">Connection Controls</string>
+    <string name="sensor_information">Sensor Information</string>
+    <string name="connect_to_device">Connect to Device</string>
+    <string name="available_connections">Available Connections</string>
+    <string name="discovery_title">Find Devices</string>
+    <string name="send_test_message">Send Test Message</string>
 </resources>
