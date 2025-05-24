@@ -1,6 +1,6 @@
 package de.schuettslaar.sensoration.presentation.core.animation
 
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -120,7 +119,7 @@ fun DeviceNetworkAnimation(modifier: Modifier = Modifier) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
-    val whiteColor = Color.White
+    val chartColor = MaterialTheme.colorScheme.inverseSurface
 
     val density = LocalDensity.current
 
@@ -131,22 +130,23 @@ fun DeviceNetworkAnimation(modifier: Modifier = Modifier) {
 
         // Make device sizes proportional to the container size
         val containerSize = min(this.constraints.maxWidth, this.constraints.maxHeight).toFloat()
-        val mainDeviceRadius = containerSize * 0.10f
-        val clientDeviceRadius = containerSize * 0.06f
-        val orbitRadius = containerSize * 0.35f
+
+        val mainDeviceSize = containerSize * 0.18f
+        val clientDeviceSize = containerSize * 0.12f
+        val orbitRadius = containerSize * 0.32f
 
         // Animation states
         val infiniteTransition = rememberInfiniteTransition(label = "networkAnimation")
         val dataPacketProgress = infiniteTransition.animateFloat(
             initialValue = 0f, targetValue = 1f, animationSpec = infiniteRepeatable(
-                animation = tween(2000, easing = FastOutSlowInEasing),
+                animation = tween(1500, easing = LinearEasing),
                 repeatMode = RepeatMode.Restart
             ), label = "dataPacketAnimation"
         )
 
         val chartAnimation = infiniteTransition.animateFloat(
             initialValue = 0f, targetValue = 1f, animationSpec = infiniteRepeatable(
-                animation = tween(3000), repeatMode = RepeatMode.Reverse
+                animation = tween(3000, easing = LinearEasing), repeatMode = RepeatMode.Restart
             ), label = "chartAnimation"
         )
 
@@ -156,37 +156,36 @@ fun DeviceNetworkAnimation(modifier: Modifier = Modifier) {
         // Get stroke width in pixels
         val strokeWidth = with(density) { 2.dp.toPx() }
 
-        val devicePainter = rememberVectorPainter(Icons.Default.Smartphone)
-        val devicePainter2 = rememberVectorPainter(Icons.Default.TabletAndroid)
+        // Use Hub icon for main device
+        val mainDevicePainter = rememberVectorPainter(Icons.Default.TabletAndroid)
+        val clientDevicePainter = rememberVectorPainter(Icons.Default.Smartphone)
 
         // Draw animation with extracted colors
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // Draw main device
+            // Calculate pixel sizes for devices
+            val mainSizePx = mainDeviceSize
+            val clientSizePx = clientDeviceSize
+
+            // Draw main device (Hub)
             translate(
-                left = centerX - mainDeviceRadius - devicePainter2.intrinsicSize.width / 2f,
-                top = centerY - mainDeviceRadius - devicePainter2.intrinsicSize.height / 2f
+                left = centerX - mainSizePx / 2,
+                top = centerY - mainSizePx / 2
             ) {
-                with(devicePainter2) {
+                with(mainDevicePainter) {
                     draw(
-                        size = Size(mainDeviceRadius.dp.toPx(), mainDeviceRadius.dp.toPx()),
+                        size = Size(mainSizePx, mainSizePx),
                         alpha = 0.5f,
                         colorFilter = ColorFilter.tint(primaryColor),
                     )
                 }
             }
 
-//            drawCircle(
-//                color = primaryColor,
-//                radius = mainDeviceRadius,
-//                center = Offset(centerX, centerY)
-//            )
-
             // Draw simplified chart inside main device
             val chartPath = Path().apply {
-                val chartWidth = mainDeviceRadius * 1.2f
-                val chartHeight = mainDeviceRadius * 0.8f
+                val chartWidth = mainSizePx * 0.8f - mainSizePx / 4
+                val chartHeight = mainSizePx * 0.4f - mainSizePx / 4
                 val startX = centerX - chartWidth / 2
-                val startY = centerY + chartHeight / 2
+                val startY = centerY + chartHeight / 3
 
                 moveTo(startX, startY)
 
@@ -201,35 +200,30 @@ fun DeviceNetworkAnimation(modifier: Modifier = Modifier) {
             }
 
             drawPath(
-                path = chartPath, color = whiteColor, style = Stroke(width = strokeWidth)
+                path = chartPath, color = chartColor, style = Stroke(width = strokeWidth)
             )
 
 
             // Draw client devices in a circle
             for (i in 0 until clientCount) {
-                val angle = 2 * PI * i / clientCount
+                // Calculate angle for even spacing (start at top position)
+                val angle = 2 * PI * i / clientCount - (PI / 2)
                 val deviceX = centerX + orbitRadius * cos(angle).toFloat()
                 val deviceY = centerY + orbitRadius * sin(angle).toFloat()
 
-                // Draw client device
+                // Draw client device - centered at the calculated position
                 translate(
-                    left = deviceX - clientDeviceRadius - devicePainter.intrinsicSize.width / 2f,
-                    top = deviceY - clientDeviceRadius - devicePainter.intrinsicSize.height / 2f
+                    left = deviceX - clientSizePx / 2,
+                    top = deviceY - clientSizePx / 2
                 ) {
-                    with(devicePainter) {
+                    with(clientDevicePainter) {
                         draw(
-                            size = Size(clientDeviceRadius.dp.toPx(), clientDeviceRadius.dp.toPx()),
+                            size = Size(clientSizePx, clientSizePx),
                             alpha = 0.5f,
-                            colorFilter = ColorFilter.tint(secondaryColor),
+                            colorFilter = ColorFilter.tint(secondaryColor)
                         )
                     }
                 }
-
-//                drawCircle(
-//                    color = secondaryColor,
-//                    radius = clientDeviceRadius,
-//                    center = Offset(deviceX, deviceY)
-//                )
 
                 // Draw data packets being sent to main device
                 val packetProgress = (dataPacketProgress.value + i.toFloat() / clientCount) % 1f
@@ -238,7 +232,7 @@ fun DeviceNetworkAnimation(modifier: Modifier = Modifier) {
                     val packetY = deviceY + (centerY - deviceY) * packetProgress
 
                     // Packet size changes as it travels (looks like it's moving in 3D)
-                    val packetSize = containerSize * 0.02f * (1f - packetProgress * 0.5f)
+                    val packetSize = containerSize * 0.015f * (1f - packetProgress * 0.3f)
 
                     // Draw packet
                     drawCircle(
