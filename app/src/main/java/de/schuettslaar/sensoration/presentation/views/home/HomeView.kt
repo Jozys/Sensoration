@@ -112,6 +112,7 @@ fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: (
                     Spacer(modifier = Modifier.height(verticalSpacing))
                 }
                 if (isLandscape) {
+                    val shouldBeCompact = screenHeight < 500.dp
                     // Landscape: Cards side by side
                     Row(
                         modifier = Modifier
@@ -129,7 +130,7 @@ fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: (
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
-                            compact = screenHeight < 500.dp
+                            compact = shouldBeCompact
                         )
 
                         DeviceRoleCard(
@@ -141,11 +142,12 @@ fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: (
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
-                            compact = screenHeight < 500.dp
+                            compact = shouldBeCompact
                         )
                     }
                 } else {
                     // Portrait: Cards stacked
+                    val shouldBeCompact = screenHeight < 780.dp
                     DeviceRoleCard(
                         title = stringResource(R.string.advertising_title),
                         description = stringResource(R.string.advertising_description),
@@ -153,7 +155,7 @@ fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: (
                         buttonText = stringResource(R.string.start_advertising),
                         onClick = onAdvertising,
                         modifier = Modifier.fillMaxWidth(0.9f),
-                        compact = screenHeight < 600.dp
+                        compact = shouldBeCompact
                     )
 
                     Spacer(modifier = Modifier.height(verticalSpacing))
@@ -165,7 +167,7 @@ fun HomeView(onAdvertising: () -> Unit, onDiscovering: () -> Unit, onSettings: (
                         buttonText = stringResource(R.string.start_discovery),
                         onClick = onDiscovering,
                         modifier = Modifier.fillMaxWidth(0.9f),
-                        compact = screenHeight < 600.dp
+                        compact = shouldBeCompact
                     )
                 }
             }
