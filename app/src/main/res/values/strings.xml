@@ -94,4 +94,9 @@
     <string name="available_connections">Available Connections</string>
     <string name="discovery_title">Find Devices</string>
     <string name="send_test_message">Send Test Message</string>
+
+    <string name="network_concept">How it works</string>
+    <string name="network_concept_description">Client devices collect sensor data and send it to the main device for analysis and visualization.</string>
+    <string name="view_concept">View how it works</string>
+    <string name="close">Close</string>
 </resources>
