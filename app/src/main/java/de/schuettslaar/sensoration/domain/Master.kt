@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.domain
 
 import android.content.Context
+import android.media.MediaActionSound
 import android.util.Log
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -11,6 +12,7 @@ import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
+import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
@@ -100,6 +102,7 @@ class Master : Device {
         when (message.messageType) {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)
             MessageType.PTP_MESSAGE -> processPTPMessage(message as PTPMessage, endpointId)
+            MessageType.TEST_MESSAGE -> handleTestMessage(message as TestMessage)
 
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
@@ -314,6 +317,13 @@ class Master : Device {
             }
         }
     }
+
+    private fun handleTestMessage(message: TestMessage) {
+        Log.i(this.javaClass.simpleName, "Test message received: ${message.content}")
+        val sound = MediaActionSound()
+        sound.play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
 }
 
 /**

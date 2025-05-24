@@ -89,6 +89,7 @@ fun Advertisement(onBack: () -> Unit) {
                     connectedDevices = masterViewModel.connectedDeviceInfos,
                     onDisconnect = { masterViewModel.disconnect(it) },
                     onConfirmRemove = { /* Handle device removal confirm */ },
+                    onSendTestMessage = { deviceId -> masterViewModel.sendTestMessage(deviceId) },
                     isDrawerOpen = drawerState.isOpen
                 )
             }
@@ -563,7 +564,7 @@ fun ConnectedDevicesInfo(
                     onClick = onViewDevices,
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
-                    Text(text = "View")
+                    Text(text = "View") // TODO: Localize this string
                 }
             }
         }
@@ -575,6 +576,7 @@ fun ConnectedDevicesPreview(
     connectedDevices: Map<DeviceId, DeviceInfo>,
     onDisconnect: (DeviceId) -> Unit,
     onConfirmRemove: () -> Unit,
+    onSendTestMessage: (DeviceId) -> Unit,
     isDrawerOpen: Boolean
 ) {
     Column(
@@ -601,7 +603,8 @@ fun ConnectedDevicesPreview(
                 DeviceListItem(
                     deviceId = deviceId,
                     deviceInfo = deviceInfo,
-                    onDisconnect = { onDisconnect(deviceId) }
+                    onDisconnect = { onDisconnect(deviceId) },
+                    onSendTestMessage = { onSendTestMessage(deviceId) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -613,7 +616,8 @@ fun ConnectedDevicesPreview(
 fun DeviceListItem(
     deviceId: DeviceId,
     deviceInfo: DeviceInfo,
-    onDisconnect: () -> Unit
+    onDisconnect: () -> Unit,
+    onSendTestMessage: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -628,26 +632,40 @@ fun DeviceListItem(
             )
 
             Text(
-                text = "Status: ${deviceInfo.applicationStatus}",
+                text = "Status: ${deviceInfo.applicationStatus}", // TODO: Localize this string
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
             Text(
-                text = "ID: ${deviceId.name}",
+                text = "ID: ${deviceId.name}", // TODO: Localize this string
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            Button(
-                onClick = onDisconnect,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                ),
-                modifier = Modifier.align(Alignment.End)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = stringResource(R.string.disconnect_device))
+                Button(
+                    onClick = onSendTestMessage,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(text = stringResource(R.string.send_test_message))
+                }
+
+                Button(
+                    onClick = onDisconnect,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text(text = stringResource(R.string.disconnect_device))
+                }
             }
         }
     }

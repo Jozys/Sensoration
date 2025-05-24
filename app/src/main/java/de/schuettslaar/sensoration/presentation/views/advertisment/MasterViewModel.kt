@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
+import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.Master
@@ -241,6 +242,24 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         if (isReceiving && currentSensorType != null) {
             stopReceiving()
             startReceiving()
+        }
+    }
+
+    fun sendTestMessage(deviceId: DeviceId) {
+        val master = thisDevice as? Master ?: return
+        val testMessage = TestMessage(
+            messageTimeStamp = System.currentTimeMillis(),
+            senderDeviceId = master.ownDeviceId ?: return,
+            state = ApplicationStatus.DESTINATION,
+            content = "Test message from ${master.ownDeviceId?.name}"
+        )
+
+        try {
+            master.sendMessage(deviceId, testMessage)
+            Logger.getLogger(this.javaClass.simpleName).info("Test message sent to $deviceId")
+        } catch (e: Exception) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Failed to send test message: ${e.message}")
         }
     }
 }

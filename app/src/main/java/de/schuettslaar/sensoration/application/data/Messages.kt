@@ -24,6 +24,7 @@ enum class MessageType {
     STOP_MEASUREMENT,
 
     PTP_MESSAGE,
+    TEST_MESSAGE,
 }
 
 /**
@@ -86,3 +87,15 @@ data class PTPMessage(
     override val messageType = MessageType.PTP_MESSAGE
 }
 
+/**
+ * Message to test the connection between devices.
+ * Should activate acoustic feedback on the receiving device
+ */
+data class TestMessage(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: DeviceId,
+    override val state: ApplicationStatus,
+    val content: String
+) : Message {
+    override val messageType = MessageType.TEST_MESSAGE
+}

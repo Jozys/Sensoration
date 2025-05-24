@@ -97,7 +97,7 @@ fun Discovering(onBack: () -> Unit) {
             ConnectedState(
                 modifier = Modifier.padding(innerPadding),
                 deviceEntry = viewModel.connectedDevices.entries.first(),
-                sendMessage = { viewModel.sendMessage() },
+                sendConnectionTestMessage = { viewModel.sendConnectionTestMessage() },
                 disconnect = { viewModel.disconnect() },
                 deviceStatus = viewModel.thisApplicationStatus,
                 sensorType = viewModel.currentSensorType,
@@ -429,7 +429,7 @@ fun DiscoveringState(
 fun ConnectedState(
     modifier: Modifier = Modifier,
     deviceEntry: Map.Entry<DeviceId, String>,
-    sendMessage: () -> Unit,
+    sendConnectionTestMessage: () -> Unit,
     disconnect: () -> Unit,
     sensorType: SensorType? = null,
     deviceStatus: ApplicationStatus,
@@ -473,7 +473,7 @@ fun ConnectedState(
 
                         // TODO: either remove or add useful functionality
                         Button(
-                            onClick = sendMessage,
+                            onClick = sendConnectionTestMessage,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(stringResource(R.string.send_test_message))
@@ -548,7 +548,7 @@ fun ConnectedState(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = sendMessage,
+                        onClick = sendConnectionTestMessage,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(R.string.send_test_message))

@@ -82,8 +82,13 @@ class DiscoveringViewModel(application: Application) : BaseNearbyViewModel(appli
         cleanUp()
     }
 
-    fun sendMessage() {
-        this.sendMessage(connectedDevices.keys.first())
+    fun sendConnectionTestMessage() {
+        if (thisDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("No device initialized to send message")
+            return
+        }
+        (thisDevice as Client).sendTestMessage()
     }
 
     fun cleanUp() {
