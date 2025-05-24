@@ -299,6 +299,21 @@ class Master : Device {
     fun isMasterDeviceProvidesData(): Boolean {
         return masterDeviceProvidesData
     }
+
+    fun setMasterDeviceProvidesData(value: Boolean) {
+        if (masterDeviceProvidesData != value) {
+            masterDeviceProvidesData = value
+
+            // If we're currently measuring, we need to restart sensor collection
+            if (sensorType != null) {
+                if (value) {
+                    startSensorCollectionOnMaster(sensorType!!, sensorType!!.processingDelay)
+                } else {
+                    stopSensorCollectionOnMaster()
+                }
+            }
+        }
+    }
 }
 
 /**

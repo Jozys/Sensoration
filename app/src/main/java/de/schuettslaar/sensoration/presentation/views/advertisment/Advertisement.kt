@@ -36,6 +36,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -350,6 +351,8 @@ fun SensorSelectionCard(
     modifier: Modifier = Modifier,
     compact: Boolean = false
 ) {
+    val masterViewModel = viewModel<MasterViewModel>()
+
     Card(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -371,6 +374,26 @@ fun SensorSelectionCard(
                         onSensorChange = onSensorSelected,
 //                        modifier = Modifier.weight(1f)
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Main device sensor data switch
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Switch(
+                            checked = masterViewModel.masterProvidesData,
+                            onCheckedChange = { masterViewModel.toggleMasterProvidesData() },
+                            enabled = !isReceiving
+                        )
+
+                        Text(
+                            text = "Main device sensors",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -398,6 +421,28 @@ fun SensorSelectionCard(
 //                        .fillMaxWidth()
 //                        .padding(bottom = 8.dp)
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Add the switch for main device data collection
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = stringResource(R.string.collect_main_device_data),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Switch(
+                        checked = masterViewModel.masterProvidesData,
+                        onCheckedChange = { masterViewModel.toggleMasterProvidesData() },
+                        enabled = !isReceiving
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 

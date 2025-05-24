@@ -99,4 +99,5 @@
     <string name="network_concept_description">Client devices collect sensor data and send it to the main device for analysis and visualization.</string>
     <string name="view_concept">View how it works</string>
     <string name="close">Close</string>
+    <string name="collect_main_device_data">Use main device sensors</string>
 </resources>

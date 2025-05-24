@@ -32,7 +32,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
     private var dataSynchronizingJob: Job? = null
 
-
     val isDrawerOpen = mutableStateOf(false)
 
     var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
@@ -40,6 +39,10 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     var isReceiving by mutableStateOf(false)
 
     private val logger = Logger.getLogger(this.javaClass.simpleName)
+
+    // Track whether the master device should provide its own sensor data
+    var masterProvidesData by mutableStateOf(true)
+        private set
 
     init {
         logger.info("Starting AdvertisementViewModel")
@@ -101,6 +104,11 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         this.thisDevice?.start { text, status ->
             this.callback(text, status)
         }
+
+        // Initialize masterProvidesData from the Master instance
+        (thisDevice as? Master)?.let {
+            masterProvidesData = it.isMasterDeviceProvidesData()
+        }
     }
 
     fun startReceiving() {
@@ -126,8 +134,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         // TODO: maybe adjust this processing delay
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
 
-
-
         dataSynchronizingJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
     }
 
@@ -137,7 +143,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
             Log.e(this.javaClass.simpleName, "Master is null")
             return emptyList()
         }
-
 
         val devices = master.connectedDevices.toList().toMutableList()
         // If master also provides data, include its device ID
@@ -164,8 +169,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                 val currentBucketTime: Long =
                     ((master.getCurrentMasterTime() - processingDelay) / 10) * 10 // floor to 10ms resolution
                 val bucketData = mutableMapOf<DeviceId, ProcessedSensorData>()
-
-
 
                 activeDevices.forEach { deviceId ->
                     val sensorData = master.getSensorDataForCurrentTime(
@@ -194,7 +197,6 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
             }
         }
     }
-
 
     private fun addTimeBucket(newBucket: TimeBucket) {
         synchronizedData.add(newBucket)
@@ -229,8 +231,19 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         )
     }
 
-}
+    fun toggleMasterProvidesData() {
+        val master = thisDevice as? Master ?: return
+        val newValue = !masterProvidesData
+        masterProvidesData = newValue
+        master.setMasterDeviceProvidesData(newValue)
 
+        // If we're currently measuring, restart the measurement with the new setting
+        if (isReceiving && currentSensorType != null) {
+            stopReceiving()
+            startReceiving()
+        }
+    }
+}
 
 data class TimeBucket(
     val referenceTime: Long,
