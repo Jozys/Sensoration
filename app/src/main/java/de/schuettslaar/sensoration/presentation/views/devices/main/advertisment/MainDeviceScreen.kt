@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,16 +22,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +40,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -84,8 +83,7 @@ fun MainDeviceScreen(onBack: () -> Unit) {
     mainDeviceViewModel.isDrawerOpen.value = drawerState.isOpen
 
     ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
+        drawerState = drawerState, drawerContent = {
             ModalDrawerSheet {
                 ConnectedDevicesPreview(
                     connectedDevices = mainDeviceViewModel.connectedDeviceInfos,
@@ -95,21 +93,17 @@ fun MainDeviceScreen(onBack: () -> Unit) {
                     isDrawerOpen = drawerState.isOpen
                 )
             }
-        }
-    ) {
+        }) {
         Scaffold(
             topBar = {
                 AdvertisementAppBar(
-                    onBack = onBack,
-                    onOpenConnectedDevices = {
+                    onBack = onBack, onOpenConnectedDevices = {
                         scope.launch {
                             drawerState.open()
                         }
-                    },
-                    deviceCount = mainDeviceViewModel.connectedDeviceInfos.size
+                    }, deviceCount = mainDeviceViewModel.connectedDeviceInfos.size
                 )
-            }
-        ) { innerPadding ->
+            }) { innerPadding ->
             if (isLandscape) {
                 LandscapeLayout(
                     innerPadding = innerPadding,
@@ -136,62 +130,107 @@ fun LandscapeLayout(
     compact: Boolean,
     contentScrollState: ScrollState
 ) {
-    Column(
+    var isMetadataPanelExpanded by remember { mutableStateOf(true) }
+    val metadataPanelScrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
             .padding(innerPadding)
             .fillMaxSize()
     ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Metadata panel (fixed during scroll)
+            val width =
+                if (isMetadataPanelExpanded && compact) 350.dp else if (isMetadataPanelExpanded) 400.dp else 56.dp
 
-
-        // Scrollable content area
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(contentScrollState)
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Status and device info
-            Column(
+            Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxHeight()
+                    .width(width)
+                    .animateContentSize()
+                    .padding(end = 16.dp, top = 16.dp, bottom = 16.dp)
             ) {
-                StatusInformation(
-                    statusText = getStringResourceByName(
-                        LocalContext.current,
-                        mainDeviceViewModel.status.name
-                    ).uppercase()
-                )
+                if (isMetadataPanelExpanded) {
+                    // Expanded view
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp, vertical = 16.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusInformation(
+                                statusText = getStringResourceByName(
+                                    LocalContext.current, mainDeviceViewModel.status.name
+                                ).uppercase()
+                            )
+                            // Collapse button
+                            IconButton(
+                                onClick = { isMetadataPanelExpanded = false },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ChevronLeft,
+                                    contentDescription = "Collapse panel"
+                                )
+                            }
+                        }
 
-                ConnectedDevicesInfo(
-                    deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
-                    onViewDevices = {
-                        mainDeviceViewModel.isDrawerOpen.value = true
-                    },
-                    compact = compact
-                )
+                        // Make the content scrollable
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight()
+//                                .padding(horizontal = 8.dp, vertical = 16.dp)
+                                .weight(1f)
+                                .verticalScroll(metadataPanelScrollState),
 
-                // Static control bar at the top
-                SensorSelectionCard(
-                    sensorType = mainDeviceViewModel.currentSensorType,
-                    onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
-                    isReceiving = mainDeviceViewModel.isReceiving,
-                    onStartReceiving = { mainDeviceViewModel.startReceiving() },
-                    onStopReceiving = { mainDeviceViewModel.stopReceiving() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    compact = compact
-                )
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Content
+                            ConnectedDevicesInfo(
+                                deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
+                                onViewDevices = { mainDeviceViewModel.isDrawerOpen.value = true },
+                                compact = compact
+                            )
+
+                            SensorSelectionCard(
+                                sensorType = mainDeviceViewModel.currentSensorType,
+                                onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                                isReceiving = mainDeviceViewModel.isReceiving,
+                                onStartReceiving = { mainDeviceViewModel.startReceiving() },
+                                onStopReceiving = { mainDeviceViewModel.stopReceiving() },
+                                modifier = Modifier.fillMaxWidth(),
+                                compact = compact
+                            )
+                        }
+                    }
+                } else {
+                    // Collapsed view - just the expand button
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 16.dp, horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(onClick = { isMetadataPanelExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Expand panel"
+                            )
+                        }
+                    }
+                }
             }
 
-            // Data visualization
+            // Data display area (scrollable)
             Column(
                 modifier = Modifier
-                    .weight(2f)
                     .fillMaxHeight()
+                    .weight(1f)
+                    .verticalScroll(contentScrollState)
+                    .padding(end = 16.dp, top = 16.dp, bottom = 16.dp)
             ) {
                 if (mainDeviceViewModel.isReceiving) {
                     DataDisplay(
@@ -222,10 +261,8 @@ fun PortraitLayout(
     ) {
         StatusInformation(
             statusText = getStringResourceByName(
-                LocalContext.current,
-                mainDeviceViewModel.status.name
-            ).uppercase(),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                LocalContext.current, mainDeviceViewModel.status.name
+            ).uppercase(), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
         ConnectedDevicesInfo(
@@ -284,8 +321,7 @@ fun NoMeasurementInfo() {
         tonalElevation = 2.dp
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.no_sensor_selected),
@@ -293,53 +329,6 @@ fun NoMeasurementInfo() {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(16.dp)
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SensorPicker(
-    currentSensorType: SensorType?,
-    onSensorSelected: (SensorType) -> Unit,
-    isDisabled: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val sensorTypes = SensorType.values()
-    val context = LocalContext.current
-
-    ExposedDropdownMenuBox(
-        expanded = expanded && !isDisabled,
-        onExpandedChange = { if (!isDisabled) expanded = it },
-        modifier = modifier
-    ) {
-        TextField(
-            value = currentSensorType?.let { getStringResourceByName(context, it.name) } ?: "",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.current_sensor)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-            enabled = !isDisabled,
-            modifier = Modifier.menuAnchor()
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            sensorTypes.forEach { sensor ->
-                DropdownMenuItem(
-                    text = {
-                        Text(getStringResourceByName(context, sensor.name))
-                    },
-                    onClick = {
-                        onSensorSelected(sensor)
-                        expanded = false
-                    }
-                )
-            }
         }
     }
 }
@@ -357,57 +346,62 @@ fun SensorSelectionCard(
     val mainDeviceViewModel = viewModel<MainDeviceViewModel>()
 
     Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = modifier, elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (compact) {
                 // Compact layout - controls side by side
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CurrentSensor(
-                        sensorType = sensorType,
-                        shouldDisableSensorChange = isReceiving,
-                        onSensorChange = onSensorSelected,
-//                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Main device sensor data switch
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    ) {
-                        Switch(
-                            checked = mainDeviceViewModel.mainDeviceIsProvidingData,
-                            onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
-                            enabled = !isReceiving
-                        )
-
-                        Text(
-                            text = "Main device sensors",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(start = 4.dp)
+                    Box(modifier = Modifier.weight(1f)) {
+                        CurrentSensor(
+                            sensorType = sensorType,
+                            shouldDisableSensorChange = isReceiving,
+                            onSensorChange = onSensorSelected,
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                    MeasurementButton(
-                        isReceiving = isReceiving,
-                        onStartReceiving = onStartReceiving,
-                        onStopReceiving = onStopReceiving,
-                        isEnabled = sensorType != null,
-                        modifier = Modifier.width(120.dp)
+                // Main device sensor data switch
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = stringResource(R.string.collect_main_device_data),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                    Switch(
+                        checked = mainDeviceViewModel.mainDeviceIsProvidingData,
+                        onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
+                        enabled = !isReceiving
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                MeasurementButton(
+                    isReceiving = isReceiving,
+                    onStartReceiving = onStartReceiving,
+                    onStopReceiving = onStopReceiving,
+                    isEnabled = sensorType != null,
+                    modifier = Modifier.width(120.dp)
+                )
+
             } else {
                 // Standard layout - stacked controls
                 Text(
@@ -416,14 +410,22 @@ fun SensorSelectionCard(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                CurrentSensor(
-                    sensorType = sensorType,
-                    onSensorChange = onSensorSelected,
-                    shouldDisableSensorChange = isReceiving,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(bottom = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        CurrentSensor(
+                            sensorType = sensorType,
+                            shouldDisableSensorChange = isReceiving,
+                            onSensorChange = onSensorSelected,
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -490,46 +492,36 @@ fun MeasurementButton(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvertisementAppBar(
-    onBack: () -> Unit,
-    onOpenConnectedDevices: () -> Unit,
-    deviceCount: Int
+    onBack: () -> Unit, onOpenConnectedDevices: () -> Unit, deviceCount: Int
 ) {
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.advertising_title),
-                style = MaterialTheme.typography.titleMedium
+    TopAppBar(title = {
+        Text(
+            text = stringResource(R.string.advertising_title),
+            style = MaterialTheme.typography.titleMedium
+        )
+    }, navigationIcon = {
+        IconButton(onClick = onBack) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.back_button_description)
             )
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back_button_description)
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onOpenConnectedDevices) {
-                Icon(
-                    Icons.Default.Devices,
-                    contentDescription = stringResource(R.string.connected_devices)
-                )
-            }
         }
-    )
+    }, actions = {
+        IconButton(onClick = onOpenConnectedDevices) {
+            Icon(
+                Icons.Default.Devices,
+                contentDescription = stringResource(R.string.connected_devices)
+            )
+        }
+    })
 }
 
 @Composable
 fun ConnectedDevicesInfo(
-    deviceCount: Int,
-    onViewDevices: () -> Unit,
-    compact: Boolean,
-    modifier: Modifier = Modifier
+    deviceCount: Int, onViewDevices: () -> Unit, compact: Boolean, modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = modifier, elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -538,8 +530,7 @@ fun ConnectedDevicesInfo(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
                     imageVector = Icons.Default.Devices,
@@ -563,8 +554,7 @@ fun ConnectedDevicesInfo(
                 }
 
                 Button(
-                    onClick = onViewDevices,
-                    modifier = Modifier.padding(start = 8.dp)
+                    onClick = onViewDevices, modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(text = "View") // TODO: Localize this string
                 }
@@ -606,8 +596,7 @@ fun ConnectedDevicesPreview(
                     deviceId = deviceId,
                     deviceInfo = deviceInfo,
                     onDisconnect = { onDisconnect(deviceId) },
-                    onSendTestMessage = { onSendTestMessage(deviceId) }
-                )
+                    onSendTestMessage = { onSendTestMessage(deviceId) })
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -622,15 +611,13 @@ fun DeviceListItem(
     onSendTestMessage: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = deviceInfo.deviceName,
-                style = MaterialTheme.typography.titleMedium
+                text = deviceInfo.deviceName, style = MaterialTheme.typography.titleMedium
             )
 
             Text(
@@ -646,12 +633,10 @@ fun DeviceListItem(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
-                    onClick = onSendTestMessage,
-                    colors = ButtonDefaults.buttonColors(
+                    onClick = onSendTestMessage, colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -660,8 +645,7 @@ fun DeviceListItem(
                 }
 
                 Button(
-                    onClick = onDisconnect,
-                    colors = ButtonDefaults.buttonColors(
+                    onClick = onDisconnect, colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
                     )
