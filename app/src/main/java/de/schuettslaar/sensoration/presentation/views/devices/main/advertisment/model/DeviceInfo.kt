@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.views.advertisment.model
+package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model
 
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 

@@ -1,10 +1,12 @@
-package de.schuettslaar.sensoration.presentation.views.advertisment
+package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
 import android.content.res.Configuration
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -61,14 +63,14 @@ import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Advertisement(onBack: () -> Unit) {
-    val masterViewModel = viewModel<MasterViewModel>()
+fun MainDeviceScreen(onBack: () -> Unit) {
+    val mainDeviceViewModel = viewModel<MainDeviceViewModel>()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
@@ -79,17 +81,17 @@ fun Advertisement(onBack: () -> Unit) {
     val contentScrollState = rememberScrollState()
 
     // Set the drawer open state based on ViewModel
-    masterViewModel.isDrawerOpen.value = drawerState.isOpen
+    mainDeviceViewModel.isDrawerOpen.value = drawerState.isOpen
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 ConnectedDevicesPreview(
-                    connectedDevices = masterViewModel.connectedDeviceInfos,
-                    onDisconnect = { masterViewModel.disconnect(it) },
+                    connectedDevices = mainDeviceViewModel.connectedDeviceInfos,
+                    onDisconnect = { mainDeviceViewModel.disconnect(it) },
                     onConfirmRemove = { /* Handle device removal confirm */ },
-                    onSendTestMessage = { deviceId -> masterViewModel.sendTestMessage(deviceId) },
+                    onSendTestMessage = { deviceId -> mainDeviceViewModel.sendTestMessage(deviceId) },
                     isDrawerOpen = drawerState.isOpen
                 )
             }
@@ -104,21 +106,21 @@ fun Advertisement(onBack: () -> Unit) {
                             drawerState.open()
                         }
                     },
-                    deviceCount = masterViewModel.connectedDeviceInfos.size
+                    deviceCount = mainDeviceViewModel.connectedDeviceInfos.size
                 )
             }
         ) { innerPadding ->
             if (isLandscape) {
                 LandscapeLayout(
                     innerPadding = innerPadding,
-                    masterViewModel = masterViewModel,
+                    mainDeviceViewModel = mainDeviceViewModel,
                     compact = compact,
                     contentScrollState = contentScrollState
                 )
             } else {
                 PortraitLayout(
                     innerPadding = innerPadding,
-                    masterViewModel = masterViewModel,
+                    mainDeviceViewModel = mainDeviceViewModel,
                     compact = compact,
                     contentScrollState = contentScrollState
                 )
@@ -129,10 +131,10 @@ fun Advertisement(onBack: () -> Unit) {
 
 @Composable
 fun LandscapeLayout(
-    innerPadding: androidx.compose.foundation.layout.PaddingValues,
-    masterViewModel: MasterViewModel,
+    innerPadding: PaddingValues,
+    mainDeviceViewModel: MainDeviceViewModel,
     compact: Boolean,
-    contentScrollState: androidx.compose.foundation.ScrollState
+    contentScrollState: ScrollState
 ) {
     Column(
         modifier = Modifier
@@ -159,25 +161,25 @@ fun LandscapeLayout(
                 StatusInformation(
                     statusText = getStringResourceByName(
                         LocalContext.current,
-                        masterViewModel.status.name
+                        mainDeviceViewModel.status.name
                     ).uppercase()
                 )
 
                 ConnectedDevicesInfo(
-                    deviceCount = masterViewModel.connectedDeviceInfos.size,
+                    deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
                     onViewDevices = {
-                        masterViewModel.isDrawerOpen.value = true
+                        mainDeviceViewModel.isDrawerOpen.value = true
                     },
                     compact = compact
                 )
 
                 // Static control bar at the top
                 SensorSelectionCard(
-                    sensorType = masterViewModel.currentSensorType,
-                    onSensorSelected = { masterViewModel.currentSensorType = it },
-                    isReceiving = masterViewModel.isReceiving,
-                    onStartReceiving = { masterViewModel.startReceiving() },
-                    onStopReceiving = { masterViewModel.stopReceiving() },
+                    sensorType = mainDeviceViewModel.currentSensorType,
+                    onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                    isReceiving = mainDeviceViewModel.isReceiving,
+                    onStartReceiving = { mainDeviceViewModel.startReceiving() },
+                    onStopReceiving = { mainDeviceViewModel.stopReceiving() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -191,12 +193,12 @@ fun LandscapeLayout(
                     .weight(2f)
                     .fillMaxHeight()
             ) {
-                if (masterViewModel.isReceiving) {
+                if (mainDeviceViewModel.isReceiving) {
                     DataDisplay(
-                        sensorType = masterViewModel.currentSensorType,
-                        devices = masterViewModel.connectedDeviceInfos,
-                        timeBuckets = masterViewModel.synchronizedData,
-                        activeDevices = masterViewModel.getActiveDevices()
+                        sensorType = mainDeviceViewModel.currentSensorType,
+                        devices = mainDeviceViewModel.connectedDeviceInfos,
+                        timeBuckets = mainDeviceViewModel.synchronizedData,
+                        activeDevices = mainDeviceViewModel.getActiveDevices()
                     )
                 } else {
                     NoMeasurementInfo()
@@ -208,10 +210,10 @@ fun LandscapeLayout(
 
 @Composable
 fun PortraitLayout(
-    innerPadding: androidx.compose.foundation.layout.PaddingValues,
-    masterViewModel: MasterViewModel,
+    innerPadding: PaddingValues,
+    mainDeviceViewModel: MainDeviceViewModel,
     compact: Boolean,
-    contentScrollState: androidx.compose.foundation.ScrollState
+    contentScrollState: ScrollState
 ) {
     Column(
         modifier = Modifier
@@ -221,15 +223,15 @@ fun PortraitLayout(
         StatusInformation(
             statusText = getStringResourceByName(
                 LocalContext.current,
-                masterViewModel.status.name
+                mainDeviceViewModel.status.name
             ).uppercase(),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
         ConnectedDevicesInfo(
-            deviceCount = masterViewModel.connectedDeviceInfos.size,
+            deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
             onViewDevices = {
-                masterViewModel.isDrawerOpen.value = true
+                mainDeviceViewModel.isDrawerOpen.value = true
             },
             compact = compact,
             modifier = Modifier
@@ -239,11 +241,11 @@ fun PortraitLayout(
 
         // Static control bar at the top
         SensorSelectionCard(
-            sensorType = masterViewModel.currentSensorType,
-            onSensorSelected = { masterViewModel.currentSensorType = it },
-            isReceiving = masterViewModel.isReceiving,
-            onStartReceiving = { masterViewModel.startReceiving() },
-            onStopReceiving = { masterViewModel.stopReceiving() },
+            sensorType = mainDeviceViewModel.currentSensorType,
+            onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+            isReceiving = mainDeviceViewModel.isReceiving,
+            onStartReceiving = { mainDeviceViewModel.startReceiving() },
+            onStopReceiving = { mainDeviceViewModel.stopReceiving() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -257,12 +259,12 @@ fun PortraitLayout(
                 .fillMaxSize()
                 .verticalScroll(contentScrollState)
         ) {
-            if (masterViewModel.isReceiving) {
+            if (mainDeviceViewModel.isReceiving) {
                 DataDisplay(
-                    sensorType = masterViewModel.currentSensorType,
-                    devices = masterViewModel.connectedDeviceInfos,
-                    timeBuckets = masterViewModel.synchronizedData,
-                    activeDevices = masterViewModel.getActiveDevices()
+                    sensorType = mainDeviceViewModel.currentSensorType,
+                    devices = mainDeviceViewModel.connectedDeviceInfos,
+                    timeBuckets = mainDeviceViewModel.synchronizedData,
+                    activeDevices = mainDeviceViewModel.getActiveDevices()
                 )
             } else {
                 NoMeasurementInfo()
@@ -352,7 +354,7 @@ fun SensorSelectionCard(
     modifier: Modifier = Modifier,
     compact: Boolean = false
 ) {
-    val masterViewModel = viewModel<MasterViewModel>()
+    val mainDeviceViewModel = viewModel<MainDeviceViewModel>()
 
     Card(
         modifier = modifier,
@@ -384,8 +386,8 @@ fun SensorSelectionCard(
                         modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
                         Switch(
-                            checked = masterViewModel.masterProvidesData,
-                            onCheckedChange = { masterViewModel.toggleMasterProvidesData() },
+                            checked = mainDeviceViewModel.mainDeviceIsProvidingData,
+                            onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
                             enabled = !isReceiving
                         )
 
@@ -439,8 +441,8 @@ fun SensorSelectionCard(
                     )
 
                     Switch(
-                        checked = masterViewModel.masterProvidesData,
-                        onCheckedChange = { masterViewModel.toggleMasterProvidesData() },
+                        checked = mainDeviceViewModel.mainDeviceIsProvidingData,
+                        onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
                         enabled = !isReceiving
                     )
                 }

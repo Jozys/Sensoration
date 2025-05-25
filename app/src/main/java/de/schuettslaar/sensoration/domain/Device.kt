@@ -11,7 +11,7 @@ import java.util.logging.Logger
 
 abstract class Device {
     internal var wrapper: NearbyWrapper? = null
-    internal var isMaster = false
+    internal var isMainDevice = false
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
     internal var connectedDeviceId: DeviceId? = null
     internal var ownDeviceId: DeviceId? = null
@@ -29,7 +29,7 @@ abstract class Device {
     fun connect(deviceIdToConnect: DeviceId) {
         wrapper?.connect(deviceIdToConnect)
         this.connectedDeviceId = deviceIdToConnect
-        this.connectedDevices = if(connectedDevices.contains(deviceIdToConnect)) {
+        this.connectedDevices = if (connectedDevices.contains(deviceIdToConnect)) {
             connectedDevices
         } else {
             connectedDevices.apply { add(deviceIdToConnect) }

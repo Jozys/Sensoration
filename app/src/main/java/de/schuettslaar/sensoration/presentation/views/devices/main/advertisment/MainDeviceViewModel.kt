@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.views.advertisment
+package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
 import android.app.Application
 import android.util.Log
@@ -11,11 +11,12 @@ import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
-import de.schuettslaar.sensoration.domain.Master
+import de.schuettslaar.sensoration.domain.MainDevice
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,7 +27,7 @@ import java.util.logging.Logger
 
 private const val PROCESSED_VALUES_CAPACITY = 100
 
-class MasterViewModel(application: Application) : BaseNearbyViewModel(application) {
+class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(application) {
     // processing data to match the sensor type and the correct time
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     val synchronizedData = mutableStateListOf<TimeBucket>()
@@ -42,12 +43,12 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     private val logger = Logger.getLogger(this.javaClass.simpleName)
 
     // Track whether the master device should provide its own sensor data
-    var masterProvidesData by mutableStateOf(true)
+    var mainDeviceIsProvidingData by mutableStateOf(true)
         private set
 
     init {
         logger.info("Starting AdvertisementViewModel")
-        this.thisDevice = Master(
+        this.thisDevice = MainDevice(
             application,
             onConnectionInitiatedCallback = { endpointId, connectionInfo ->
                 this.setConnectedDeviceInfo(
@@ -66,10 +67,10 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                 )
                 if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
                     // We need to send the id of the device to the client
-                    val master = this.thisDevice
+                    val mainDevice = this.thisDevice
                     var handshakeMessage = HandshakeMessage(
                         messageTimeStamp = System.currentTimeMillis().toLong(),
-                        senderDeviceId = master?.ownDeviceId!!,
+                        senderDeviceId = mainDevice?.ownDeviceId!!,
                         state = ApplicationStatus.DESTINATION,
                         clientId = endpointId,
                     )
@@ -79,12 +80,12 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
                     this.setConnectedDeviceInfo(endpointId, deviceInfo)
 
                     try {
-                        master.sendMessage(endpointId, handshakeMessage)
+                        mainDevice.sendMessage(endpointId, handshakeMessage)
                     } catch (_: Exception) {
                         logger
                             .info { "Failed to send handshake message" }
                     }
-                    master.addConnectedDevice(
+                    mainDevice.addConnectedDevice(
                         endpointId
                     )
 
@@ -107,15 +108,15 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         }
 
         // Initialize masterProvidesData from the Master instance
-        (thisDevice as? Master)?.let {
-            masterProvidesData = it.isMasterDeviceProvidesData()
+        (thisDevice as? MainDevice)?.let {
+            mainDeviceIsProvidingData = it.isMainDeviceProvidingData()
         }
     }
 
     fun startReceiving() {
         Logger.getLogger(this.javaClass.simpleName).info { "Starting receiving" }
-        val master = this.thisDevice as? Master
-        if (master == null) {
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
             return
         }
@@ -125,37 +126,38 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
             return
         }
 
-        master.clearSensorData()
+        mainDevice.clearSensorData()
         synchronizedData.clear()
 
-        master.startMeasurement(currentSensorType!!)
+        mainDevice.startMeasurement(currentSensorType!!)
 
         isReceiving = true
 
         // TODO: maybe adjust this processing delay
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
 
-        dataSynchronizingJob = getJobForCookingData(sensorTimeResolution, master, currentSensorType)
+        dataSynchronizingJob =
+            getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
     }
 
     fun getActiveDevices(): List<DeviceId> {
-        val master = this.thisDevice as? Master
-        if (master == null) {
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
             Log.e(this.javaClass.simpleName, "Master is null")
             return emptyList()
         }
 
-        val devices = master.connectedDevices.toList().toMutableList()
+        val devices = mainDevice.connectedDevices.toList().toMutableList()
         // If master also provides data, include its device ID
-        if (master.isMasterDeviceProvidesData() && master.ownDeviceId != null) {
-            devices.add(master.ownDeviceId!!)
+        if (mainDevice.isMainDeviceProvidingData() && mainDevice.ownDeviceId != null) {
+            devices.add(mainDevice.ownDeviceId!!)
         }
         return devices.toList()
     }
 
     private fun getJobForCookingData(
         sensorTimeResolution: Long,
-        master: Master,
+        mainDevice: MainDevice,
         currentSensorType: SensorType?
     ): Job {
 
@@ -168,11 +170,11 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
             while (isActive) {
                 val currentBucketTime: Long =
-                    ((master.getCurrentMasterTime() - processingDelay) / 10) * 10 // floor to 10ms resolution
+                    ((mainDevice.getCurrentTimeOfMainDevice() - processingDelay) / 10) * 10 // floor to 10ms resolution
                 val bucketData = mutableMapOf<DeviceId, ProcessedSensorData>()
 
                 activeDevices.forEach { deviceId ->
-                    val sensorData = master.getSensorDataForCurrentTime(
+                    val sensorData = mainDevice.getSensorDataForCurrentTime(
                         currentBucketTime, deviceId, currentSensorType!!, sensorTimeResolution * 10
                     )
 
@@ -208,12 +210,12 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
 
     fun stopReceiving() {
         Logger.getLogger(this.javaClass.simpleName).info { "Stopping receiving" }
-        val master = this.thisDevice as? Master
-        if (master == null) {
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
             return
         }
-        master.stopMeasurement()
+        mainDevice.stopMeasurement()
         isReceiving = false
         dataSynchronizingJob?.cancel()
     }
@@ -232,11 +234,11 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
         )
     }
 
-    fun toggleMasterProvidesData() {
-        val master = thisDevice as? Master ?: return
-        val newValue = !masterProvidesData
-        masterProvidesData = newValue
-        master.setMasterDeviceProvidesData(newValue)
+    fun toggleMainDeviceProvidingData() {
+        val mainDevice = thisDevice as? MainDevice ?: return
+        val newValue = !mainDeviceIsProvidingData
+        mainDeviceIsProvidingData = newValue
+        mainDevice.setMainDeviceToProvidingData(newValue)
 
         // If we're currently measuring, restart the measurement with the new setting
         if (isReceiving && currentSensorType != null) {
@@ -246,16 +248,16 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     }
 
     fun sendTestMessage(deviceId: DeviceId) {
-        val master = thisDevice as? Master ?: return
+        val mainDevice = thisDevice as? MainDevice ?: return
         val testMessage = TestMessage(
             messageTimeStamp = System.currentTimeMillis(),
-            senderDeviceId = master.ownDeviceId ?: return,
+            senderDeviceId = mainDevice.ownDeviceId ?: return,
             state = ApplicationStatus.DESTINATION,
-            content = "Test message from ${master.ownDeviceId?.name}"
+            content = "Test message from ${mainDevice.ownDeviceId?.name}"
         )
 
         try {
-            master.sendMessage(deviceId, testMessage)
+            mainDevice.sendMessage(deviceId, testMessage)
             Logger.getLogger(this.javaClass.simpleName).info("Test message sent to $deviceId")
         } catch (e: Exception) {
             Logger.getLogger(this.javaClass.simpleName)
@@ -264,7 +266,3 @@ class MasterViewModel(application: Application) : BaseNearbyViewModel(applicatio
     }
 }
 
-data class TimeBucket(
-    val referenceTime: Long,
-    val deviceData: Map<DeviceId, ProcessedSensorData>
-)

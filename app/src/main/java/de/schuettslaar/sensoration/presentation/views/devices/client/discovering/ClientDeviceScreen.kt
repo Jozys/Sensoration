@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.views.discovering
+package de.schuettslaar.sensoration.presentation.views.devices.client.discovering
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
@@ -58,8 +58,8 @@ import de.schuettslaar.sensoration.utils.getStringResourceByName
 
 
 @Composable
-fun Discovering(onBack: () -> Unit) {
-    val viewModel = viewModel<DiscoveringViewModel>()
+fun ClientDeviceScreen(onBack: () -> Unit) {
+    val viewModel = viewModel<ClientDeviceViewModel>()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenHeight = configuration.screenHeightDp.dp

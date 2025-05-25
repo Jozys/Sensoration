@@ -28,8 +28,10 @@ import co.yml.charts.ui.linechart.model.Line
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
-import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.core.data.representations.TableDisplay
+import de.schuettslaar.sensoration.presentation.core.data.representations.YChartDisplay
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 
 @Composable

@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.core.data
+package de.schuettslaar.sensoration.presentation.core.data.representations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -23,6 +23,7 @@ import co.yml.charts.ui.linechart.model.LineChartData
 import co.yml.charts.ui.linechart.model.LinePlotData
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.presentation.core.data.NoVisualizationAvailable
 
 const val AXIS_STEP_SIZE = 5
 

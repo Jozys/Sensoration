@@ -35,7 +35,7 @@ import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.core.drawerOverlay.DrawerOverlay
 import de.schuettslaar.sensoration.presentation.core.icon.ApplicationStatusIcon
-import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 
 @Composable
 fun ConnectedDevicesPreview(
