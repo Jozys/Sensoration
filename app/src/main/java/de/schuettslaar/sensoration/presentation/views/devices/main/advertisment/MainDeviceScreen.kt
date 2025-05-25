@@ -2,6 +2,8 @@ package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +27,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -138,27 +142,33 @@ fun LandscapeLayout(
             .padding(innerPadding)
             .fillMaxSize()
     ) {
+        val expandedPanelWidth =
+            if (isMetadataPanelExpanded && compact) 350.dp else if (isMetadataPanelExpanded) 400.dp else 56.dp
         Row(modifier = Modifier.fillMaxSize()) {
-            // Metadata panel (fixed during scroll)
-            val width =
-                if (isMetadataPanelExpanded && compact) 350.dp else if (isMetadataPanelExpanded) 400.dp else 56.dp
-
-            Box(
+            // Metadata panel with fixed width
+            Surface(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(width)
-                    .animateContentSize()
-                    .padding(end = 16.dp, top = 16.dp, bottom = 16.dp)
+                    .width(expandedPanelWidth)
+                    .animateContentSize(
+                        // Smoother animation to prevent layout issues
+                        animationSpec = spring(
+                            dampingRatio = 0.8f,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ),
+                tonalElevation = 1.dp
             ) {
                 if (isMetadataPanelExpanded) {
                     // Expanded view
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
+                        modifier = Modifier.fillMaxSize()
                     ) {
+                        // Header with status and collapse button
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -181,11 +191,10 @@ fun LandscapeLayout(
                         // Make the content scrollable
                         Column(
                             modifier = Modifier
-                                .fillMaxHeight()
-//                                .padding(horizontal = 8.dp, vertical = 16.dp)
+                                .fillMaxWidth()
                                 .weight(1f)
+                                .padding(horizontal = 8.dp)
                                 .verticalScroll(metadataPanelScrollState),
-
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             // Content
@@ -224,23 +233,28 @@ fun LandscapeLayout(
                 }
             }
 
-            // Data display area (scrollable)
-            Column(
+            // Data display area
+            Box(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .weight(1f)
-                    .verticalScroll(contentScrollState)
-                    .padding(end = 16.dp, top = 16.dp, bottom = 16.dp)
+                    .fillMaxHeight()
+                    .padding(16.dp)
             ) {
-                if (mainDeviceViewModel.isReceiving) {
-                    DataDisplay(
-                        sensorType = mainDeviceViewModel.currentSensorType,
-                        devices = mainDeviceViewModel.connectedDeviceInfos,
-                        timeBuckets = mainDeviceViewModel.synchronizedData,
-                        activeDevices = mainDeviceViewModel.getActiveDevices()
-                    )
-                } else {
-                    NoMeasurementInfo()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(contentScrollState)
+                ) {
+                    if (mainDeviceViewModel.isReceiving) {
+                        DataDisplay(
+                            sensorType = mainDeviceViewModel.currentSensorType,
+                            devices = mainDeviceViewModel.connectedDeviceInfos,
+                            timeBuckets = mainDeviceViewModel.synchronizedData,
+                            activeDevices = mainDeviceViewModel.getActiveDevices()
+                        )
+                    } else {
+                        NoMeasurementInfo()
+                    }
                 }
             }
         }
@@ -254,43 +268,127 @@ fun PortraitLayout(
     compact: Boolean,
     contentScrollState: ScrollState
 ) {
+    var isMetadataPanelExpanded by remember { mutableStateOf(true) }
+    val metadataPanelScrollState = rememberScrollState()
+    val expandedPanelHeight =
+        if (isMetadataPanelExpanded && compact) 350.dp
+        else if (isMetadataPanelExpanded) 400.dp
+        else 80.dp
+
     Column(
         modifier = Modifier
             .padding(innerPadding)
             .fillMaxSize()
     ) {
-        StatusInformation(
-            statusText = getStringResourceByName(
-                LocalContext.current, mainDeviceViewModel.status.name
-            ).uppercase(), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        ConnectedDevicesInfo(
-            deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
-            onViewDevices = {
-                mainDeviceViewModel.isDrawerOpen.value = true
-            },
-            compact = compact,
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+                .height(expandedPanelHeight)
+                .animateContentSize(
+                    // Smoother animation to prevent layout issues
+                    animationSpec = spring(
+                        dampingRatio = 0.8f,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ),
+            tonalElevation = 1.dp
+        ) {
+            if (isMetadataPanelExpanded) {
+                // Expanded view
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Header with status and collapse button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        StatusInformation(
+                            statusText = getStringResourceByName(
+                                LocalContext.current, mainDeviceViewModel.status.name
+                            ).uppercase(),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                        // Collapse button
+                        IconButton(
+                            onClick = { isMetadataPanelExpanded = false },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowUp,
+                                contentDescription = "Collapse panel"
+                            )
+                        }
+                    }
 
-        // Static control bar at the top
-        SensorSelectionCard(
-            sensorType = mainDeviceViewModel.currentSensorType,
-            onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
-            isReceiving = mainDeviceViewModel.isReceiving,
-            onStartReceiving = { mainDeviceViewModel.startReceiving() },
-            onStopReceiving = { mainDeviceViewModel.stopReceiving() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            compact = compact
-        )
+                    // Make the content scrollable
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                            .verticalScroll(metadataPanelScrollState),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Content
+                        ConnectedDevicesInfo(
+                            deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
+                            onViewDevices = {
+                                mainDeviceViewModel.isDrawerOpen.value = true
+                            },
+                            compact = compact,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+
+                        // Static control bar at the top
+                        SensorSelectionCard(
+                            sensorType = mainDeviceViewModel.currentSensorType,
+                            onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                            isReceiving = mainDeviceViewModel.isReceiving,
+                            onStartReceiving = { mainDeviceViewModel.startReceiving() },
+                            onStopReceiving = { mainDeviceViewModel.stopReceiving() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            compact = compact
+                        )
+                    }
+                }
+            } else {
+                // Collapsed view - just the expand button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatusInformation(
+                        statusText = getStringResourceByName(
+                            LocalContext.current, mainDeviceViewModel.status.name
+                        ).uppercase(),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                    // Collapse button
+                    IconButton(
+                        onClick = { isMetadataPanelExpanded = true },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Expand panel"
+                        )
+                    }
+                }
+
+            }
+        }
 
 
-        // Scrollable data area
+        // Data display area
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -307,6 +405,7 @@ fun PortraitLayout(
                 NoMeasurementInfo()
             }
         }
+
     }
 }
 
