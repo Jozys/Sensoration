@@ -87,7 +87,8 @@ fun MainDeviceScreen(onBack: () -> Unit) {
     mainDeviceViewModel.isDrawerOpen.value = drawerState.isOpen
 
     ModalNavigationDrawer(
-        drawerState = drawerState, drawerContent = {
+        drawerState = drawerState,
+        drawerContent = {
             ModalDrawerSheet {
                 ConnectedDevicesPreview(
                     connectedDevices = mainDeviceViewModel.connectedDeviceInfos,
@@ -97,15 +98,20 @@ fun MainDeviceScreen(onBack: () -> Unit) {
                     isDrawerOpen = drawerState.isOpen
                 )
             }
-        }) {
+        },
+//        gesturesEnabled = false
+    ) {
+        val onOpenConnectedDevices: () -> Unit = {
+            scope.launch {
+                drawerState.open()
+            }
+        }
         Scaffold(
             topBar = {
                 AdvertisementAppBar(
-                    onBack = onBack, onOpenConnectedDevices = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }, deviceCount = mainDeviceViewModel.connectedDeviceInfos.size
+                    onBack = onBack,
+                    onOpenConnectedDevices = onOpenConnectedDevices,
+                    deviceCount = mainDeviceViewModel.connectedDeviceInfos.size
                 )
             }) { innerPadding ->
             if (isLandscape) {
@@ -113,14 +119,16 @@ fun MainDeviceScreen(onBack: () -> Unit) {
                     innerPadding = innerPadding,
                     mainDeviceViewModel = mainDeviceViewModel,
                     compact = compact,
-                    contentScrollState = contentScrollState
+                    contentScrollState = contentScrollState,
+                    onOpenConnectedDevices = onOpenConnectedDevices,
                 )
             } else {
                 PortraitLayout(
                     innerPadding = innerPadding,
                     mainDeviceViewModel = mainDeviceViewModel,
                     compact = compact,
-                    contentScrollState = contentScrollState
+                    contentScrollState = contentScrollState,
+                    onOpenConnectedDevices = onOpenConnectedDevices,
                 )
             }
         }
@@ -132,7 +140,8 @@ fun LandscapeLayout(
     innerPadding: PaddingValues,
     mainDeviceViewModel: MainDeviceViewModel,
     compact: Boolean,
-    contentScrollState: ScrollState
+    contentScrollState: ScrollState,
+    onOpenConnectedDevices: () -> Unit,
 ) {
     var isMetadataPanelExpanded by remember { mutableStateOf(true) }
     val metadataPanelScrollState = rememberScrollState()
@@ -200,8 +209,8 @@ fun LandscapeLayout(
                             // Content
                             ConnectedDevicesInfo(
                                 deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
-                                onViewDevices = { mainDeviceViewModel.isDrawerOpen.value = true },
-                                compact = compact
+                                onViewDevices = onOpenConnectedDevices,
+                                compact = compact,
                             )
 
                             SensorSelectionCard(
@@ -266,7 +275,8 @@ fun PortraitLayout(
     innerPadding: PaddingValues,
     mainDeviceViewModel: MainDeviceViewModel,
     compact: Boolean,
-    contentScrollState: ScrollState
+    contentScrollState: ScrollState,
+    onOpenConnectedDevices: () -> Unit,
 ) {
     var isMetadataPanelExpanded by remember { mutableStateOf(true) }
     val metadataPanelScrollState = rememberScrollState()
@@ -335,9 +345,7 @@ fun PortraitLayout(
                         // Content
                         ConnectedDevicesInfo(
                             deviceCount = mainDeviceViewModel.connectedDeviceInfos.size,
-                            onViewDevices = {
-                                mainDeviceViewModel.isDrawerOpen.value = true
-                            },
+                            onViewDevices = onOpenConnectedDevices,
                             compact = compact,
                             modifier = Modifier
                                 .fillMaxWidth()
