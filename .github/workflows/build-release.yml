@@ -8,8 +8,8 @@ on:
 
 
 jobs:
-  build-debug:
-    name: "Build Debug APK"
+  build-release:
+    name: "Build Release APK"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout repository"
@@ -55,3 +55,4 @@ jobs:
           tag: ${{ env.VERSION_NAME }}
           name: ${{ env.VERSION_NAME }}
           artifacts: "fastlane/build/outputs/*"
+          token: ${{ secrets.SE_GITHUB_TOKEN }}
