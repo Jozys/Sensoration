@@ -27,7 +27,6 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
             ruby-version: '3.1'
-            working-directory: 'android'
             bundler-cache: true
 
       - name: "Run Fastlane Debug Build"
@@ -35,11 +34,10 @@ jobs:
         uses: maierj/fastlane-action@v3.1.0
         with:
           lane: build_debug
-          subdirectory: android
         env:
           SE_GITHUB_TOKEN: ${{ secrets.SE_GITHUB_TOKEN }}
       - name: "Upload Debug APK"
         uses: actions/upload-artifact@v4
         with:
           name: sensoration-debug
-          path: android/fastlane/build/outputs/sensoration-debug.apk
+          path: fastlane/build/outputs/sensoration-debug.apk
