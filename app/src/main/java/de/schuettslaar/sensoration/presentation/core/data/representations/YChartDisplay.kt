@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import co.yml.charts.axis.AxisData
-import co.yml.charts.common.extensions.formatToSinglePrecision
 import co.yml.charts.ui.linechart.LineChart
 import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineChartData
@@ -83,12 +82,35 @@ private fun createLineChartData(
     xAxisLabel: String,
     yAxisLabel: String,
 ): LineChartData {
+    // Find the minimum and maximum values across all data points
+    val allDataPoints = data.values.flatMap { it.dataPoints }
+    val minValue = allDataPoints.minOfOrNull { it.y } ?: 0f
+    val maxValue = allDataPoints.maxOfOrNull { it.y } ?: 1f
+
+    // Calculate the range of values
+    val range = maxValue - minValue
+
+    // Choose the formatting function based on the range of values
+    val formatFunc: (Float) -> String = when {
+        range < 0.1f -> { value -> "%.3f".format(value) }  // Sehr kleine Werte (0.001)
+        range < 1f -> { value -> "%.2f".format(value) }    // Kleine Werte (0.01)
+        range < 10f -> { value -> "%.1f".format(value) }   // Mittlere Werte (0.1)
+        else -> { value -> "%.0f".format(value) }          // Große Werte (1+)
+    }
+
+    // Find max X value across all data points
+    val maxX = allDataPoints.maxOfOrNull { it.x }?.toInt() ?: 0
+
+    // Ensure we always have at least 10 steps on X-axis
+    val xAxisSteps = maxOf(10, maxX + 1)
+
     return LineChartData(
         linePlotData = LinePlotData(
             lines = data.values.toList(),
         ),
-        xAxisData = AxisData.Builder().steps(AXIS_STEP_SIZE).labelData { i ->
-            if (i > 0) {
+        xAxisData = AxisData.Builder().steps(xAxisSteps).labelData { i ->
+            if (i >0 && i % 2 == 0) {
+                // TODO: Show the time since the start of the measurement
                 i.toString()
             } else {
                 ""
@@ -98,11 +120,8 @@ private fun createLineChartData(
         }.axisLabelColor(MaterialTheme.colorScheme.onSurface).labelAndAxisLinePadding(12.dp)
             .build(),
         yAxisData = AxisData.Builder().steps(AXIS_STEP_SIZE).labelData {
-            val maxValue = data.entries.first().value.dataPoints.maxOf { it.y }
-            val minValue = data.entries.first().value.dataPoints.minOf { it.y }
-
-            val scale = (maxValue - minValue) / AXIS_STEP_SIZE
-            ((it * scale) + minValue).formatToSinglePrecision()
+            val stepValue = minValue + (range / AXIS_STEP_SIZE) * it
+            formatFunc(stepValue)
         }.axisLabelDescription {
             yAxisLabel
         }.axisLabelColor(MaterialTheme.colorScheme.onSurface).labelAndAxisLinePadding(12.dp)
