@@ -1,4 +1,4 @@
-name: "Build Debug APK"
+name: "Build Release APK"
 on:
   workflow_dispatch:
   push:
@@ -23,26 +23,33 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
+
       - name: "Setup Ruby"
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.1'
           bundler-cache: true
-
-      - name: "Run Fastlane Debug Build"
+      - name: "Run Fastlane Release Build and Deploy"
         id: fastlane
         uses: maierj/fastlane-action@v3.1.0
         with:
-          lane: build_debug
+          lane: build_release
         env:
           SE_GITHUB_TOKEN: ${{ secrets.SE_GITHUB_TOKEN }}
           SE_KEYSTORE_PASSWORD: ${{ secrets.SE_KEYSTORE_PASSWORD }}
           SE_KEY_ALIAS: ${{ secrets.SE_KEY_ALIAS }}
           SE_KEY_PASSWORD: ${{ secrets.SE_KEY_PASSWORD }}
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
-      - name: "Upload Debug APK"
+      - name: "Upload Release Artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: sensoration-debug
-          path: fastlane/build/outputs/sensoration-debug.apk
+          name: sensoration-release
+          path: fastlane/build/outputs/
+      - name: "Create GitHub Release"
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          prerelease: false
+          tag: ${{ env.VERSION_NAME }}
+          name: ${{ env.VERSION_NAME }}
+          artifacts: "fastlane/build/outputs/*"
