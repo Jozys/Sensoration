@@ -11,11 +11,13 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.domain.PTPHandler
+import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.jvm.Throws
 
 private const val AUDIO_SOURCE_TYPE = MediaRecorder.AudioSource.UNPROCESSED
 private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
@@ -42,6 +44,7 @@ class MicrophoneSensorHandler(private val context: Context, private val ptpHandl
         this.processor = processor
     }
 
+    @Throws(MissingPermissionException::class)
     override fun startListening() {
         if (processor == null) {
             Log.e(TAG, "Processor not initialized")
@@ -52,7 +55,9 @@ class MicrophoneSensorHandler(private val context: Context, private val ptpHandl
             != PackageManager.PERMISSION_GRANTED
         ) {
             Log.e(TAG, "RECORD_AUDIO permission not granted")
-            return
+            throw MissingPermissionException(
+                Manifest.permission.RECORD_AUDIO
+            )
         }
 
         startRecordingAudio()

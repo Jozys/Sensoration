@@ -5,6 +5,8 @@ import android.util.Log
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 import de.schuettslaar.sensoration.domain.PTPHandler
+import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
+import kotlin.jvm.Throws
 
 class SensorManager(private val context: Context, private val ptpHandler: PTPHandler) {
 
@@ -30,6 +32,7 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
         else -> HardwareSensorHandler(context, sensorType, ptpHandler)
     }
 
+    @Throws( MissingPermissionException::class)
     fun startListening() {
         if (currentHandler == null) {
             Log.e(TAG, "No sensor registered. Call registerSensor() first.")

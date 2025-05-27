@@ -100,4 +100,6 @@
     <string name="view_concept">View how it works</string>
     <string name="close">Close</string>
     <string name="collect_main_device_data">Use main device sensors</string>
+    <string name="sensor_unavailable">Current sensor not available on this device</string>
+    <string name="sensor_permission_denied">"Permission was denied for this type of sensor. "</string>
 </resources>

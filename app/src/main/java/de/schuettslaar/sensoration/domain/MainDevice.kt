@@ -14,6 +14,7 @@ import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -28,6 +29,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.logging.Logger
+import kotlin.jvm.Throws
 import kotlin.math.abs
 
 private const val RAW_BUFFER_VALUES_CAPACITY = 10
@@ -140,6 +142,7 @@ class MainDevice : Device {
             .info("Broadcasted message $message to ${connectedDevices.size} devices: $connectedDevices")
     }
 
+    @Throws(SensorUnavailableException::class)
     fun startMeasurement(sensorType: SensorType) {
         var startMeasurementMessage = StartMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
@@ -153,7 +156,6 @@ class MainDevice : Device {
 
         if (isMainProvidingSensorData) {
             startSensorCollectionOnMainDevice(sensorType, sensorType.processingDelay)
-
         }
 
 
@@ -227,6 +229,7 @@ class MainDevice : Device {
         }
     }
 
+    @Throws(SensorUnavailableException::class)
     private fun startSensorCollectionOnMainDevice(sensorType: SensorType, intervalMs: Long = 100) {
         if (!isMainProvidingSensorData) {
             Log.d(this.javaClass.simpleName, "Main Device does not provide sensor data")
@@ -235,7 +238,7 @@ class MainDevice : Device {
 
         if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
             Log.d(this.javaClass.simpleName, "Main Device does not has sensor type: $sensorType")
-            return
+            throw SensorUnavailableException(sensorType)
         }
 
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)

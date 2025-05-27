@@ -51,6 +51,7 @@ import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
@@ -103,10 +104,12 @@ fun ClientDeviceScreen(onBack: () -> Unit) {
                 sensorType = viewModel.currentSensorType,
                 isLandscape = isLandscape,
                 compact = compact,
-                spacing = verticalSpacing
+                spacing = verticalSpacing,
+                currentSensorUnavailable = viewModel.currentSensorUnavailable.value
             )
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -435,7 +438,8 @@ fun ConnectedState(
     deviceStatus: ApplicationStatus,
     isLandscape: Boolean,
     compact: Boolean,
-    spacing: Dp
+    spacing: Dp,
+    currentSensorUnavailable: Pair<SensorType, UnavailabilityType>? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -589,12 +593,24 @@ fun ConnectedState(
                         sensorType = sensorType,
                         shouldDisableSensorChange = true
                     )
+
+                    if(currentSensorUnavailable != null) {
+                        StatusInformation(
+                            statusText = stringResource(
+                                when(currentSensorUnavailable.second) {
+                                    UnavailabilityType.SENSOR_NOT_SUPPORTED -> R.string.sensor_unavailable
+                                    UnavailabilityType.SENSOR_PERMISSION_DENIED -> R.string.sensor_permission_denied
+                                },
+                                currentSensorUnavailable.first.name
+                            ),
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
-
 @Composable
 fun ConnectedDeviceContent(deviceName: String, compact: Boolean) {
     Icon(

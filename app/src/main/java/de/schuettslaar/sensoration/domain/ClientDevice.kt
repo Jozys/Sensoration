@@ -16,6 +16,9 @@ import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
+import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -26,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.logging.Logger
+import kotlin.jvm.Throws
 
 class ClientDevice : Device {
     private val sensorManager: SensorManager
@@ -47,6 +51,7 @@ class ClientDevice : Device {
         onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
         onSensorTypeChanged: (SensorType) -> Unit,
         onApplicationStatusChanged: (ApplicationStatus) -> Unit,
+        onSensorUnavailableCallback: (Pair<SensorType, UnavailabilityType>) -> Unit
     ) : super() {
         this.isMainDevice = false
         this.wrapper = DiscoverNearbyWrapper(
@@ -64,10 +69,11 @@ class ClientDevice : Device {
                 }
             }
         )
-        sensorManager = SensorManager(context, clientPtpHandler)
+        this.sensorManager = SensorManager(context, clientPtpHandler)
 
-        onSensorTypeChangedCallback = onSensorTypeChanged
-        onApplicationStatusChangedCallback = onApplicationStatusChanged
+        this.onSensorTypeChangedCallback = onSensorTypeChanged
+        this.onSensorUnavailableCallback = onSensorUnavailableCallback
+        this.onApplicationStatusChangedCallback = onApplicationStatusChanged
     }
 
     fun startSensorCollection(sensorType: SensorType) {
@@ -76,19 +82,29 @@ class ClientDevice : Device {
             return
         }
 
+        onSensorTypeChangedCallback(sensorType)
         if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
             Log.d(this.javaClass.simpleName, "Device does not support sensor type: $sensorType")
             applicationStatus = ApplicationStatus.IDLE
-            return
+            throw SensorUnavailableException(sensorType)
+
         }
 
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
-        sensorManager.startListening()
+        try {
+            sensorManager.startListening()
+        } catch (e: MissingPermissionException) {
+            Log.d(this.javaClass.simpleName, "Sensor initialization failed: ${e.message}")
+            onSensorUnavailableCallback(
+                Pair(sensorType, UnavailabilityType.SENSOR_PERMISSION_DENIED)
+            )
+            applicationStatus = ApplicationStatus.IDLE
+            return
+        }
         applicationStatus = ApplicationStatus.ACTIVE
         onApplicationStatusChangedCallback(
             applicationStatus,
         )
-        onSensorTypeChangedCallback(sensorType)
     }
 
     fun stopSensorCollection() {
@@ -198,6 +214,7 @@ class ClientDevice : Device {
         stopSensorCollection()
     }
 
+    @Throws(SensorUnavailableException::class)
     private fun handleMeasurementMessage(startMeasurementMessage: StartMeasurementMessage) {
         if (startMeasurementMessage.senderDeviceId != MAIN_DEVICE_ID || connectedDeviceId == null) {
             Logger.getLogger(this.javaClass.simpleName)
@@ -208,8 +225,16 @@ class ClientDevice : Device {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Start measurement message received from ${startMeasurementMessage.senderDeviceId}")
         val sensorType = startMeasurementMessage.sensorType
-        startSensorCollection(sensorType)
-        startPeriodicSending(connectedDeviceId!!, sensorType.processingDelay)
+        try {
+            startSensorCollection(sensorType)
+            startPeriodicSending(connectedDeviceId!!, sensorType.processingDelay)
+        } catch (e: SensorUnavailableException) {
+            onSensorUnavailableCallback(
+                Pair(e.getSensorType(), e.getUnavailabilityType())
+            )
+            return
+        }
+
     }
 
     private fun handleHandshakeMessage(handshakeMessage: HandshakeMessage) {
