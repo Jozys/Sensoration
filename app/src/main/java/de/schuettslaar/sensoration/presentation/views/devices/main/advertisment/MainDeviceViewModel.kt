@@ -32,6 +32,8 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     val synchronizedData = mutableStateListOf<TimeBucket>()
 
+    var mainDeviceInfo: Pair<DeviceId, DeviceInfo>? by mutableStateOf(null)
+
     private var dataSynchronizingJob: Job? = null
 
     val isDrawerOpen = mutableStateOf(false)
@@ -39,6 +41,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
     var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
 
     var isReceiving by mutableStateOf(false)
+
 
     private val logger = Logger.getLogger(this.javaClass.simpleName)
 
@@ -111,6 +114,14 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         (thisDevice as? MainDevice)?.let {
             mainDeviceIsProvidingData = it.isMainDeviceProvidingData()
         }
+
+        this.mainDeviceInfo = Pair(thisDevice!!.ownDeviceId!!, DeviceInfo(
+            deviceName = thisDevice!!.ownDeviceId!!.name,
+            applicationStatus = ApplicationStatus.ACTIVE
+        ))
+        logger.info(
+            "MainDeviceViewModel initialized with device: ${this.mainDeviceInfo?.first?.name}"
+        )
     }
 
     fun startReceiving() {

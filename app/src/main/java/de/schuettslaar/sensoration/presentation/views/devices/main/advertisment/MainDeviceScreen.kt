@@ -254,10 +254,15 @@ fun LandscapeLayout(
                         .fillMaxSize()
                         .verticalScroll(contentScrollState)
                 ) {
+
                     if (mainDeviceViewModel.isReceiving) {
                         DataDisplay(
                             sensorType = mainDeviceViewModel.currentSensorType,
-                            devices = mainDeviceViewModel.connectedDeviceInfos,
+                            devices =  if(mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                                mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
+                            } else {
+                                mainDeviceViewModel.connectedDeviceInfos
+                            },
                             timeBuckets = mainDeviceViewModel.synchronizedData,
                             activeDevices = mainDeviceViewModel.getActiveDevices()
                         )
@@ -405,7 +410,11 @@ fun PortraitLayout(
             if (mainDeviceViewModel.isReceiving) {
                 DataDisplay(
                     sensorType = mainDeviceViewModel.currentSensorType,
-                    devices = mainDeviceViewModel.connectedDeviceInfos,
+                    devices = if(mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                        mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
+                    } else {
+                        mainDeviceViewModel.connectedDeviceInfos
+                    },
                     timeBuckets = mainDeviceViewModel.synchronizedData,
                     activeDevices = mainDeviceViewModel.getActiveDevices()
                 )
@@ -505,7 +514,7 @@ fun SensorSelectionCard(
                     isReceiving = isReceiving,
                     onStartReceiving = onStartReceiving,
                     onStopReceiving = onStopReceiving,
-                    isEnabled = sensorType != null,
+                    isEnabled = sensorType != null && (mainDeviceViewModel.mainDeviceIsProvidingData || mainDeviceViewModel.connectedDeviceInfos.isNotEmpty()),
                     modifier = Modifier.width(120.dp)
                 )
 
@@ -562,7 +571,7 @@ fun SensorSelectionCard(
                     isReceiving = isReceiving,
                     onStartReceiving = onStartReceiving,
                     onStopReceiving = onStopReceiving,
-                    isEnabled = sensorType != null,
+                    isEnabled = sensorType != null && (mainDeviceViewModel.mainDeviceIsProvidingData || mainDeviceViewModel.connectedDeviceInfos.isNotEmpty()),
                     modifier = Modifier.fillMaxWidth()
                 )
             }

@@ -50,8 +50,6 @@ fun DataDisplay(
     timeBuckets: List<TimeBucket>,
     activeDevices: List<DeviceId>,
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-
     val viewMode = remember { mutableStateMapOf<Int, Boolean>() }
 
 
@@ -210,6 +208,7 @@ fun Legend(
     title: String,
     data: Map<DeviceId, DeviceInfo>,
 ) {
+
     Column(
         modifier = modifier
             .padding(8.dp)

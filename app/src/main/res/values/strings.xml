@@ -100,4 +100,6 @@
     <string name="view_concept">View how it works</string>
     <string name="close">Close</string>
     <string name="collect_main_device_data">Use main device sensors</string>
+    <string name="display_toggle_table">Table</string>
+    <string name="display_toggle_chart">Chart</string>
 </resources>
