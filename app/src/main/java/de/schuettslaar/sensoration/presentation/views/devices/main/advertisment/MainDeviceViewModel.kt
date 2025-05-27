@@ -42,6 +42,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
 
     var isReceiving by mutableStateOf(false)
 
+    var isPaused by mutableStateOf(false)
 
     private val logger = Logger.getLogger(this.javaClass.simpleName)
 
@@ -149,6 +150,56 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
 
         dataSynchronizingJob =
             getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+    }
+
+    private fun resumeReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Resuming data reception" }
+        if (currentSensorType == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Sensor type is null" }
+            return
+        }
+
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+
+        mainDevice.startMeasurement(currentSensorType!!)
+        isReceiving = true
+
+        // Restart the data synchronizing job
+        val sensorTimeResolution: Long = currentSensorType!!.processingDelay
+        dataSynchronizingJob =
+            getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+    }
+
+    private fun pauseReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Pausing data reception" }
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+
+        mainDevice.stopMeasurement()
+
+        // Cancel the data synchronizing job
+        dataSynchronizingJob?.cancel()
+    }
+
+    fun togglePause() {
+        if( isPaused) {
+            // Resume
+            isPaused = false
+            Logger.getLogger(this.javaClass.simpleName).info { "Resuming data reception" }
+            resumeReceiving()
+        } else {
+            // Pause
+            isPaused = true
+            Logger.getLogger(this.javaClass.simpleName).info { "Pausing data reception" }
+            pauseReceiving()
+        }
     }
 
     fun getActiveDevices(): List<DeviceId> {

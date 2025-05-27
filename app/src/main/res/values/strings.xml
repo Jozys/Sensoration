@@ -116,4 +116,6 @@
     <string name="sensor_microphone_value_max">the max amplitude of the sound sensor.</string>
     <string name="sensor_sound_pressure_value_description">The sound pressure value.</string>
     <string name="table_time">Time</string>
+    <string name="resume_receiving">Resume receiving</string>
+    <string name="pause_receiving">Pause receiving</string>
 </resources>

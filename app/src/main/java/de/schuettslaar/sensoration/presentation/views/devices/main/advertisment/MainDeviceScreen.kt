@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -61,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
+import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
@@ -181,20 +185,15 @@ fun LandscapeLayout(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            StatusInformation(
-                                statusText = getStringResourceByName(
-                                    LocalContext.current, mainDeviceViewModel.status.name
-                                ).uppercase()
+                            Header(
+                                status = mainDeviceViewModel.status,
+                                isExpanded = isMetadataPanelExpanded,
+                                onCollapse = { isMetadataPanelExpanded = false },
+                                isReceiving = mainDeviceViewModel.isReceiving,
+                                isPaused = mainDeviceViewModel.isPaused,
+                                togglePause = { mainDeviceViewModel.togglePause() },
+                                isLandscape = true
                             )
-                            // Collapse button
-                            IconButton(
-                                onClick = { isMetadataPanelExpanded = false },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ChevronLeft,
-                                    contentDescription = "Collapse panel"
-                                )
-                            }
                         }
 
                         // Make the content scrollable
@@ -238,6 +237,12 @@ fun LandscapeLayout(
                                 contentDescription = "Expand panel"
                             )
                         }
+                        TogglePauseButton(
+                            isReceiving = mainDeviceViewModel.isReceiving,
+                            isPaused = mainDeviceViewModel.isPaused,
+                            onTogglePause = { mainDeviceViewModel.togglePause() },
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp
+                        ))
                     }
                 }
             }
@@ -321,21 +326,14 @@ fun PortraitLayout(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusInformation(
-                            statusText = getStringResourceByName(
-                                LocalContext.current, mainDeviceViewModel.status.name
-                            ).uppercase(),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        Header(
+                            status = mainDeviceViewModel.status,
+                            isExpanded = isMetadataPanelExpanded,
+                            onCollapse = { isMetadataPanelExpanded = false },
+                            isReceiving = mainDeviceViewModel.isReceiving,
+                            isPaused = mainDeviceViewModel.isPaused,
+                            togglePause = { mainDeviceViewModel.togglePause() }
                         )
-                        // Collapse button
-                        IconButton(
-                            onClick = { isMetadataPanelExpanded = false },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowUp,
-                                contentDescription = "Collapse panel"
-                            )
-                        }
                     }
 
                     // Make the content scrollable
@@ -380,26 +378,17 @@ fun PortraitLayout(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusInformation(
-                        statusText = getStringResourceByName(
-                            LocalContext.current, mainDeviceViewModel.status.name
-                        ).uppercase(),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                   Header(
+                        status = mainDeviceViewModel.status,
+                        isExpanded = isMetadataPanelExpanded,
+                        onCollapse = { isMetadataPanelExpanded = true },
+                        isReceiving = mainDeviceViewModel.isReceiving,
+                        isPaused = mainDeviceViewModel.isPaused,
+                        togglePause = { mainDeviceViewModel.togglePause() }
                     )
-                    // Collapse button
-                    IconButton(
-                        onClick = { isMetadataPanelExpanded = true },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Expand panel"
-                        )
-                    }
                 }
-
             }
         }
-
 
         // Data display area
         Box(
@@ -768,6 +757,79 @@ fun DeviceListItem(
                 ) {
                     Text(text = stringResource(R.string.disconnect_device))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun Header(
+    status : NearbyStatus,
+    isExpanded: Boolean,
+    onCollapse: () -> Unit = {},
+    isReceiving: Boolean,
+    isPaused: Boolean,
+    togglePause: () -> Unit,
+    isLandscape: Boolean = false
+) {
+    StatusInformation(
+            statusText = getStringResourceByName(
+                LocalContext.current, status.name
+            ).uppercase(),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+
+    TogglePauseButton(
+        isReceiving = isReceiving,
+        isPaused = isPaused,
+        onTogglePause = { togglePause() },
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+    )
+    // Collapse button
+    IconButton(
+        onClick = { onCollapse() },
+    ) {
+        if( !isLandscape ) {
+            Icon(
+                imageVector = if(isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = "Collapse panel",
+                modifier = Modifier.size(24.dp)
+            )
+        } else {
+            Icon(
+                imageVector = if(isExpanded) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
+                contentDescription = "Collapse panel",
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+    }
+}
+
+@Composable
+fun TogglePauseButton(
+    isReceiving: Boolean,
+    isPaused: Boolean,
+    onTogglePause: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(isReceiving) {
+        IconButton(
+            onClick = {
+                onTogglePause()
+            },
+            modifier = modifier
+        ) {
+            if(isPaused) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = stringResource(R.string.resume_receiving)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Pause,
+                    contentDescription = stringResource(R.string.pause_receiving)
+                )
             }
         }
     }
