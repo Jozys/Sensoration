@@ -12,6 +12,7 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import kotlinx.coroutines.CoroutineScope
@@ -21,14 +22,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.apache.commons.collections4.queue.CircularFifoQueue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.logging.Logger
+import kotlin.math.abs
 
-private const val PROCESSED_VALUES_CAPACITY = 10
+private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
-const val MASTER_NAME = "MASTER"
+val MASTER_NAME = DeviceId("MASTER")
 
 class Master : Device {
-    private val sensorDataMap = mutableMapOf<String, CircularFifoQueue<WrappedSensorData>>()
+    private val rawSensorDataMap = mutableMapOf<DeviceId, CircularFifoQueue<WrappedSensorData>>()
 
     // Optional the master can also provide sensor data
     private val sensorManager: SensorManager
@@ -40,14 +45,13 @@ class Master : Device {
     private var ptpJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-
     private var sensorType: SensorType? = null
 
     constructor(
         context: Context,
-        onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
-        onDisconnectedCallback: (String, NearbyStatus) -> Unit,
-        onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit
+        onConnectionResultCallback: (DeviceId, ConnectionResolution, NearbyStatus) -> Unit,
+        onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
+        onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
     ) : super() {
         this.ownDeviceId = MASTER_NAME
         this.isMaster = true
@@ -86,7 +90,7 @@ class Master : Device {
         }
     }
 
-    override fun messageReceived(endpointId: String, payload: ByteArray) {
+    override fun messageReceived(endpointId: DeviceId, payload: ByteArray) {
         val message: Message? = parseMessage(endpointId, payload)
         if (message == null) {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
@@ -103,19 +107,27 @@ class Master : Device {
         }
     }
 
+    fun clearSensorData() {
+        rawSensorDataMap.clear()
+    }
 
     private fun processSensorData(
         sensorData: WrappedSensorData,
-        endpointId: String
+        endpointId: DeviceId
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Sensor data received from ${sensorData.senderDeviceId} > ${sensorData.sensorData}")
-        sensorDataMap.getOrDefault(
+        var data = rawSensorDataMap.getOrDefault(
             endpointId, CircularFifoQueue(
-                PROCESSED_VALUES_CAPACITY
+                RAW_BUFFER_VALUES_CAPACITY
             )
-        ).add(sensorData)
+        )
+        data.add(sensorData)
+        rawSensorDataMap[endpointId] = data
     }
+
+    private fun getCurrentRawData(endpointId: DeviceId): List<WrappedSensorData> =
+        rawSensorDataMap[endpointId]?.toList() ?: emptyList()
 
     fun broadcastMessage(message: Message) {
         connectedDevices.forEach { deviceId ->
@@ -128,7 +140,7 @@ class Master : Device {
     fun startMeasurement(sensorType: SensorType) {
         var startMeasurementMessage = StartMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             sensorType = sensorType,
             delay = sensorType.processingDelay
@@ -140,12 +152,14 @@ class Master : Device {
             startSensorCollectionOnMaster(sensorType, sensorType.processingDelay)
 
         }
+
+
     }
 
     fun stopMeasurement() {
         val stopMeasurementMessage = StopMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
         )
         broadcastMessage(stopMeasurementMessage)
@@ -174,7 +188,7 @@ class Master : Device {
 
         var ptpSync = PTPMessage(
             messageTimeStamp = t1,
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             ptpType = PTPMessage.PTPMessageType.SYNC,
         )
@@ -182,7 +196,7 @@ class Master : Device {
 
         var ptpFollowup = PTPMessage(
             messageTimeStamp = t1,
-            senderDeviceId = ownDeviceId.toString(),
+            senderDeviceId = ownDeviceId!!,
             state = ApplicationStatus.DESTINATION,
             ptpType = PTPMessage.PTPMessageType.FOLLOW_UP,
         )
@@ -191,7 +205,7 @@ class Master : Device {
 
     private fun processPTPMessage(
         ptpMessage: PTPMessage,
-        endPointId: String
+        endPointId: DeviceId
     ) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("PTP message received from ${ptpMessage.senderDeviceId} > ${ptpMessage.ptpType}")
@@ -199,7 +213,7 @@ class Master : Device {
             var t4 = System.currentTimeMillis().toLong()
             var ptpDelayResponse = PTPMessage(
                 messageTimeStamp = t4,
-                senderDeviceId = ownDeviceId.toString(),
+                senderDeviceId = ownDeviceId!!,
                 state = ApplicationStatus.DESTINATION,
                 ptpType = PTPMessage.PTPMessageType.DELAY_RESPONSE,
             )
@@ -234,7 +248,7 @@ class Master : Device {
 
                     val wrappedSensorData = WrappedSensorData(
                         messageTimeStamp = ptpHandler.getAdjustedTime(),
-                        ownDeviceId.toString(),
+                        ownDeviceId!!,
                         applicationStatus,
                         latestSensorData
                     )
@@ -257,4 +271,105 @@ class Master : Device {
         sensorJob = null
 
     }
+
+    fun getCurrentMasterTime(): Long {
+        return ptpHandler.getAdjustedTime()
+    }
+
+    fun getSensorDataForCurrentTime(
+        currentTime: Long,
+        endpointId: DeviceId,
+        sensorType: SensorType,
+        maxTimeThreshold: Long
+    ): ProcessedSensorData? {
+        val sensorDataList: Collection<WrappedSensorData> = rawSensorDataMap[endpointId]
+            ?: emptyList<WrappedSensorData>() // Handle the null case appropriately
+
+        val closestData =
+            getClosestSensorData(currentTime, sensorDataList, sensorType, maxTimeThreshold)
+
+        if (closestData != null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .info { "Cooking SensorDataForCurrentTime: delta=${abs(closestData.timestamp - currentTime)} endpoint=${endpointId} closedData=${closestData} threshold=${maxTimeThreshold}" }
+        }
+
+        return closestData
+    }
+
+    fun isMasterDeviceProvidesData(): Boolean {
+        return masterDeviceProvidesData
+    }
+}
+
+/**
+ * Get the closest data out of the collection compared to the reference time
+ */
+fun getClosestSensorData(
+    referenceTime: Long,
+    items: Collection<WrappedSensorData>,
+    sensorType: SensorType,
+    maxTimeThreshold: Long
+): ProcessedSensorData? {
+    if (items.isEmpty()) {
+        return null
+    }
+
+    var selectedCandidate: ProcessedSensorData? = null
+    try {
+        val candidates = items
+            .asSequence()
+            .filter { it.state != ApplicationStatus.IDLE }
+            .filter { it.sensorData.sensorType == sensorType.sensorId }
+            .map { it.sensorData }  // Explicitly filter out nulls
+            .toList()
+
+        candidates
+            .minByOrNull { abs(it.timestamp - referenceTime) }
+            ?.let { closest ->
+                // Apply threshold check
+                if (abs(closest.timestamp - referenceTime) <= maxTimeThreshold) {
+                    Log.d(
+                        "SensorData",
+                        "Selected closest: ${closest.timestamp}, diff=${abs(closest.timestamp - referenceTime)}"
+                    )
+                    selectedCandidate = closest
+                } else {
+                    Log.d(
+                        "SensorData",
+                        "Closest value exceeded threshold: diff=${abs(closest.timestamp - referenceTime)}, max=$maxTimeThreshold, " +
+                                "referenceTime=${formatTimestamp(referenceTime)} " +
+                                "-> candidates: ${candidates.map { formatTimestamp(it.timestamp) }}"
+                    )
+                }
+            }
+    } catch (e: Exception) {
+        Log.e("getClosestSensorData", "Error finding closest sensor data: ${e.message}", e)
+        null
+    }
+    return selectedCandidate
+}
+
+/**
+ * Returns the item from the collection with the property value closest to the reference value.
+ *
+ * @param referenceValue The reference value to compare against
+ * @param items The collection of items to search
+ * @param selector A function that extracts the comparable numeric value from each item
+ * @return The closest item, or null if the collection is empty
+ */
+fun <T> getClosest(referenceValue: Long, items: Collection<T>, selector: (T) -> Long): T? {
+    items.forEach {
+        Log.d(
+            "Master",
+            "getClosest: abs=${abs(selector(it) - referenceValue)} $referenceValue, ${selector(it)}"
+        );
+    }
+    return items.minByOrNull { abs(selector(it) - referenceValue) }
+}
+
+// Helper function to format timestamp
+private fun formatTimestamp(timestamp: Long): String {
+    val date = Date(timestamp)
+    val format = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+    return format.format(date)
 }

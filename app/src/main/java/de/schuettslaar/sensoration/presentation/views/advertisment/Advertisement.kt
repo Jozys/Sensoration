@@ -5,9 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -21,10 +25,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.views.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.presentation.views.connected.ConnectedDevicesPreview
 import de.schuettslaar.sensoration.presentation.views.home.HomeAppBar
 import de.schuettslaar.sensoration.utils.getStringResourceByName
@@ -32,68 +38,68 @@ import de.schuettslaar.sensoration.utils.getStringResourceByName
 @Composable
 fun Advertisement(onBack: () -> Unit) {
 
-    var viewModel = viewModel<AdvertisementViewModel>()
+    var masterViewModel = viewModel<MasterViewModel>()
 
     Scaffold(
         topBar = {
-            AnimatedVisibility(!viewModel.isDrawerOpen.value) { HomeAppBar() }
-
+            AnimatedVisibility(!masterViewModel.isDrawerOpen.value) { HomeAppBar() }
         }
     ) { innerPadding ->
         AdvertisementContent(
             modifier = Modifier.padding(innerPadding),
             onBack = onBack,
-            connectedDevices = viewModel.connectedDevices,
-            sensorType = viewModel.currentSensorType,
-            status = viewModel.status,
+            connectedDeviceInfos = masterViewModel.connectedDeviceInfos.toMutableMap(),
+            sensorType = masterViewModel.currentSensorType,
+            status = masterViewModel.status,
             onDrawerOpen = {
-                viewModel.isDrawerOpen.value = true
+                masterViewModel.isDrawerOpen.value = true
             },
             onStartReceiving = {
-                viewModel.startReceiving()
+                masterViewModel.startReceiving()
             },
+            onStopReceiving = {
+                masterViewModel.stopReceiving()
+            },
+            isReceiving = masterViewModel.isReceiving,
             onStop = {
-                viewModel.stop()
+                masterViewModel.stop()
             },
             onSensorChange = {
-                viewModel.currentSensorType = it
+                masterViewModel.currentSensorType = it
             },
-            onStartDebugMeasurement = {
-                viewModel.startDebugMeasurement()
-            },
-            onStopDebugMeasurement = {
-                viewModel.stopDebugMeasurement()
-            }
+            measurementData = masterViewModel.synchronizedData,
+            activeDevices = masterViewModel.getActiveDevices(),
         )
     }
     ConnectedDevicesPreview(
-        isDrawerOpen = viewModel.isDrawerOpen,
-        connectedDevices = viewModel.connectedDevices,
-        connectionDevicesStatus = viewModel.connectionDevicesStatus,
+        isDrawerOpen = masterViewModel.isDrawerOpen,
+        connectedDeviceInfos = masterViewModel.connectedDeviceInfos,
         onConfirmRemove = {
-            viewModel.disconnect(it)
+            masterViewModel.disconnect(it)
         })
-
-
 }
 
 @Composable
 fun AdvertisementContent(
     modifier: Modifier = Modifier,
-    connectedDevices: Map<String, String>,
+    connectedDeviceInfos: MutableMap<DeviceId, DeviceInfo>,
     sensorType: SensorType?,
     status: NearbyStatus,
     onDrawerOpen: () -> Unit,
     onBack: () -> Unit,
     onStartReceiving: () -> Unit,
+    onStopReceiving: () -> Unit,
+    isReceiving: Boolean = false,
     onStop: () -> Unit,
     onSensorChange: (SensorType) -> Unit = { },
-    onStartDebugMeasurement: () -> Unit = { },
-    onStopDebugMeasurement: () -> Unit = { },
+    measurementData: List<TimeBucket>,
+    activeDevices: List<DeviceId>,
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         StatusInformation(
             statusText = getStringResourceByName(
@@ -112,12 +118,12 @@ fun AdvertisementContent(
                 Text(
                     stringResource(
                         R.string.connected_devices_description,
-                        connectedDevices.size
+                        connectedDeviceInfos.size
                     )
                 )
             },
             trailingContent = {
-                if (connectedDevices.isEmpty()) {
+                if (connectedDeviceInfos.isEmpty()) {
                     Icon(Icons.Default.Close, stringResource(R.string.no_connected_devices))
                 } else {
                     Icon(Icons.Default.Check, stringResource(R.string.connected_devices))
@@ -129,27 +135,43 @@ fun AdvertisementContent(
             onSensorChange(it)
         }, noSensorSelectedDescription = R.string.no_sensor_selected, trailingContent = {
             Button(
-                enabled = connectedDevices.isNotEmpty() && sensorType != null,
-                onClick = onStartReceiving,
+                enabled = connectedDeviceInfos.isNotEmpty() && sensorType != null,
+                onClick = {
+                    if (isReceiving) {
+                        onStopReceiving()
+                    } else {
+                        onStartReceiving()
+                    }
+                },
             ) {
-                Text(stringResource(R.string.start_receiving_data))
+                if (isReceiving) {
+                    Icon(
+                        Icons.Default.Stop,
+                        contentDescription = stringResource(R.string.stop_receiving_data)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = stringResource(R.string.stop_receiving_data)
+                    )
+                }
             }
         })
 
-        DataDisplay(sensorType)
+        AnimatedVisibility(sensorType != null && isReceiving) {
+            DataDisplay(
+                sensorType,
+                devices = connectedDeviceInfos,
+                timeBuckets = measurementData,
+                activeDevices = activeDevices,
+            )
+        }
 
         Button(onClick = {
             onStop()
             onBack()
         }) {
             Text(stringResource(R.string.stop_advertising))
-        }
-
-        Button(onClick = { onStartDebugMeasurement() }) {
-            Text(stringResource(R.string.start_debug_measurement))
-        }
-        Button(onClick = { onStopDebugMeasurement() }) {
-            Text(stringResource(R.string.stop_debug_measurement))
         }
     }
 }

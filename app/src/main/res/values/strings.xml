@@ -49,20 +49,30 @@
     <string name="sensor_type_unknown">Unknown Sensor</string>
     <string name="current_sensor">Current Sensor</string>
     <string name="sensor_gravity_description">This sensor is used to determine the device\'s relative orientation in space</string>
-    <string name="sensor_pressure_description">This sensor provices the ambient air pressure measured by your device.</string>
+    <string name="sensor_pressure_description">This sensor provides the ambient air pressure measured by your device.</string>
     <string name="sensor_type_unknown_description">Currently no sensor is selected. If the Master device selects a sensor, this will change.</string>
 
     <string name="sensor_accelerometer">Accelerometer</string>
     <string name="sensor_accelerometer_description">Raw data of the accelerometer</string>
-    
+
     <string name="connected_devices_description">You have currently %1$s connected devices</string>
     <string name="no_sensor_selected">No sensor selected. Choose one from the list to make other devices send data from their sensors.</string>
     <string name="start_receiving_data">Start</string>
+
     <string name="connected">Connected</string>
-    <string name="no_data_available_for_this_sensor_type">No data available for this sensor type.</string>
-  
+    <string name="no_data_available_for_this_sensor_type">No visualization available for this sensor type.</string>
+
     <string name="start_debug_measurement">Start DEBUG measurement</string>
     <string name="stop_debug_measurement">Stop DEBUG measurement</string>
     <string name="sensor_microphone">Microphone</string>
     <string name="sensor_microphone_description">Min and Max Amplitude of the Audiosignal</string>
+    <string name="data_display_legend">Legend</string>
+    <string name="data_display_title">Sensor Data</string>
+    <string name="stop_receiving_data">Stop</string>
+    <string name="sensor_sound_pressure_description">Measurement of the sound pressure recorded by the microphone sensors</string>
+    <string name="sensor_sound_pressure">Sound Pressure</string>
+    <string name="index">Index</string>
+    <string name="sensor_data_unit">Unit</string>
+    <string name="timestamp">Time</string>
+    <string name="no_data">No data available\n</string>
 </resources>

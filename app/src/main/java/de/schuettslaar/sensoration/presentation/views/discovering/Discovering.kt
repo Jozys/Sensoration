@@ -32,6 +32,7 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
@@ -88,8 +89,8 @@ fun Discovering(onBack: () -> Unit) {
                         disconnect = {
                             viewModel.disconnect()
                         },
-                        deviceStatus = viewModel.thisDevice?.applicationStatus
-                            ?: ApplicationStatus.ERROR
+                        deviceStatus = viewModel.thisApplicationStatus,
+                        sensorType = viewModel.currentSensorType
                     )
                 }
             }
@@ -99,9 +100,9 @@ fun Discovering(onBack: () -> Unit) {
 
 @Composable
 fun BuildDeviceEntry(
-    id: String,
+    id: DeviceId,
     info: DiscoveredEndpointInfo,
-    onClick: (id: String) -> Unit,
+    onClick: (id: DeviceId) -> Unit,
 ) {
     ListItem(modifier = Modifier.clickable {
         onClick(id)
@@ -115,9 +116,9 @@ fun BuildDeviceEntry(
 
 @Composable
 fun DiscoveringState(
-    connect: (String) -> Unit,
+    connect: (DeviceId) -> Unit,
     stop: () -> Unit,
-    possibleConnections: Map<String, DiscoveredEndpointInfo>,
+    possibleConnections: Map<DeviceId, DiscoveredEndpointInfo>,
     status: NearbyStatus
 ) {
     StatusInformation(
@@ -151,7 +152,7 @@ fun DiscoveringState(
 
 @Composable
 fun ConnectedState(
-    entry: Map.Entry<String, String>,
+    entry: Map.Entry<DeviceId, String>,
     sendMessage: () -> Unit,
     disconnect: () -> Unit,
     sensorType: SensorType? = null,

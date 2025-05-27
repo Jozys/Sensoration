@@ -9,22 +9,23 @@ import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.Strategy
+import de.schuettslaar.sensoration.domain.DeviceId
 
 class DiscoverNearbyWrapper : NearbyWrapper {
 
-    private var onEndpointAddCallback: ((value: Pair<String, DiscoveredEndpointInfo>) -> Unit);
-    private var onEndpointRemoveCallback: ((id: String) -> Unit)
+    private var onEndpointAddCallback: ((value: Pair<DeviceId, DiscoveredEndpointInfo>) -> Unit);
+    private var onEndpointRemoveCallback: ((id: DeviceId) -> Unit)
     private var endpointDiscoveryCallback: EndpointDiscoveryCallback? = null
 
 
     constructor(
         context: Context,
-        onEndpointAddCallback: (value: Pair<String, DiscoveredEndpointInfo>) -> Unit,
-        onEndpointRemoveCallback: (id: String) -> Unit,
-        onConnectionInitiatedCallback: (endpointId: String, result: ConnectionInfo) -> Unit,
-        onDisconnectedCallback: (endpointId: String, status: NearbyStatus) -> Unit,
-        onConnectionResultCallback: (endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
-        onPayloadReceivedCallback: (endPointId: String, payload: Payload) -> Unit
+        onEndpointAddCallback: (value: Pair<DeviceId, DiscoveredEndpointInfo>) -> Unit,
+        onEndpointRemoveCallback: (id: DeviceId) -> Unit,
+        onConnectionInitiatedCallback: (endpointId: DeviceId, result: ConnectionInfo) -> Unit,
+        onDisconnectedCallback: (endpointId: DeviceId, status: NearbyStatus) -> Unit,
+        onConnectionResultCallback: (endpointId: DeviceId, connectionStatus: ConnectionResolution, status: NearbyStatus) -> Unit,
+        onPayloadReceivedCallback: (endPointId: DeviceId, payload: Payload) -> Unit
     ) : super(
         context = context,
     ) {
@@ -40,12 +41,12 @@ class DiscoverNearbyWrapper : NearbyWrapper {
     private fun createEndpointLifecycleCallback() = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
             logE("Found Endpoint: $endpointId ${info.endpointName}")
-            onEndpointAddCallback(Pair(endpointId, info))
+            onEndpointAddCallback(Pair(DeviceId(endpointId), info))
         }
 
         override fun onEndpointLost(endpointId: String) {
             logE("LOST Endpoint: $endpointId")
-            onEndpointRemoveCallback(endpointId)
+            onEndpointRemoveCallback(DeviceId(endpointId))
         }
     }
 

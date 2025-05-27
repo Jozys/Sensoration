@@ -12,6 +12,7 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.Client
 import de.schuettslaar.sensoration.domain.Device
+import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.util.logging.Logger
 
@@ -20,8 +21,9 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var thisDevice by mutableStateOf<Device?>(null)
     var status by mutableStateOf(NearbyStatus.STOPPED)
     var text by mutableStateOf("")
-    var connectedDevices by mutableStateOf(mapOf<String, String>())
+    var connectedDevices by mutableStateOf(mapOf<DeviceId, String>())
     var isLoading by mutableStateOf(false)
+    var currentSensorType by mutableStateOf<SensorType?>(null)
 
     var isSending: Boolean = false
 
@@ -62,14 +64,14 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun connect(endpointId: String) {
+    fun connect(endpointId: DeviceId) {
         Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
         thisDevice?.connect(endpointId)
         this.isLoading = true
     }
 
     // TODO: Add data model for sensor data
-    fun sendMessage(connectedId: String) {
+    fun sendMessage(connectedId: DeviceId) {
         val client = thisDevice as? Client
         if (isSending) {
             Log.e("BaseNearbyViewModel", "Stopping sensor collection")
@@ -87,13 +89,13 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     }
 
     fun onConnectionInitiatedCallback(
-        endpointId: String, info: ConnectionInfo
+        endpointId: DeviceId, info: ConnectionInfo
     ) {
         connectedDevices = connectedDevices.plus(Pair(endpointId, info.endpointName))
     }
 
     fun onConnectionResultCallback(
-        endpointId: String, connectionStatus: ConnectionResolution, status: NearbyStatus
+        endpointId: DeviceId, connectionStatus: ConnectionResolution, status: NearbyStatus
     ) {
         if (connectionStatus.status.statusCode == ConnectionsStatusCodes.STATUS_OK) {
             Logger.getLogger(this.javaClass.simpleName).info(
@@ -111,7 +113,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         this.status = status
     }
 
-    fun onDisconnectedCallback(endpointId: String, status: NearbyStatus) {
+    fun onDisconnectedCallback(endpointId: DeviceId, status: NearbyStatus) {
         if (connectedDevices.containsKey(endpointId)) {
             connectedDevices = connectedDevices.minus(endpointId)
         }

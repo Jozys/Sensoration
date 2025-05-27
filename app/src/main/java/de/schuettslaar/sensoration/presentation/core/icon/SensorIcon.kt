@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LineWeight
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,6 +36,8 @@ fun getIcon(sensorType: SensorType?): ImageVector {
         SensorType.GRAVITY -> Icons.Filled.LineWeight
         SensorType.PRESSURE -> Icons.Filled.Compress
         SensorType.ACCELEROMETER -> Icons.Filled.Speed
+        SensorType.SOUND_PRESSURE -> Icons.Filled.Mic
+        SensorType.MIN_MAX_SOUND_AMPLITUDE -> Icons.Filled.Mic
 
         else -> {
             Icons.Default.Info

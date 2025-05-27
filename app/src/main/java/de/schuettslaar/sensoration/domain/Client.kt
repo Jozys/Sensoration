@@ -32,13 +32,18 @@ class Client : Device {
     private var sensorJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+    private val onSensorTypeChangedCallback: (SensorType) -> Unit
+    private val onApplicationStatusChangedCallback: (ApplicationStatus) -> Unit
+
     constructor(
         context: Context,
-        onEndpointAddCallback: (Pair<String, DiscoveredEndpointInfo>) -> Unit,
-        onEndpointRemoveCallback: (String) -> Unit,
-        onConnectionInitiatedCallback: (String, ConnectionInfo) -> Unit,
-        onConnectionResultCallback: (String, ConnectionResolution, NearbyStatus) -> Unit,
-        onDisconnectedCallback: (String, NearbyStatus) -> Unit
+        onEndpointAddCallback: (Pair<DeviceId, DiscoveredEndpointInfo>) -> Unit,
+        onEndpointRemoveCallback: (DeviceId) -> Unit,
+        onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
+        onConnectionResultCallback: (DeviceId, ConnectionResolution, NearbyStatus) -> Unit,
+        onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
+        onSensorTypeChanged: (SensorType) -> Unit,
+        onApplicationStatusChanged: (ApplicationStatus) -> Unit,
     ) : super() {
         this.isMaster = false
         this.wrapper = DiscoverNearbyWrapper(
@@ -57,6 +62,9 @@ class Client : Device {
             }
         )
         sensorManager = SensorManager(context, clientPtpHandler)
+
+        onSensorTypeChangedCallback = onSensorTypeChanged
+        onApplicationStatusChangedCallback = onApplicationStatusChanged
     }
 
     fun startSensorCollection(sensorType: SensorType) {
@@ -74,6 +82,10 @@ class Client : Device {
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
         sensorManager.startListening()
         applicationStatus = ApplicationStatus.ACTIVE
+        onApplicationStatusChangedCallback(
+            applicationStatus,
+        )
+        onSensorTypeChangedCallback(sensorType)
     }
 
     fun stopSensorCollection() {
@@ -86,7 +98,7 @@ class Client : Device {
         applicationStatus = ApplicationStatus.IDLE
     }
 
-    fun startPeriodicSending(masterId: String, intervalMs: Long = 100) {
+    fun startPeriodicSending(masterId: DeviceId, intervalMs: Long = 100) {
         stopPeriodicSending()
 
         sensorJob = coroutineScope.launch {
@@ -110,7 +122,7 @@ class Client : Device {
     }
 
 
-    private fun sendSensorData(masterId: String, sensorData: ProcessedSensorData) {
+    private fun sendSensorData(masterId: DeviceId, sensorData: ProcessedSensorData) {
         if (applicationStatus != ApplicationStatus.ACTIVE) {
             Log.d(
                 this.javaClass.simpleName,
@@ -122,7 +134,7 @@ class Client : Device {
         try {
             val wrappedSensorData = WrappedSensorData(
                 messageTimeStamp = clientPtpHandler.getAdjustedTime(),
-                ownDeviceId.toString(),
+                ownDeviceId!!,
                 applicationStatus,
                 sensorData
             )
@@ -151,12 +163,14 @@ class Client : Device {
         stopSensorCollection()
     }
 
-    override fun messageReceived(endpointId: String, payload: ByteArray) {
+    override fun messageReceived(endpointId: DeviceId, payload: ByteArray) {
         val message: Message? = parseMessage(endpointId, payload)
         if (message == null) {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
             return
         }
+        Logger.getLogger(this.javaClass.simpleName)
+            .info("Message received from $endpointId of type ${message.messageType}")
 
         when (message.messageType) {
             MessageType.HANDSHAKE -> handleHandshakeMessage(message)
@@ -197,6 +211,9 @@ class Client : Device {
     }
 
     fun sendDelayRequest(delayRequestMessage: PTPMessage) {
+        Log.d(
+            javaClass.simpleName, "sendDelayRequest: $delayRequestMessage"
+        )
         sendMessage(connectedDeviceId!!, delayRequestMessage)
     }
 }
