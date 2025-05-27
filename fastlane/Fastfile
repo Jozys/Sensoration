@@ -1,0 +1,260 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+  desc "Runs all the tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+   # Helper to configure GitHub access with token
+    lane :setup_github_token do
+      if ENV["CI"]
+        UI.message("CI environment detected, setting up GitHub token authentication")
+
+        github_token = ENV["SE_GITHUB_TOKEN"]
+
+        if github_token
+          UI.message("GitHub token found, length: #{github_token.length}")
+
+          # Create a .netrc file for Git authentication
+          sh("echo 'machine github.com login #{github_token} password x-oauth-basic' > ~/.netrc")
+          sh("chmod 600 ~/.netrc")
+        else
+          UI.important("No GitHub token provided, private repositories may not be accessible")
+        end
+      else
+        UI.message("Not running in CI environment, skipping GitHub token setup")
+      end
+    end
+
+  desc "Generate version code"
+  lane :generate_version_code do
+     currentDate = Time.now.strftime("%Y.%m.%d")
+
+     # Fetch tags from remote, ignore errors from rejected tags
+     sh("git fetch --tags || true")
+
+     # We need to get the highest hotfix tag for the current date
+      hotfix = 0
+      version_pattern = /^#{currentDate}\+(\d+)$/
+
+       tag_exists = true
+          while tag_exists
+            test_tag = "#{currentDate}+#{hotfix}"
+            UI.message("Checking if tag exists: #{test_tag}")
+
+            # Use git_tag_exists to check remote for the tag
+            tag_exists = git_tag_exists(
+              tag: test_tag,
+              remote: true,
+              remote_name: "origin"
+            )
+
+            if tag_exists
+              UI.message("Tag #{test_tag} already exists, incrementing hotfix number...")
+              hotfix += 1
+            else
+              UI.success("Found available tag: #{test_tag}")
+            end
+          end
+      version_name = "#{currentDate}+#{hotfix}"
+      build_number = (Time.now.strftime("%Y%m%d").to_i * 100) + hotfix
+
+      # Create Android-compatible versions
+      # Android doesn't like the "+" in version names
+      android_version_name = "#{currentDate}.#{hotfix}"
+      android_version_code = build_number
+
+      # Export environment variables for GitHub Actions
+      ENV["VERSION_NAME"] = version_name
+      ENV["BUILD_NUMBER"] = build_number.to_s
+      ENV["ANDROID_VERSION_NAME"] = android_version_name
+      ENV["ANDROID_VERSION_CODE"] = android_version_code.to_s
+
+      # Set output for GitHub Actions
+      if ENV["GITHUB_OUTPUT"]
+        sh("echo \"version_name=#{version_name}\" >> $GITHUB_OUTPUT")
+        sh("echo \"build_number=#{build_number}\" >> $GITHUB_OUTPUT")
+        sh("echo \"android_version_name=#{android_version_name}\" >> $GITHUB_OUTPUT")
+        sh("echo \"android_version_code=#{android_version_code}\" >> $GITHUB_OUTPUT")
+
+        # Ensure the environment variables are also visible to the GitHub runner directly
+        # This adds the variables to the environment for subsequent steps
+        sh("echo \"VERSION_NAME=#{version_name}\" >> $GITHUB_ENV")
+        sh("echo \"BUILD_NUMBER=#{build_number}\" >> $GITHUB_ENV")
+        sh("echo \"ANDROID_VERSION_NAME=#{android_version_name}\" >> $GITHUB_ENV")
+        sh("echo \"ANDROID_VERSION_CODE=#{android_version_code}\" >> $GITHUB_ENV")
+      end
+
+      {
+        version_name: version_name,
+        build_number: build_number,
+        android_version_name: android_version_name,
+        android_version_code: android_version_code
+      }
+  end
+
+  desc "Setup keystore properties from CI environment"
+    lane :setup_keystore do
+        # Check if we're running in a CI environment
+        if ENV["CI"]
+            UI.message("Running in CI environment, setting up keystore from secrets")
+
+            # Create keystore file from base64 encoded string
+            keystore_path = File.join(Dir.pwd, "..", "app", "keystore.jks")
+            File.write(keystore_path, Base64.decode64(ENV["KEYSTORE_BASE64"]))
+
+            # Set environment variables for the keystore
+            ENV["KEYSTORE_PATH"] = keystore_path
+        else
+            UI.message("Running locally, using local keystore configuration")
+            # Local development setup
+
+        end
+        # Set keystore properties
+        ENV["KEYSTORE_PASSWORD"] = ENV["KEYSTORE_PASSWORD"] || ENV["SE_KEYSTORE_PASSWORD"]
+        ENV["KEY_ALIAS"] = ENV["KEY_ALIAS"] || ENV["SE_KEY_ALIAS"]
+        ENV["KEY_PASSWORD"] = ENV["KEY_PASSWORD"] || ENV["SE_KEY_PASSWORD"]
+
+  end
+
+
+  desc "Build apk file"
+  lane :build_apk do |options|
+      build_type = options[:build_type]
+      version_info = options[:version_info]
+
+      UI.message("Building APK for build type: #{build_type}")
+      unless build_type == "Debug" || build_type == "Release"
+        UI.user_error!("Build type must be 'debug' or 'release'")
+      end
+
+      unless version_info
+        UI.user_error!("Version information is required")
+      end
+
+      # Extract version information
+      version_name = version_info[:version_name]
+      build_number = version_info[:build_number]
+      android_version_name = version_info[:android_version_name]
+      android_version_code = version_info[:android_version_code]
+
+      setup_keystore
+
+      if ENV["CI"]
+        UI.message("Setting up GitHub token for private repository access")
+        setup_github_token
+
+
+
+      else
+        UI.message("Running in local mode, assuming git is already configured")
+      end
+
+      gradle(
+        task: 'assemble',
+        build_type: build_type,
+        properties: {
+            "android.injected.signing.store.file" => ENV["KEYSTORE_PATH"],
+            "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+            "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+            "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+        }
+      )
+
+      proj_root = File.expand_path("..", __dir__)
+
+      # Create output directory
+      sh("mkdir -p build/outputs")
+
+      # Copy the APK using the correct path
+      apk_path = "build/outputs/sensoration-#{build_type.downcase}.apk"
+      sh("cp #{proj_root}/app/build/outputs/apk/#{build_type.downcase}/app-#{build_type.downcase}.apk #{apk_path}")
+
+      # Return the APK path
+      UI.success("#{build_type.capitalize} APK built at: android/fastlane/#{apk_path}")
+      apk_path
+  end
+
+  desc "Build release version (APK and AAB)"
+  lane :build_release do |options|
+      version_info = generate_version_code
+      version_name = version_info[:version_name]
+      build_number = version_info[:build_number]
+
+       #Create threads for parallel builds
+#        apk_thread = Thread.new do
+#             UI.message("Starting APK build thread...")
+#             apk_path = build_apk(
+#               build_type: "Release",
+#               version_info: version_info
+#             )
+#             Thread.current[:path] = apk_path
+#        end
+       apk_path = build_apk(
+          build_type: "Release",
+          version_info: version_info
+       )
+
+#        aab_thread = Thread.new do
+#            UI.message("Starting AAB build thread...")
+#             aab_path = build_aab(
+#               build_type: "Release",
+#               version_info: version_info
+#             )
+#            Thread.current[:path] = aab_path
+#        end
+
+    # Wait for both builds to complete
+  #  aab_thread.join
+
+    # Retrieve the paths
+
+    #aab_path = aab_thread[:path]
+
+  end
+
+  # 2. Debug build with versioning
+  desc "Build debug APK with versioning"
+  lane :build_debug do
+      UI.message("Starting debug build with versioning")
+
+      # Get version information
+      UI.message("Generating version information...")
+      version_info = generate_version_code
+      version_name = version_info[:version_name]
+      build_number = version_info[:build_number]
+      UI.message("Using version: #{version_name} (#{build_number})")
+
+      # Build the APK
+      UI.message("Building debug APK...")
+      apk_path = build_apk(
+        build_type: "Debug",
+        version_info: version_info
+      )
+
+      UI.success("Debug APK built successfully with version #{version_name}")
+      UI.important("Version information: name=#{version_name}, build=#{build_number}")
+
+      # Return version info for GitHub Actions
+      version_info
+    end
+
+
+
+end
