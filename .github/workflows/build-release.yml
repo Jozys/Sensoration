@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/ci-cd # Just to trigger the workflow for testing purposes
-
 
 jobs:
   build-release:

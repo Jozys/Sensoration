@@ -1,10 +1,9 @@
 name: "Build Debug APK"
 on:
   workflow_dispatch:
-  push:
+  pull_request_target:
     branches:
       - main
-      - feat/ci-cd # Just to trigger the workflow for testing purposes
 
 jobs:
   build-debug:
