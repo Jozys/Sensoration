@@ -1,7 +1,6 @@
 package de.schuettslaar.sensoration.presentation.views
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +9,6 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
-import de.schuettslaar.sensoration.domain.Client
 import de.schuettslaar.sensoration.domain.Device
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -24,8 +22,6 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var connectedDevices by mutableStateOf(mapOf<DeviceId, String>())
     var isLoading by mutableStateOf(false)
     var currentSensorType by mutableStateOf<SensorType?>(null)
-
-    var isSending: Boolean = false
 
     fun callback(text: String, status: NearbyStatus) {
         this.text = text
@@ -68,24 +64,6 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
         Logger.getLogger(this.javaClass.simpleName).info { "Connecting to $endpointId" }
         thisDevice?.connect(endpointId)
         this.isLoading = true
-    }
-
-    // TODO: Add data model for sensor data
-    fun sendMessage(connectedId: DeviceId) {
-        val client = thisDevice as? Client
-        if (isSending) {
-            Log.e("BaseNearbyViewModel", "Stopping sensor collection")
-            client?.stopPeriodicSending()
-            isSending = false
-        } else {
-            Log.e("BaseNearbyViewModel", "Starting sensor collection")
-            client?.startSensorCollection(
-                sensorType = SensorType.ACCELEROMETER
-            )
-            client?.startPeriodicSending(connectedId)
-            isSending = true
-        }
-
     }
 
     fun onConnectionInitiatedCallback(

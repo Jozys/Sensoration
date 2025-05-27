@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.views.discovering
+package de.schuettslaar.sensoration.presentation.views.devices.client.discovering
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -6,10 +6,10 @@ import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 
 @Serializable
-object DiscoveryRoute
+object ClientDeviceRoute
 
 fun NavGraphBuilder.addDiscoveryNavGraph(navController: NavHostController) {
-    composable<DiscoveryRoute> {
-        Discovering(onBack = { navController.popBackStack() })
+    composable<ClientDeviceRoute> {
+        ClientDeviceScreen(onBack = { navController.popBackStack() })
     }
 }

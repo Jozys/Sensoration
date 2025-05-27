@@ -11,7 +11,7 @@ interface PTPHandler {
     fun getAdjustedTime(): Long
 }
 
-class MasterPTPHandler : PTPHandler {
+class MainDevicePTPHandler : PTPHandler {
     override fun getAdjustedTime(): Long {
         return System.currentTimeMillis()
     }
@@ -26,11 +26,11 @@ class ClientPTPHandler : PTPHandler {
     private var offset: Long = 0
 
 
-    fun handleMessage(ptpMessage: PTPMessage, client: Client) {
+    fun handleMessage(ptpMessage: PTPMessage, clientDevice: ClientDevice) {
         Log.d(javaClass.simpleName, "PTP message: $ptpMessage")
         when (ptpMessage.ptpType) {
             PTPMessage.PTPMessageType.SYNC -> handleSync(ptpMessage)
-            PTPMessage.PTPMessageType.FOLLOW_UP -> handleFollowUp(ptpMessage, client)
+            PTPMessage.PTPMessageType.FOLLOW_UP -> handleFollowUp(ptpMessage, clientDevice)
             PTPMessage.PTPMessageType.DELAY_RESPONSE -> handleDelayResponse(ptpMessage)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName)
@@ -60,7 +60,7 @@ class ClientPTPHandler : PTPHandler {
 
     }
 
-    private fun handleFollowUp(message: PTPMessage, client: Client) {
+    private fun handleFollowUp(message: PTPMessage, clientDevice: ClientDevice) {
 //        if (client.connectedDevices.isEmpty()) return // TODO check why this is not updated
         t1 = message.messageTimeStamp
 
@@ -70,7 +70,7 @@ class ClientPTPHandler : PTPHandler {
             state = message.state,
             ptpType = PTPMessage.PTPMessageType.DELAY_REQUEST,
         )
-        client.sendDelayRequest(delayRequest)
+        clientDevice.sendDelayRequest(delayRequest)
         t3 = System.currentTimeMillis().toLong()
     }
 

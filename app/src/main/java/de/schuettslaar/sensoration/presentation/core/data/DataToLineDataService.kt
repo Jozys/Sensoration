@@ -4,7 +4,7 @@ import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineStyle
 import de.schuettslaar.sensoration.domain.DeviceId
-import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import de.schuettslaar.sensoration.utils.generateColorBasedOnName
 import kotlin.math.roundToLong
 

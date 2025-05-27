@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.domain
 
 import android.content.Context
+import android.media.MediaActionSound
 import android.util.Log
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -12,6 +13,8 @@ import de.schuettslaar.sensoration.application.data.Message
 import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
+import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
+import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
@@ -24,7 +27,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.logging.Logger
 
-class Client : Device {
+class ClientDevice : Device {
     private val sensorManager: SensorManager
     private val clientPtpHandler: ClientPTPHandler = ClientPTPHandler()
 
@@ -45,7 +48,7 @@ class Client : Device {
         onSensorTypeChanged: (SensorType) -> Unit,
         onApplicationStatusChanged: (ApplicationStatus) -> Unit,
     ) : super() {
-        this.isMaster = false
+        this.isMainDevice = false
         this.wrapper = DiscoverNearbyWrapper(
             context = context,
             onEndpointAddCallback = onEndpointAddCallback,
@@ -98,7 +101,7 @@ class Client : Device {
         applicationStatus = ApplicationStatus.IDLE
     }
 
-    fun startPeriodicSending(masterId: DeviceId, intervalMs: Long = 100) {
+    fun startPeriodicSending(mainDeviceId: DeviceId, intervalMs: Long = 100) {
         stopPeriodicSending()
 
         sensorJob = coroutineScope.launch {
@@ -108,7 +111,7 @@ class Client : Device {
                 val latestSensorData = sensorManager.getLatestSensorData()
                 Log.d(this.javaClass.simpleName, "Latest sensor data: $latestSensorData")
                 if (latestSensorData != null) {
-                    sendSensorData(masterId, latestSensorData)
+                    sendSensorData(mainDeviceId, latestSensorData)
                 } else {
                     Log.d(this.javaClass.simpleName, "No sensor data available")
                 }
@@ -122,7 +125,7 @@ class Client : Device {
     }
 
 
-    private fun sendSensorData(masterId: DeviceId, sensorData: ProcessedSensorData) {
+    private fun sendSensorData(mainDeviceId: DeviceId, sensorData: ProcessedSensorData) {
         if (applicationStatus != ApplicationStatus.ACTIVE) {
             Log.d(
                 this.javaClass.simpleName,
@@ -138,7 +141,7 @@ class Client : Device {
                 applicationStatus,
                 sensorData
             )
-            sendMessage(masterId, wrappedSensorData)
+            sendMessage(mainDeviceId, wrappedSensorData)
 
         } catch (e: Exception) {
             Log.d(this.javaClass.simpleName, "Failed to send sensor data: ${e.toString()}")
@@ -154,7 +157,7 @@ class Client : Device {
         }
 
         stopPeriodicSending()
-        // Maybe send a disconnect request message to the master before disconnecting
+        // Maybe send a disconnect request message to the main device before disconnecting
 
         sensorManager.cleanup()
 
@@ -173,29 +176,35 @@ class Client : Device {
             .info("Message received from $endpointId of type ${message.messageType}")
 
         when (message.messageType) {
-            MessageType.HANDSHAKE -> handleHandshakeMessage(message)
-            MessageType.START_MEASUREMENT -> handleMeasurementMessage(message)
-            MessageType.STOP_MEASUREMENT -> stopMeasurement(message)
+            MessageType.HANDSHAKE -> handleHandshakeMessage(message as HandshakeMessage)
+            MessageType.START_MEASUREMENT -> handleMeasurementMessage(message as StartMeasurementMessage)
+            MessageType.STOP_MEASUREMENT -> stopMeasurement(message as StopMeasurementMessage)
             MessageType.PTP_MESSAGE -> clientPtpHandler.handleMessage(message as PTPMessage, this)
+            MessageType.TEST_MESSAGE -> handleTestMessage(message as TestMessage)
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
             }
         }
     }
 
-    private fun stopMeasurement(message: Message) {
+    private fun handleTestMessage(message: TestMessage) {
+        Log.i(this.javaClass.simpleName, "Test message received: ${message.content}")
+        val sound = MediaActionSound()
+        sound.play(MediaActionSound.STOP_VIDEO_RECORDING)
+    }
+
+    private fun stopMeasurement(message: StopMeasurementMessage) {
         stopPeriodicSending()
         stopSensorCollection()
     }
 
-    private fun handleMeasurementMessage(message: Message) {
-        if (message.senderDeviceId != MASTER_NAME || connectedDeviceId == null) {
+    private fun handleMeasurementMessage(startMeasurementMessage: StartMeasurementMessage) {
+        if (startMeasurementMessage.senderDeviceId != MAIN_DEVICE_ID || connectedDeviceId == null) {
             Logger.getLogger(this.javaClass.simpleName)
-                .warning("Received measurement message from unknown device: ${message.senderDeviceId}")
+                .warning("Received measurement message from unknown device: ${startMeasurementMessage.senderDeviceId}")
             return
         }
 
-        val startMeasurementMessage = message as StartMeasurementMessage
         Logger.getLogger(this.javaClass.simpleName)
             .info("Start measurement message received from ${startMeasurementMessage.senderDeviceId}")
         val sensorType = startMeasurementMessage.sensorType
@@ -203,8 +212,7 @@ class Client : Device {
         startPeriodicSending(connectedDeviceId!!, sensorType.processingDelay)
     }
 
-    private fun handleHandshakeMessage(message: Message) {
-        val handshakeMessage = message as HandshakeMessage
+    private fun handleHandshakeMessage(handshakeMessage: HandshakeMessage) {
         Logger.getLogger(this.javaClass.simpleName)
             .info("Handshake message received from ${handshakeMessage.senderDeviceId}")
         ownDeviceId = handshakeMessage.clientId
@@ -215,5 +223,24 @@ class Client : Device {
             javaClass.simpleName, "sendDelayRequest: $delayRequestMessage"
         )
         sendMessage(connectedDeviceId!!, delayRequestMessage)
+    }
+
+    fun sendTestMessage() {
+        Log.d(javaClass.simpleName, "Sending test message")
+        if (connectedDeviceId == null) {
+            Logger.getLogger(this.javaClass.simpleName)
+                .warning("Could not send test message because no device is connected")
+            return
+        }
+
+        sendMessage(
+            connectedDeviceId!!,
+            TestMessage(
+                messageTimeStamp = clientPtpHandler.getAdjustedTime(),
+                senderDeviceId = ownDeviceId!!,
+                state = applicationStatus,
+                content = "Test message from Client"
+            )
+        )
     }
 }

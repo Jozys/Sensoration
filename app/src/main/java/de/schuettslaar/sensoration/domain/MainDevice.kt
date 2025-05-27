@@ -1,6 +1,7 @@
 package de.schuettslaar.sensoration.domain
 
 import android.content.Context
+import android.media.MediaActionSound
 import android.util.Log
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -11,6 +12,7 @@ import de.schuettslaar.sensoration.application.data.MessageType
 import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
+import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
@@ -30,16 +32,16 @@ import kotlin.math.abs
 
 private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
-val MASTER_NAME = DeviceId("MASTER")
+val MAIN_DEVICE_ID = DeviceId("MASTER")
 
-class Master : Device {
+class MainDevice : Device {
     private val rawSensorDataMap = mutableMapOf<DeviceId, CircularFifoQueue<WrappedSensorData>>()
 
     // Optional the master can also provide sensor data
     private val sensorManager: SensorManager
-    private var masterDeviceProvidesData: Boolean = true
+    private var isMainProvidingSensorData: Boolean = true
     private var sensorJob: Job? = null
-    private val ptpHandler = MasterPTPHandler()
+    private val ptpHandler = MainDevicePTPHandler()
 
     // For periodic sending
     private var ptpJob: Job? = null
@@ -53,8 +55,8 @@ class Master : Device {
         onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
     ) : super() {
-        this.ownDeviceId = MASTER_NAME
-        this.isMaster = true
+        this.ownDeviceId = MAIN_DEVICE_ID
+        this.isMainDevice = true
         this.wrapper = AdvertiseNearbyWrapper(
             context = context,
             onConnectionResultCallback = onConnectionResultCallback,
@@ -100,6 +102,7 @@ class Master : Device {
         when (message.messageType) {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)
             MessageType.PTP_MESSAGE -> processPTPMessage(message as PTPMessage, endpointId)
+            MessageType.TEST_MESSAGE -> handleTestMessage(message as TestMessage)
 
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
@@ -148,8 +151,8 @@ class Master : Device {
         startPTP(1000)
         broadcastMessage(startMeasurementMessage)
 
-        if (masterDeviceProvidesData) {
-            startSensorCollectionOnMaster(sensorType, sensorType.processingDelay)
+        if (isMainProvidingSensorData) {
+            startSensorCollectionOnMainDevice(sensorType, sensorType.processingDelay)
 
         }
 
@@ -164,8 +167,8 @@ class Master : Device {
         )
         broadcastMessage(stopMeasurementMessage)
 
-        if (masterDeviceProvidesData) {
-            stopSensorCollectionOnMaster()
+        if (isMainProvidingSensorData) {
+            stopSensorCollectionOnMainDevice()
         }
     }
 
@@ -224,14 +227,14 @@ class Master : Device {
         }
     }
 
-    private fun startSensorCollectionOnMaster(sensorType: SensorType, intervalMs: Long = 100) {
-        if (!masterDeviceProvidesData) {
-            Log.d(this.javaClass.simpleName, "Master Device does not provide sensor data")
+    private fun startSensorCollectionOnMainDevice(sensorType: SensorType, intervalMs: Long = 100) {
+        if (!isMainProvidingSensorData) {
+            Log.d(this.javaClass.simpleName, "Main Device does not provide sensor data")
             return
         }
 
         if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
-            Log.d(this.javaClass.simpleName, "Master Device does not has sensor type: $sensorType")
+            Log.d(this.javaClass.simpleName, "Main Device does not has sensor type: $sensorType")
             return
         }
 
@@ -243,7 +246,10 @@ class Master : Device {
                 delay(intervalMs)
 
                 val latestSensorData = sensorManager.getLatestSensorData()
-                Log.d("SensorCollectionOnMaster-Routine", "Latest sensor data: $latestSensorData")
+                Log.d(
+                    "SensorCollectionOnMainDevice-Routine",
+                    "Latest sensor data: $latestSensorData"
+                )
                 if (latestSensorData != null) {
 
                     val wrappedSensorData = WrappedSensorData(
@@ -252,18 +258,18 @@ class Master : Device {
                         applicationStatus,
                         latestSensorData
                     )
-                    processSensorData(wrappedSensorData, MASTER_NAME)
+                    processSensorData(wrappedSensorData, MAIN_DEVICE_ID)
 
                 } else {
-                    Log.d("SensorCollectionOnMaster-Routine", "No sensor data available")
+                    Log.d("SensorCollectionOnMainDevice-Routine", "No sensor data available")
                 }
             }
         }
     }
 
-    fun stopSensorCollectionOnMaster() {
-        if (!masterDeviceProvidesData) {
-            Log.d(this.javaClass.simpleName, "Master Device does not provide sensor data")
+    fun stopSensorCollectionOnMainDevice() {
+        if (!isMainProvidingSensorData) {
+            Log.d(this.javaClass.simpleName, "Main device does not provide sensor data")
         }
 
         sensorManager.stopListening()
@@ -272,7 +278,7 @@ class Master : Device {
 
     }
 
-    fun getCurrentMasterTime(): Long {
+    fun getCurrentTimeOfMainDevice(): Long {
         return ptpHandler.getAdjustedTime()
     }
 
@@ -296,9 +302,37 @@ class Master : Device {
         return closestData
     }
 
-    fun isMasterDeviceProvidesData(): Boolean {
-        return masterDeviceProvidesData
+    fun isMainDeviceProvidingData(): Boolean {
+        return isMainProvidingSensorData
     }
+
+    fun setMainDeviceToProvidingData(enable: Boolean) {
+        if (isMainProvidingSensorData != enable) {
+            isMainProvidingSensorData = enable
+
+            // If we're currently measuring, we need to restart sensor collection
+            if (sensorType != null) {
+                if (enable) {
+                    startSensorCollectionOnMainDevice(sensorType!!, sensorType!!.processingDelay)
+                } else {
+                    stopSensorCollectionOnMainDevice()
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles a test message by logging its content and playing a sound.
+     * This is used for identifying and locating the main device
+     *
+     * @param message The test message received.
+     */
+    private fun handleTestMessage(message: TestMessage) {
+        Log.i(this.javaClass.simpleName, "Test message received: ${message.content}")
+        val sound = MediaActionSound()
+        sound.play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
 }
 
 /**
@@ -360,7 +394,7 @@ fun getClosestSensorData(
 fun <T> getClosest(referenceValue: Long, items: Collection<T>, selector: (T) -> Long): T? {
     items.forEach {
         Log.d(
-            "Master",
+            "getClosest",
             "getClosest: abs=${abs(selector(it) - referenceValue)} $referenceValue, ${selector(it)}"
         );
     }

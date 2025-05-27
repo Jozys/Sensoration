@@ -1,4 +1,4 @@
-package de.schuettslaar.sensoration.presentation.core.data
+package de.schuettslaar.sensoration.presentation.core.data.representations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
-import de.schuettslaar.sensoration.presentation.views.advertisment.TimeBucket
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
