@@ -1,8 +1,6 @@
 package de.schuettslaar.sensoration.presentation.core.data.representations
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,10 +27,10 @@ const val AXIS_STEP_SIZE = 5
 
 @Composable
 fun YChartDisplay(
-    data: Map<DeviceId, Line>, diagramName: String, xAxisUnit: String, yAxisUnit: String
+    data: Map<DeviceId, Line>, xAxisUnit: String, yAxisUnit: String
 ) {
-    var xAxisLabel = "${stringResource(R.string.index)} $xAxisUnit"
-    var yAxisLabel = "in $xAxisUnit"
+    val xAxisLabel = "${stringResource(R.string.index)} $xAxisUnit"
+    val yAxisLabel = "in $xAxisUnit"
 
     if (data.isEmpty()) {
         NoVisualizationAvailable()
@@ -47,20 +45,8 @@ fun YChartDisplay(
         shape = RoundedCornerShape(8.dp),
         tonalElevation = 1.dp
     ) {
-        var lineChartData = createLineChartData(data, xAxisLabel, yAxisLabel)
-        Column() {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = diagramName,
-                    style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.Center,
-                )
-            }
+        val lineChartData = createLineChartData(data, xAxisLabel, yAxisLabel)
+        Column {
 
             Text(
                 text = stringResource(R.string.sensor_data_unit),

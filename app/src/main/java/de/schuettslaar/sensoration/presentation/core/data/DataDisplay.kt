@@ -80,7 +80,7 @@ fun DataDisplay(
             }
 
             // Array of a line with a color
-            var parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
+            val parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
                 sensorType.valueSize,
                 timeBuckets,
                 activeDevices,
@@ -129,7 +129,7 @@ private fun SensorValueDisplay(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = sensorType.name, // TODO: more descriptive name
+                    text = stringResource(sensorType.measurementInfos[index].valueDescriptionId),
                     style = MaterialTheme.typography.titleSmall
                 )
 
@@ -152,18 +152,13 @@ private fun SensorValueDisplay(
                         TableDisplay(
                             timeBuckets = timeBuckets,
                             dataValueIndex = index,
-                            // TODO replace to appropriate text and error handling
-                            diagramName = sensorType?.name ?: "Unknown Sensor",
-                            xAxisUnit = stringResource(R.string.index),
-                            yAxisUnit = "Unknown Unit"
+                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId)
                         )
                     } else {
                         YChartDisplay(
                             data = dataMap,
-                            // TODO replace to appropriate text and error handling
-                            diagramName = sensorType?.name ?: "Unknown Sensor",
                             xAxisUnit = stringResource(R.string.index),
-                            yAxisUnit = "Unknown Unit"
+                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId)
                         )
                     }
                 }

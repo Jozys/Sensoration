@@ -32,6 +32,10 @@ enum class SensorType(
      */
     val valueSize: Int = 1,
     /**
+     *  The list of measurement information associated with the sensor.
+     */
+    val measurementInfos: List<MeasurementInfo> = emptyList(),
+    /**
      * The delay in milliseconds between sensor updates.
      */
     val processingDelay: Long = 100L, // Delay in milliseconds
@@ -40,7 +44,13 @@ enum class SensorType(
         Sensor.TYPE_PRESSURE,
         R.string.sensor_pressure,
         R.string.sensor_pressure_description,
-        RawClientDataProcessing()
+        RawClientDataProcessing(),
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_hpa,
+                valueDescriptionId = R.string.sensor_pressure_value_description
+            )
+        )
     ),
     GRAVITY(
         Sensor.TYPE_GRAVITY,
@@ -48,6 +58,20 @@ enum class SensorType(
         R.string.sensor_gravity_description,
         RawClientDataProcessing(),
         valueSize = 3,
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_gravity_value_x
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_gravity_value_y
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_gravity_value_z
+            )
+        )
     ),
     ACCELEROMETER(
         Sensor.TYPE_ACCELEROMETER,
@@ -55,7 +79,21 @@ enum class SensorType(
         R.string.sensor_accelerometer_description,
         RawClientDataProcessing(),
         processingDelay = 500L,
-        valueSize = 3
+        valueSize = 3,
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_accelerometer_value_x
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_accelerometer_value_y
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_m_s2,
+                valueDescriptionId = R.string.sensor_accelerometer_value_z
+            )
+        )
     ),
     MIN_MAX_SOUND_AMPLITUDE(
         -1001, // Custom ID for microphone
@@ -63,14 +101,30 @@ enum class SensorType(
         R.string.sensor_microphone_description,
         MinMaxClientDataProcessing(),
         processingDelay = 100L,
-        valueSize = 2
+        valueSize = 2,
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_decibel,
+                valueDescriptionId = R.string.sensor_microphone_value_min
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_decibel,
+                valueDescriptionId = R.string.sensor_microphone_value_max
+            )
+        )
     ),
     SOUND_PRESSURE(
         -1000, // Custom ID for microphone
         R.string.sensor_sound_pressure,
         R.string.sensor_sound_pressure_description,
         SoundPressureClientDataProcessing(),
-        processingDelay = 100L
+        processingDelay = 100L,
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_decibel,
+                valueDescriptionId = R.string.sensor_sound_pressure_value_description
+            )
+        )
     )
     ;
 
