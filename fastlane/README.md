@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Runs all the tests
 
+### android setup_github_token
+
+```sh
+[bundle exec] fastlane android setup_github_token
+```
+
+
+
 ### android generate_version_code
 
 ```sh
