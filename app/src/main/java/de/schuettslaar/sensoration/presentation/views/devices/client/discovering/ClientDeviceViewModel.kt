@@ -104,7 +104,10 @@ class ClientDeviceViewModel(application: Application) : BaseNearbyViewModel(appl
 
     fun cleanUp() {
         thisDevice?.cleanUp()
-//        possibleConnections.clear()
+        thisDevice!!.stop { text, status ->
+            this.callback(text, status)
+        }
+        possibleConnections.clear()
         connectedDevices = mapOf()
         thisApplicationStatus = ApplicationStatus.IDLE
         currentSensorType = null

@@ -36,6 +36,13 @@ private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
 val MAIN_DEVICE_ID = DeviceId("MASTER")
 
+/**
+ * MainDevice class represents the data collecting device
+ * It is responsible for administrate all connected devices,
+ * collecting from all clients and processing sensor data
+ * As well as providing the PTP synchronization
+ *
+ */
 class MainDevice : Device {
     private val rawSensorDataMap = mutableMapOf<DeviceId, CircularFifoQueue<WrappedSensorData>>()
 
@@ -51,11 +58,15 @@ class MainDevice : Device {
 
     private var sensorType: SensorType? = null
 
+    // Update the internal status representation of a connected device
+    private val onStatusUpdateCallback: (DeviceId, ApplicationStatus) -> Unit
+
     constructor(
         context: Context,
         onConnectionResultCallback: (DeviceId, ConnectionResolution, NearbyStatus) -> Unit,
         onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
+        onStatusUpdateCallback: (DeviceId, ApplicationStatus) -> Unit
     ) : super() {
         this.ownDeviceId = MAIN_DEVICE_ID
         this.isMainDevice = true
@@ -73,6 +84,7 @@ class MainDevice : Device {
 
             })
         sensorManager = SensorManager(context, ptpHandler)
+        this.onStatusUpdateCallback = onStatusUpdateCallback
     }
 
     override fun cleanUp() {
@@ -100,6 +112,11 @@ class MainDevice : Device {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
             return
         }
+
+        onStatusUpdateCallback(
+            message.senderDeviceId,
+            message.state
+        )
 
         when (message.messageType) {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)

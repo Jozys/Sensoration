@@ -1,5 +1,6 @@
 package de.schuettslaar.sensoration.presentation.views.devices.main.advertisment
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -10,6 +11,10 @@ object MainDeviceRoute
 
 fun NavGraphBuilder.addAdvertisementNavGraph(navController: NavHostController) {
     composable<MainDeviceRoute> {
-        MainDeviceScreen(onBack = { navController.popBackStack() })
+        val viewModel: MainDeviceViewModel = viewModel()
+        MainDeviceScreen(onBack = {
+            viewModel.cleanUp()
+            navController.popBackStack()
+        })
     }
 }
