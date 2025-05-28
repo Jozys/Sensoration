@@ -4,8 +4,10 @@ import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.intl.Locale
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
@@ -32,13 +34,22 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     val synchronizedData = mutableStateListOf<TimeBucket>()
 
+    var mainDeviceInfo: Pair<DeviceId, DeviceInfo>? by mutableStateOf(null)
+
     private var dataSynchronizingJob: Job? = null
+
+    var elapsedTimeInSeconds by mutableStateOf(0L)
+        private set
+    private var timerJob: Job? = null
+
 
     val isDrawerOpen = mutableStateOf(false)
 
-    var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
+    val connectedDeviceInfos = mutableStateMapOf<DeviceId, DeviceInfo>()
 
     var isReceiving by mutableStateOf(false)
+
+    var isPaused by mutableStateOf(false)
 
     private val logger = Logger.getLogger(this.javaClass.simpleName)
 
@@ -94,14 +105,17 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                 }
             },
             onDisconnectedCallback = { endpointId, status ->
-                this.connectedDeviceInfos = this.connectedDeviceInfos.minus(endpointId)
+                this.connectedDeviceInfos.remove(endpointId)
                 this.onDisconnectedCallback(endpointId, status)
 
                 if (connectedDeviceInfos.isEmpty()) {
                     this.stopReceiving()
                     isReceiving = false
                 }
-            }
+            },
+            onStatusUpdateCallback = { endpointId, newApplicationStatus ->
+                this.updateDeviceInfoStatus(endpointId, newApplicationStatus)
+            },
         )
         this.thisDevice?.start { text, status ->
             this.callback(text, status)
@@ -111,6 +125,16 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         (thisDevice as? MainDevice)?.let {
             mainDeviceIsProvidingData = it.isMainDeviceProvidingData()
         }
+
+        this.mainDeviceInfo = Pair(
+            thisDevice!!.ownDeviceId!!, DeviceInfo(
+                deviceName = thisDevice!!.ownDeviceId!!.name,
+                applicationStatus = ApplicationStatus.ACTIVE
+            )
+        )
+        logger.info(
+            "MainDeviceViewModel initialized with device: ${this.mainDeviceInfo?.first?.name}"
+        )
     }
 
     fun startReceiving() {
@@ -132,12 +156,88 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         mainDevice.startMeasurement(currentSensorType!!)
 
         isReceiving = true
+        isPaused = false
 
         // TODO: maybe adjust this processing delay
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
 
         dataSynchronizingJob =
             getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+
+        // Reset and start the timer
+        resetTimer()
+        startTimer()
+    }
+
+    private fun resetTimer() {
+        timerJob?.cancel()
+        elapsedTimeInSeconds = 0L
+    }
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = coroutineScope.launch {
+            while (isActive) {
+                delay(1000) // Update every second
+                elapsedTimeInSeconds++
+            }
+        }
+    }
+
+    private fun resumeReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Resuming data reception" }
+        if (currentSensorType == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Sensor type is null" }
+            return
+        }
+
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+
+        mainDevice.startMeasurement(currentSensorType!!)
+        isReceiving = true
+
+        // Restart the data synchronizing job
+        val sensorTimeResolution: Long = currentSensorType!!.processingDelay
+        dataSynchronizingJob =
+            getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+
+        // Restart the timer
+        startTimer()
+    }
+
+    private fun pauseReceiving() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Pausing data reception" }
+        val mainDevice = this.thisDevice as? MainDevice
+        if (mainDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
+            return
+        }
+
+        mainDevice.stopMeasurement()
+
+        // Cancel the data synchronizing job
+        dataSynchronizingJob?.cancel()
+
+        // Cancel the timer job
+        timerJob?.cancel()
+    }
+
+    fun togglePause() {
+        if (isPaused) {
+            // Resume
+            isPaused = false
+            Logger.getLogger(this.javaClass.simpleName).info { "Resuming data reception" }
+            resumeReceiving()
+        } else {
+            // Pause
+            isPaused = true
+            Logger.getLogger(this.javaClass.simpleName).info { "Pausing data reception" }
+            pauseReceiving()
+        }
     }
 
     fun getActiveDevices(): List<DeviceId> {
@@ -179,10 +279,6 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                     )
 
                     if (sensorData != null) {
-                        bucketData.put(
-                            deviceId,
-                            sensorData
-                        )
                         bucketData[deviceId] = sensorData
                     }
                 }
@@ -218,6 +314,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         mainDevice.stopMeasurement()
         isReceiving = false
         dataSynchronizingJob?.cancel()
+        resetTimer()
     }
 
     fun disconnect(endpointId: DeviceId) {
@@ -229,9 +326,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         endpointId: DeviceId,
         deviceInfo: DeviceInfo
     ) {
-        this.connectedDeviceInfos = this.connectedDeviceInfos.plus(
-            Pair(endpointId, deviceInfo)
-        )
+        this.connectedDeviceInfos.put(endpointId, deviceInfo)
     }
 
     fun toggleMainDeviceProvidingData() {
@@ -245,6 +340,20 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
             stopReceiving()
             startReceiving()
         }
+    }
+
+    // Format elapsed time as HH:MM:SS
+    fun getFormattedTime(): String {
+        val hours = elapsedTimeInSeconds / 3600
+        val minutes = (elapsedTimeInSeconds % 3600) / 60
+        val seconds = elapsedTimeInSeconds % 60
+        return String.format(
+            Locale.current.platformLocale,
+            "%02d:%02d:%02d",
+            hours,
+            minutes,
+            seconds
+        )
     }
 
     fun sendTestMessage(deviceId: DeviceId) {
@@ -265,6 +374,18 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         }
     }
 
+    fun updateDeviceInfoStatus(
+        endpointId: DeviceId,
+        newApplicationStatus: ApplicationStatus
+    ) {
+        val existingDeviceInfo = connectedDeviceInfos[endpointId] ?: return
+        val updatedDeviceInfo = existingDeviceInfo.copy(applicationStatus = newApplicationStatus)
+        // IMPORTANT: Force update by removing and re-adding
+        connectedDeviceInfos.remove(endpointId) // DO NOT REMOVE THIS LINE
+        connectedDeviceInfos[endpointId] = updatedDeviceInfo
+    }
+
+
     fun cleanUp() {
         Logger.getLogger(this.javaClass.simpleName).info { "Cleaning up MainDeviceViewModel" }
         if (isReceiving) {
@@ -284,9 +405,10 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         dataSynchronizingJob?.cancel()
         synchronizedData.clear()
         thisDevice = null
-        connectedDeviceInfos = emptyMap()
+        connectedDeviceInfos.clear()
         isReceiving = false
         mainDeviceIsProvidingData = true
     }
 }
+
 
