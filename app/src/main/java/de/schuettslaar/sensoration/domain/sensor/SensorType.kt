@@ -3,9 +3,10 @@ package de.schuettslaar.sensoration.domain.sensor
 import android.hardware.Sensor
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
+import de.schuettslaar.sensoration.application.data.DecibelFullScaleClientDataProcessing
 import de.schuettslaar.sensoration.application.data.MinMaxClientDataProcessing
+import de.schuettslaar.sensoration.application.data.PitchDetectionClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
-import de.schuettslaar.sensoration.application.data.SoundPressureClientDataProcessing
 
 /**
  * A enum class representing different types of sensors used in the application.
@@ -113,16 +114,34 @@ enum class SensorType(
             )
         )
     ),
-    SOUND_PRESSURE(
+    DECIBEL_FULL_SCALE(
         -1000, // Custom ID for microphone
         R.string.sensor_sound_pressure,
         R.string.sensor_sound_pressure_description,
-        SoundPressureClientDataProcessing(),
+        DecibelFullScaleClientDataProcessing(),
         processingDelay = 100L,
         measurementInfos = listOf(
             MeasurementInfo(
                 unitId = R.string.unit_decibel,
                 valueDescriptionId = R.string.sensor_sound_pressure_value_description
+            )
+        )
+    ),
+    SIGNIFICANT_PITCH(
+        -1000, // Custom ID for significant pitch
+        R.string.sensor_significant_pitch,
+        R.string.sensor_significant_pitch_description,
+        PitchDetectionClientDataProcessing(),
+        processingDelay = 100L,
+        valueSize = 2,
+        measurementInfos = listOf(
+            MeasurementInfo(
+                unitId = R.string.unit_hertz,
+                valueDescriptionId = R.string.sensor_significant_pitch_value_description
+            ),
+            MeasurementInfo(
+                unitId = R.string.unit_decibel,
+                valueDescriptionId = R.string.sensor_significant_pitch_value_amplitude_description
             )
         )
     )

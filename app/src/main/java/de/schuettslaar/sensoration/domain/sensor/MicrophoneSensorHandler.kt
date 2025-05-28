@@ -104,7 +104,7 @@ class MicrophoneSensorHandler(private val context: Context, private val ptpHandl
                     if (readResult > 0) {
                         val rawData = RawSensorData(
                             timestamp = ptpHandler.getAdjustedTime(),
-                            sensorType = SensorType.SOUND_PRESSURE.sensorId,
+                            sensorType = SensorType.DECIBEL_FULL_SCALE.sensorId,
                             value = buffer
                         )
 

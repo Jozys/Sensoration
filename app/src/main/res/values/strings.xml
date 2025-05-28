@@ -64,7 +64,7 @@
     <string name="data_display_title">Sensor Data</string>
     <string name="stop_receiving_data">Stop</string>
     <string name="sensor_sound_pressure_description">Measurement of the sound pressure recorded by the microphone sensors</string>
-    <string name="sensor_sound_pressure">Sound Pressure</string>
+    <string name="sensor_sound_pressure">Decibel Full Scale</string>
     <string name="index">Index</string>
     <string name="sensor_data_unit">Unit</string>
     <string name="timestamp">Time</string>
@@ -102,20 +102,25 @@
     <string name="collect_main_device_data">Use main device sensors</string>
     <string name="display_toggle_table">Table</string>
     <string name="display_toggle_chart">Chart</string>
-    <string name="unit_hpa">hPA</string>
+    <string name="unit_hpa" translatable="false">hPA</string>
     <string name="sensor_pressure_value_description">Ambient air pressure.</string>
-    <string name="unit_m_s2">m/s²</string>
+    <string name="unit_m_s2" translatable="false">m/s²</string>
     <string name="sensor_gravity_value_x">Force of gravity along the x axis.</string>
     <string name="sensor_gravity_value_y">Force of gravity along the y axis.</string>
     <string name="sensor_gravity_value_z">Force of gravity along the z axis.</string>
     <string name="sensor_accelerometer_value_x">Acceleration force along the x axis (including gravity).</string>
     <string name="sensor_accelerometer_value_y">Acceleration force along the y axis (including gravity).</string>
     <string name="sensor_accelerometer_value_z">Acceleration force along the z axis (including gravity).</string>
-    <string name="unit_decibel">dB</string>
+    <string name="unit_decibel" translatable="false">dBFS</string>
     <string name="sensor_microphone_value_min">The minimum amplitude of the sound sensor.</string>
     <string name="sensor_microphone_value_max">The maximum amplitude of the sound sensor.</string>
     <string name="sensor_sound_pressure_value_description">The sound pressure value.</string>
     <string name="table_time">Time</string>
     <string name="resume_receiving">Resume receiving</string>
     <string name="pause_receiving">Pause receiving</string>
+    <string name="sensor_significant_pitch">Significant pitch</string>
+    <string name="sensor_significant_pitch_description">Extracts the pitch with the highest magnitude</string>
+    <string name="unit_hertz">Hz</string>
+    <string name="sensor_significant_pitch_value_description">in Hz</string>
+    <string name="sensor_significant_pitch_value_amplitude_description">Magnitude des Signals</string>
 </resources>
