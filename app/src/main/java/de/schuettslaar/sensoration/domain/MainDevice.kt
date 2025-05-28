@@ -48,12 +48,14 @@ class MainDevice : Device {
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var sensorType: SensorType? = null
+    private val onStatusUpdateCallback: (DeviceId, ApplicationStatus) -> Unit
 
     constructor(
         context: Context,
         onConnectionResultCallback: (DeviceId, ConnectionResolution, NearbyStatus) -> Unit,
         onDisconnectedCallback: (DeviceId, NearbyStatus) -> Unit,
         onConnectionInitiatedCallback: (DeviceId, ConnectionInfo) -> Unit,
+        onStatusUpdateCallback: (DeviceId, ApplicationStatus) -> Unit
     ) : super() {
         this.ownDeviceId = MAIN_DEVICE_ID
         this.isMainDevice = true
@@ -71,6 +73,7 @@ class MainDevice : Device {
 
             })
         sensorManager = SensorManager(context, ptpHandler)
+        this.onStatusUpdateCallback = onStatusUpdateCallback
     }
 
     override fun cleanUp() {
@@ -98,6 +101,11 @@ class MainDevice : Device {
             Logger.getLogger(this.javaClass.simpleName).warning("Message is null")
             return
         }
+
+        onStatusUpdateCallback(
+            message.senderDeviceId,
+            message.state
+        )
 
         when (message.messageType) {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)
