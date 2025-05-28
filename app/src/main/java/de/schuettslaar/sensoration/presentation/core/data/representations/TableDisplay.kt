@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,9 +31,8 @@ import java.util.Locale
 fun TableDisplay(
     timeBuckets: Collection<TimeBucket>,
     dataValueIndex: Int,
-    diagramName: String,
-    xAxisUnit: String,
-    yAxisUnit: String
+    yAxisUnit: String,
+    devices: Map<DeviceId, DeviceInfo>
 ) {
     Surface(
         modifier = Modifier
@@ -55,13 +55,14 @@ fun TableDisplay(
         } else {
             // Get all unique device IDs from all buckets
             val allDeviceIds = timeBuckets.flatMap { it.deviceData.keys }.toSet().toList()
+            val allDeviceNames = devices.map { it.value.deviceName }.toList()
 
             // Sort buckets by reference time
             val sortedBuckets = timeBuckets.sortedBy { it.referenceTime }
 
             Column {
                 // Display header with device names
-                Header(diagramName, allDeviceIds)
+                Header(stringResource(R.string.table_time), allDeviceNames)
 
                 LazyColumn(
                     modifier = Modifier
@@ -69,7 +70,7 @@ fun TableDisplay(
                         .weight(1f)
                 ) {
                     items(sortedBuckets) { bucket ->
-                        BucketRow(bucket, allDeviceIds, dataValueIndex)
+                        BucketRow(bucket, allDeviceIds, dataValueIndex, yAxisUnit)
                     }
                 }
             }
@@ -81,7 +82,8 @@ fun TableDisplay(
 private fun BucketRow(
     bucket: TimeBucket,
     deviceIds: List<DeviceId>,
-    dataValueIndex: Int
+    dataValueIndex: Int,
+    unit: String,
 ) {
     Row(
         modifier = Modifier
@@ -106,7 +108,7 @@ private fun BucketRow(
                 // Value display
                 Text(
                     text = if (sensorData != null && dataValueIndex < sensorData.value.size) {
-                        "%.2f".format(sensorData.value[dataValueIndex])
+                        "%.2f".format(sensorData.value[dataValueIndex]) + " $unit"
                     } else "—",
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
@@ -125,8 +127,8 @@ private fun BucketRow(
 
 @Composable
 private fun Header(
-    diagramName: String,
-    deviceIds: List<DeviceId>
+    title: String,
+    deviceNames: List<String>
 ) {
     Row(
         modifier = Modifier
@@ -136,16 +138,16 @@ private fun Header(
     ) {
         // Time column header
         Text(
-            text = diagramName,
+            text = title,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
 
         // Device column headers
-        deviceIds.forEach { deviceId ->
+        deviceNames.forEach { deviceName ->
             Text(
-                text = deviceId.name,
+                text = deviceName,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)

@@ -50,8 +50,6 @@ fun DataDisplay(
     timeBuckets: List<TimeBucket>,
     activeDevices: List<DeviceId>,
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-
     val viewMode = remember { mutableStateMapOf<Int, Boolean>() }
 
 
@@ -82,14 +80,14 @@ fun DataDisplay(
             }
 
             // Array of a line with a color
-            var parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
+            val parsedData: Array<Map<DeviceId, Line>> = DataToLineDataService.parseSensorData(
                 sensorType.valueSize,
                 timeBuckets,
                 activeDevices,
             )
             if (parsedData.isNotEmpty()) {
                 for ((index, dataMap) in parsedData.withIndex()) {
-                    SensorValueDisplay(viewMode, index, timeBuckets, sensorType, dataMap)
+                    SensorValueDisplay(viewMode, index, timeBuckets, sensorType, dataMap, devices)
                 }
             }
             if (devices.isNotEmpty()) {
@@ -107,7 +105,8 @@ private fun SensorValueDisplay(
     index: Int,
     timeBuckets: List<TimeBucket>,
     sensorType: SensorType,
-    dataMap: Map<DeviceId, Line>
+    dataMap: Map<DeviceId, Line>,
+    devices: Map<DeviceId, DeviceInfo>
 ) {
 
     var isExpanded by remember { mutableStateOf(true) }
@@ -131,7 +130,7 @@ private fun SensorValueDisplay(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = sensorType.name, // TODO: more descriptive name
+                    text = stringResource(sensorType.measurementInfos[index].valueDescriptionId),
                     style = MaterialTheme.typography.titleSmall
                 )
 
@@ -154,18 +153,13 @@ private fun SensorValueDisplay(
                         TableDisplay(
                             timeBuckets = timeBuckets,
                             dataValueIndex = index,
-                            // TODO replace to appropriate text and error handling
-                            diagramName = sensorType?.name ?: "Unknown Sensor",
-                            xAxisUnit = stringResource(R.string.index),
-                            yAxisUnit = "Unknown Unit"
+                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId),
+                            devices = devices// Assuming deviceInfo is available
                         )
                     } else {
                         YChartDisplay(
                             data = dataMap,
-                            // TODO replace to appropriate text and error handling
-                            diagramName = sensorType?.name ?: "Unknown Sensor",
-                            xAxisUnit = stringResource(R.string.index),
-                            yAxisUnit = "Unknown Unit"
+                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId)
                         )
                     }
                 }
@@ -210,6 +204,7 @@ fun Legend(
     title: String,
     data: Map<DeviceId, DeviceInfo>,
 ) {
+
     Column(
         modifier = modifier
             .padding(8.dp)
