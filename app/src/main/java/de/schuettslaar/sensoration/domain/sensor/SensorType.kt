@@ -4,7 +4,6 @@ import android.hardware.Sensor
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.application.data.ClientDataProcessing
 import de.schuettslaar.sensoration.application.data.DecibelFullScaleClientDataProcessing
-import de.schuettslaar.sensoration.application.data.MinMaxClientDataProcessing
 import de.schuettslaar.sensoration.application.data.PitchDetectionClientDataProcessing
 import de.schuettslaar.sensoration.application.data.RawClientDataProcessing
 
@@ -93,24 +92,6 @@ enum class SensorType(
             MeasurementInfo(
                 unitId = R.string.unit_m_s2,
                 valueDescriptionId = R.string.sensor_accelerometer_value_z
-            )
-        )
-    ),
-    MIN_MAX_SOUND_AMPLITUDE(
-        -1001, // Custom ID for microphone
-        R.string.sensor_microphone,
-        R.string.sensor_microphone_description,
-        MinMaxClientDataProcessing(),
-        processingDelay = 100L,
-        valueSize = 2,
-        measurementInfos = listOf(
-            MeasurementInfo(
-                unitId = R.string.unit_decibel,
-                valueDescriptionId = R.string.sensor_microphone_value_min
-            ),
-            MeasurementInfo(
-                unitId = R.string.unit_decibel,
-                valueDescriptionId = R.string.sensor_microphone_value_max
             )
         )
     ),
