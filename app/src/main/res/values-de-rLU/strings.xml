@@ -67,7 +67,7 @@
     <string name="data_display_legend">ednegeL</string>
     <string name="data_display_title">netadrosneS</string>
     <string name="stop_receiving_data">neppotS</string>
-    <string name="sensor_sound_pressure_description">enohporkiM sad hcrud tenhciezegfua skcurdllahcS sed negnusseM</string>
+    <string name="sensor_sound_pressure_description">noforkiM mov tenhciezegfua skcurdllahcS sed negnusseM</string>
     <string name="sensor_sound_pressure">kcurdllahcS</string>
     <string name="index">xednI</string>
     <string name="sensor_data_unit">tiehniE</string>
@@ -98,7 +98,7 @@
     <string name="sensor_gravity_value_y">.eshcA-Y red gnaltne tfarkrewhcS eiD</string>
     <string name="sensor_gravity_value_z">.eshcA-Z red gnaltne tfarkrewhcS eiD</string>
     <string name="sensor_accelerometer_value_x">.)tfarkrewhcS hcilßeilhcsnie( eshcA-X red gnaltne tfarksgnuginuelhcseB</string>
-    <string name="sensor_accelerometer_value_y">.)tfarkrewhcS hcilßeilhcsnie( eshcA-Y red gnaltne tfarksgnuginuelhcseB</string>
+    <string name="sensor_accelerometer_value_y">.)ftfarkrewhcS hcilßeilhcsnie( eshcA-Y red gnaltne tfarksgnuginuelhcseB</string>
     <string name="sensor_accelerometer_value_z">.)tfarkrewhcS hcilßeilhcsnie( eshcA-Z red gnaltne tfarksgnuginuelhcseB</string>
     <string name="sensor_microphone_value_min">.srosneslahcS sed edutilpmA elaminim eiD</string>
     <string name="sensor_microphone_value_max">.srosneslahcS sed edutilpmA elamixam eiD</string>

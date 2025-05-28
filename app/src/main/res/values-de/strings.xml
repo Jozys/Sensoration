@@ -3,7 +3,7 @@
     <string name="app_icon_desc">App-Symbol</string>
     <string name="start_advertising">Advertising starten</string>
     <string name="start_discovery">Suche starten</string>
-    <string name="no_data">Keine Daten verfügbar[...]</string>
+    <string name="no_data">Keine Daten verfügbar[…]</string>
     <string name="advertising_title">Advertising</string>
     <string name="stop_advertising">Advertising stoppen</string>
     <string name="discovering_title">Suche</string>
@@ -67,14 +67,14 @@
     <string name="data_display_legend">Legende</string>
     <string name="data_display_title">Sensordaten</string>
     <string name="stop_receiving_data">Stoppen</string>
-    <string name="sensor_sound_pressure_description">Messungen des Schalldrucks aufgezeichnet durch das Mikrophone</string>
+    <string name="sensor_sound_pressure_description">Messungen des Schalldrucks aufgezeichnet vom Mikrofon</string>
     <string name="sensor_sound_pressure">Schalldruck</string>
     <string name="index">Index</string>
     <string name="sensor_data_unit">Einheit</string>
     <string name="timestamp">Zeit</string>
     <string name="devices_title">Verfügbare Geräte</string>
     <string name="no_devices_found">Keine Geräte gefunden</string>
-    <string name="searching_devices">Suche nach Geräten in der Nähe...</string>
+    <string name="searching_devices">Suche nach Geräten in der Nähe…</string>
     <string name="device_id_format">ID: %1$s</string>
     <string name="connect_button_description">Verbinden</string>
     <string name="device_entry_format">Gerät: %1$s</string>
