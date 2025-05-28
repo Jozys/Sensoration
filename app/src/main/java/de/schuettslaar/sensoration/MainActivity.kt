@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         // Start a coroutine to remove the splash screen after animation completes
         lifecycleScope.launch {
-            delay(1000) // Match animation duration
+            delay(1200) // Match animation duration
             splashScreen.setKeepOnScreenCondition { false }
         }
 
