@@ -34,6 +34,13 @@ private const val RAW_BUFFER_VALUES_CAPACITY = 10
 
 val MAIN_DEVICE_ID = DeviceId("MASTER")
 
+/**
+ * MainDevice class represents the data collecting device
+ * It is responsible for administrate all connected devices,
+ * collecting from all clients and processing sensor data
+ * As well as providing the PTP synchronization
+ *
+ */
 class MainDevice : Device {
     private val rawSensorDataMap = mutableMapOf<DeviceId, CircularFifoQueue<WrappedSensorData>>()
 
@@ -48,6 +55,8 @@ class MainDevice : Device {
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var sensorType: SensorType? = null
+
+    // Update the internal status representation of a connected device
     private val onStatusUpdateCallback: (DeviceId, ApplicationStatus) -> Unit
 
     constructor(

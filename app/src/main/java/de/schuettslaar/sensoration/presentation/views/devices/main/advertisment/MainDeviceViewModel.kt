@@ -37,7 +37,6 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
 
     val isDrawerOpen = mutableStateOf(false)
 
-    //    var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
     val connectedDeviceInfos = mutableStateMapOf<DeviceId, DeviceInfo>()
 
     var isReceiving by mutableStateOf(false)
@@ -184,10 +183,6 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                     )
 
                     if (sensorData != null) {
-                        bucketData.put(
-                            deviceId,
-                            sensorData
-                        )
                         bucketData[deviceId] = sensorData
                     }
                 }
@@ -274,8 +269,8 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
     ) {
         val existingDeviceInfo = connectedDeviceInfos[endpointId] ?: return
         val updatedDeviceInfo = existingDeviceInfo.copy(applicationStatus = newApplicationStatus)
-        // Force update by removing and re-adding
-        connectedDeviceInfos.remove(endpointId)
+        // IMPORTANT: Force update by removing and re-adding
+        connectedDeviceInfos.remove(endpointId) // DO NOT REMOVE THIS LINE
         connectedDeviceInfos[endpointId] = updatedDeviceInfo
     }
 
