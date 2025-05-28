@@ -33,17 +33,18 @@ class MinMaxClientDataProcessing : ClientDataProcessing {
     }
 }
 
-class SoundPressureClientDataProcessing : ClientDataProcessing {
+class DecibelFullScaleClientDataProcessing : ClientDataProcessing {
     override fun processData(rawData: RawSensorData): ProcessedSensorData {
 
         val maxValue = rawData.value.max()
-        val decibelValue = 20 * log10(maxValue / 1)//20e-6f) // Reference pressure in air is 20 µPa
+        val decibelFullScale =
+            20 * log10(maxValue / 1.0f) // dBFS calculation (0 dB = max amplitude)
 
         return ProcessedSensorData(
             timestamp = rawData.timestamp,
             sensorType = rawData.sensorType,
             processingStatus = "sound_pressure",
-            value = arrayOf(decibelValue)
+            value = arrayOf(decibelFullScale)
         )
     }
 }
