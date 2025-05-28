@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.TimeBucket
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,7 +31,8 @@ import java.util.Locale
 fun TableDisplay(
     timeBuckets: Collection<TimeBucket>,
     dataValueIndex: Int,
-    yAxisUnit: String
+    yAxisUnit: String,
+    devices: Map<DeviceId, DeviceInfo>
 ) {
     Surface(
         modifier = Modifier
@@ -53,13 +55,14 @@ fun TableDisplay(
         } else {
             // Get all unique device IDs from all buckets
             val allDeviceIds = timeBuckets.flatMap { it.deviceData.keys }.toSet().toList()
+            val allDeviceNames = devices.map { it.value.deviceName }.toList()
 
             // Sort buckets by reference time
             val sortedBuckets = timeBuckets.sortedBy { it.referenceTime }
 
             Column {
                 // Display header with device names
-                Header(stringResource(R.string.table_time), allDeviceIds)
+                Header(stringResource(R.string.table_time), allDeviceNames)
 
                 LazyColumn(
                     modifier = Modifier
@@ -80,7 +83,7 @@ private fun BucketRow(
     bucket: TimeBucket,
     deviceIds: List<DeviceId>,
     dataValueIndex: Int,
-    unit : String,
+    unit: String,
 ) {
     Row(
         modifier = Modifier
@@ -125,7 +128,7 @@ private fun BucketRow(
 @Composable
 private fun Header(
     title: String,
-    deviceIds: List<DeviceId>
+    deviceNames: List<String>
 ) {
     Row(
         modifier = Modifier
@@ -142,9 +145,9 @@ private fun Header(
         )
 
         // Device column headers
-        deviceIds.forEach { deviceId ->
+        deviceNames.forEach { deviceName ->
             Text(
-                text = deviceId.name,
+                text = deviceName,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)

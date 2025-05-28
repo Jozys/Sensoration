@@ -87,7 +87,7 @@ fun DataDisplay(
             )
             if (parsedData.isNotEmpty()) {
                 for ((index, dataMap) in parsedData.withIndex()) {
-                    SensorValueDisplay(viewMode, index, timeBuckets, sensorType, dataMap)
+                    SensorValueDisplay(viewMode, index, timeBuckets, sensorType, dataMap, devices)
                 }
             }
             if (devices.isNotEmpty()) {
@@ -105,7 +105,8 @@ private fun SensorValueDisplay(
     index: Int,
     timeBuckets: List<TimeBucket>,
     sensorType: SensorType,
-    dataMap: Map<DeviceId, Line>
+    dataMap: Map<DeviceId, Line>,
+    devices: Map<DeviceId, DeviceInfo>
 ) {
 
     var isExpanded by remember { mutableStateOf(true) }
@@ -152,12 +153,12 @@ private fun SensorValueDisplay(
                         TableDisplay(
                             timeBuckets = timeBuckets,
                             dataValueIndex = index,
-                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId)
+                            yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId),
+                            devices = devices// Assuming deviceInfo is available
                         )
                     } else {
                         YChartDisplay(
                             data = dataMap,
-                            xAxisUnit = stringResource(R.string.index),
                             yAxisUnit = stringResource(sensorType.measurementInfos[index].unitId)
                         )
                     }

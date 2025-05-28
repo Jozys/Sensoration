@@ -22,15 +22,12 @@ import co.yml.charts.ui.linechart.model.LinePlotData
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.presentation.core.data.NoVisualizationAvailable
-
-const val AXIS_STEP_SIZE = 5
+import kotlin.math.max
 
 @Composable
 fun YChartDisplay(
-    data: Map<DeviceId, Line>, xAxisUnit: String, yAxisUnit: String
+    data: Map<DeviceId, Line>, yAxisUnit: String
 ) {
-    val xAxisLabel = "${stringResource(R.string.index)} $xAxisUnit"
-    val yAxisLabel = "in $xAxisUnit"
 
     if (data.isEmpty()) {
         NoVisualizationAvailable()
@@ -45,7 +42,7 @@ fun YChartDisplay(
         shape = RoundedCornerShape(8.dp),
         tonalElevation = 1.dp
     ) {
-        val lineChartData = createLineChartData(data, xAxisLabel, yAxisLabel)
+        val lineChartData = createLineChartData(data)
         Column {
 
             Text(
@@ -80,12 +77,10 @@ fun YChartDisplay(
 @Composable
 private fun createLineChartData(
     data: Map<DeviceId, Line>,
-    xAxisLabel: String,
-    yAxisLabel: String,
 ): LineChartData {
     // Find the minimum and maximum values across all data points
     val allDataPoints = data.values.flatMap { it.dataPoints }
-    val minValue = allDataPoints.minOfOrNull { it.y } ?: 0f
+    val minValue = max(allDataPoints.minOfOrNull { it.y } ?: 0f, DataConfig.MINIMUM)
     val maxValue = allDataPoints.maxOfOrNull { it.y } ?: 1f
 
     // Calculate the range of values
@@ -103,20 +98,24 @@ private fun createLineChartData(
     val maxX = data.values.firstOrNull()?.dataPoints?.size?.toFloat() ?: 0f
 
     return LineChartData(
-         linePlotData = LinePlotData(
+        linePlotData = LinePlotData(
             lines = data.values.toList(),
         ),
-        xAxisData = AxisData.Builder().steps(((maxX- minX) / AXIS_STEP_SIZE).toInt()).labelData { i ->
-           value( i, minX, maxX)
-        }.axisLabelDescription {
-            xAxisLabel
-        }.axisLabelColor(MaterialTheme.colorScheme.onSurface).axisStepSize(calculateStepSize(minX, maxX)).labelAndAxisLinePadding(12.dp)
+        xAxisData = AxisData.Builder()
+            .steps(
+                kotlin.math.max(
+                    1,
+                    kotlin.math.ceil((maxX - minX) / DataConfig.AXIS_STEP_SIZE.toFloat()).toInt()
+                )
+            )
+            .labelData { i ->
+                value(i, minX, maxX)
+            }.axisLabelColor(MaterialTheme.colorScheme.onSurface)
+            .axisStepSize(calculateStepSize(minX, maxX)).labelAndAxisLinePadding(12.dp)
             .build(),
-        yAxisData = AxisData.Builder().steps(AXIS_STEP_SIZE).labelData {
-            val stepValue = minValue + (range / AXIS_STEP_SIZE) * it
+        yAxisData = AxisData.Builder().steps(DataConfig.AXIS_STEP_SIZE).labelData {
+            val stepValue = minValue + (range / DataConfig.AXIS_STEP_SIZE) * it
             formatFunc(stepValue)
-        }.axisLabelDescription {
-            yAxisLabel
         }.axisLabelColor(MaterialTheme.colorScheme.onSurface).labelAndAxisLinePadding(12.dp)
             .build(),
 
@@ -128,12 +127,12 @@ private fun createLineChartData(
  * Should show the x-axis labels in a readable format.
  * This should be dependent on the data range and the number of data points.
  * */
-private val value : (Int, Float, Float) -> String = { i,minX, maxX ->
+private val value: (Int, Float, Float) -> String = { i, minX, maxX ->
     if (minX == maxX) {
         "0"
     } else {
         val range = maxX - minX
-        val divider = range / AXIS_STEP_SIZE
+        val divider = range / DataConfig.AXIS_STEP_SIZE
         if (i > 0 && i.toFloat() % divider == 0f) {
             i.toString()
         } else {

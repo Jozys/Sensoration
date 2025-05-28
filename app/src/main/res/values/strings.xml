@@ -112,8 +112,8 @@
     <string name="sensor_accelerometer_value_y">Acceleration force along the y axis (including gravity).</string>
     <string name="sensor_accelerometer_value_z">Acceleration force along the z axis (including gravity).</string>
     <string name="unit_decibel">dB</string>
-    <string name="sensor_microphone_value_min">the min amplitude of the sound sensor.</string>
-    <string name="sensor_microphone_value_max">the max amplitude of the sound sensor.</string>
+    <string name="sensor_microphone_value_min">The minimum amplitude of the sound sensor.</string>
+    <string name="sensor_microphone_value_max">The maximum amplitude of the sound sensor.</string>
     <string name="sensor_sound_pressure_value_description">The sound pressure value.</string>
     <string name="table_time">Time</string>
     <string name="resume_receiving">Resume receiving</string>
