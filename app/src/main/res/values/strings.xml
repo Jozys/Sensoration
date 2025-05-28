@@ -120,7 +120,7 @@
     <string name="pause_receiving">Pause receiving</string>
     <string name="sensor_significant_pitch">Significant pitch</string>
     <string name="sensor_significant_pitch_description">Extracts the pitch with the highest magnitude</string>
-    <string name="unit_hertz">Hz</string>
+    <string name="unit_hertz" translatable="false">Hz</string>
     <string name="sensor_significant_pitch_value_description">in Hz</string>
-    <string name="sensor_significant_pitch_value_amplitude_description">Magnitude des Signals</string>
+    <string name="sensor_significant_pitch_value_amplitude_description">Magnitude of signal</string>
 </resources>
