@@ -120,6 +120,9 @@ dependencies {
     // Preferences / Settings
     implementation(libs.compose.prefs3)
 
+    // FFT
+    implementation("com.github.paramsen:noise:2.0.0")
+
     // Utility
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.commons.collections4)
