@@ -110,6 +110,7 @@ dependencies {
 
     // Nearby Connections
     implementation(libs.play.services.nearby)
+    implementation(libs.androidx.core.splashscreen)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
