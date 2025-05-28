@@ -192,7 +192,8 @@ fun LandscapeLayout(
                                 isReceiving = mainDeviceViewModel.isReceiving,
                                 isPaused = mainDeviceViewModel.isPaused,
                                 togglePause = { mainDeviceViewModel.togglePause() },
-                                isLandscape = true
+                                isLandscape = true,
+                                formattedTime = mainDeviceViewModel.getFormattedTime()
                             )
                         }
 
@@ -241,8 +242,10 @@ fun LandscapeLayout(
                             isReceiving = mainDeviceViewModel.isReceiving,
                             isPaused = mainDeviceViewModel.isPaused,
                             onTogglePause = { mainDeviceViewModel.togglePause() },
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp
-                        ))
+                            modifier = Modifier.padding(
+                                horizontal = 8.dp, vertical = 8.dp
+                            )
+                        )
                     }
                 }
             }
@@ -263,7 +266,7 @@ fun LandscapeLayout(
                     if (mainDeviceViewModel.isReceiving) {
                         DataDisplay(
                             sensorType = mainDeviceViewModel.currentSensorType,
-                            devices =  if(mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                            devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                                 mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                             } else {
                                 mainDeviceViewModel.connectedDeviceInfos
@@ -332,7 +335,8 @@ fun PortraitLayout(
                             onCollapse = { isMetadataPanelExpanded = false },
                             isReceiving = mainDeviceViewModel.isReceiving,
                             isPaused = mainDeviceViewModel.isPaused,
-                            togglePause = { mainDeviceViewModel.togglePause() }
+                            togglePause = { mainDeviceViewModel.togglePause() },
+                            formattedTime = mainDeviceViewModel.getFormattedTime()
                         )
                     }
 
@@ -378,13 +382,14 @@ fun PortraitLayout(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                   Header(
+                    Header(
                         status = mainDeviceViewModel.status,
                         isExpanded = isMetadataPanelExpanded,
                         onCollapse = { isMetadataPanelExpanded = true },
                         isReceiving = mainDeviceViewModel.isReceiving,
                         isPaused = mainDeviceViewModel.isPaused,
-                        togglePause = { mainDeviceViewModel.togglePause() }
+                        togglePause = { mainDeviceViewModel.togglePause() },
+                        formattedTime = mainDeviceViewModel.getFormattedTime()
                     )
                 }
             }
@@ -399,7 +404,7 @@ fun PortraitLayout(
             if (mainDeviceViewModel.isReceiving) {
                 DataDisplay(
                     sensorType = mainDeviceViewModel.currentSensorType,
-                    devices = if(mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                    devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                         mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                     } else {
                         mainDeviceViewModel.connectedDeviceInfos
@@ -764,7 +769,8 @@ fun DeviceListItem(
 
 @Composable
 fun Header(
-    status : NearbyStatus,
+    formattedTime: String,
+    status: NearbyStatus,
     isExpanded: Boolean,
     onCollapse: () -> Unit = {},
     isReceiving: Boolean,
@@ -773,11 +779,18 @@ fun Header(
     isLandscape: Boolean = false
 ) {
     StatusInformation(
-            statusText = getStringResourceByName(
-                LocalContext.current, status.name
-            ).uppercase(),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        statusText = getStringResourceByName(
+            LocalContext.current, status.name
+        ).uppercase(),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
+
+    AnimatedVisibility(isReceiving) {
+        Text(
+            text = formattedTime,
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
 
     TogglePauseButton(
         isReceiving = isReceiving,
@@ -789,15 +802,15 @@ fun Header(
     IconButton(
         onClick = { onCollapse() },
     ) {
-        if( !isLandscape ) {
+        if (!isLandscape) {
             Icon(
-                imageVector = if(isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = "Collapse panel",
                 modifier = Modifier.size(24.dp)
             )
         } else {
             Icon(
-                imageVector = if(isExpanded) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
+                imageVector = if (isExpanded) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
                 contentDescription = "Collapse panel",
                 modifier = Modifier.size(32.dp)
             )
@@ -820,7 +833,7 @@ fun TogglePauseButton(
             },
             modifier = modifier
         ) {
-            if(isPaused) {
+            if (isPaused) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = stringResource(R.string.resume_receiving)

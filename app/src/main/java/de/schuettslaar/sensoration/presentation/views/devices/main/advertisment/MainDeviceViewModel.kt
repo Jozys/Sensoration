@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.intl.Locale
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.application.data.HandshakeMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
@@ -35,6 +36,11 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
     var mainDeviceInfo: Pair<DeviceId, DeviceInfo>? by mutableStateOf(null)
 
     private var dataSynchronizingJob: Job? = null
+
+    var elapsedTimeInSeconds by mutableStateOf(0L)
+        private set
+    private var timerJob: Job? = null
+
 
     val isDrawerOpen = mutableStateOf(false)
 
@@ -116,10 +122,12 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
             mainDeviceIsProvidingData = it.isMainDeviceProvidingData()
         }
 
-        this.mainDeviceInfo = Pair(thisDevice!!.ownDeviceId!!, DeviceInfo(
-            deviceName = thisDevice!!.ownDeviceId!!.name,
-            applicationStatus = ApplicationStatus.ACTIVE
-        ))
+        this.mainDeviceInfo = Pair(
+            thisDevice!!.ownDeviceId!!, DeviceInfo(
+                deviceName = thisDevice!!.ownDeviceId!!.name,
+                applicationStatus = ApplicationStatus.ACTIVE
+            )
+        )
         logger.info(
             "MainDeviceViewModel initialized with device: ${this.mainDeviceInfo?.first?.name}"
         )
@@ -144,12 +152,32 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         mainDevice.startMeasurement(currentSensorType!!)
 
         isReceiving = true
+        isPaused = false
 
         // TODO: maybe adjust this processing delay
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay //* 2
 
         dataSynchronizingJob =
             getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+
+        // Reset and start the timer
+        resetTimer()
+        startTimer()
+    }
+
+    private fun resetTimer() {
+        timerJob?.cancel()
+        elapsedTimeInSeconds = 0L
+    }
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = coroutineScope.launch {
+            while (isActive) {
+                delay(1000) // Update every second
+                elapsedTimeInSeconds++
+            }
+        }
     }
 
     private fun resumeReceiving() {
@@ -172,6 +200,9 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         val sensorTimeResolution: Long = currentSensorType!!.processingDelay
         dataSynchronizingJob =
             getJobForCookingData(sensorTimeResolution, mainDevice, currentSensorType)
+
+        // Restart the timer
+        startTimer()
     }
 
     private fun pauseReceiving() {
@@ -186,10 +217,13 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
 
         // Cancel the data synchronizing job
         dataSynchronizingJob?.cancel()
+
+        // Cancel the timer job
+        timerJob?.cancel()
     }
 
     fun togglePause() {
-        if( isPaused) {
+        if (isPaused) {
             // Resume
             isPaused = false
             Logger.getLogger(this.javaClass.simpleName).info { "Resuming data reception" }
@@ -280,6 +314,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         mainDevice.stopMeasurement()
         isReceiving = false
         dataSynchronizingJob?.cancel()
+        resetTimer()
     }
 
     fun disconnect(endpointId: DeviceId) {
@@ -307,6 +342,20 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
             stopReceiving()
             startReceiving()
         }
+    }
+
+    // Format elapsed time as HH:MM:SS
+    fun getFormattedTime(): String {
+        val hours = elapsedTimeInSeconds / 3600
+        val minutes = (elapsedTimeInSeconds % 3600) / 60
+        val seconds = elapsedTimeInSeconds % 60
+        return String.format(
+            Locale.current.platformLocale,
+            "%02d:%02d:%02d",
+            hours,
+            minutes,
+            seconds
+        )
     }
 
     fun sendTestMessage(deviceId: DeviceId) {
