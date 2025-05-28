@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
@@ -36,7 +37,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
 
     val isDrawerOpen = mutableStateOf(false)
 
-    var connectedDeviceInfos by mutableStateOf(mapOf<DeviceId, DeviceInfo>())
+    val connectedDeviceInfos = mutableStateMapOf<DeviceId, DeviceInfo>()
 
     var isReceiving by mutableStateOf(false)
 
@@ -94,14 +95,17 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                 }
             },
             onDisconnectedCallback = { endpointId, status ->
-                this.connectedDeviceInfos = this.connectedDeviceInfos.minus(endpointId)
+                this.connectedDeviceInfos.remove(endpointId)
                 this.onDisconnectedCallback(endpointId, status)
 
                 if (connectedDeviceInfos.isEmpty()) {
                     this.stopReceiving()
                     isReceiving = false
                 }
-            }
+            },
+            onStatusUpdateCallback = { endpointId, newApplicationStatus ->
+                this.updateDeviceInfoStatus(endpointId, newApplicationStatus)
+            },
         )
         this.thisDevice?.start { text, status ->
             this.callback(text, status)
@@ -179,10 +183,6 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                     )
 
                     if (sensorData != null) {
-                        bucketData.put(
-                            deviceId,
-                            sensorData
-                        )
                         bucketData[deviceId] = sensorData
                     }
                 }
@@ -229,9 +229,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         endpointId: DeviceId,
         deviceInfo: DeviceInfo
     ) {
-        this.connectedDeviceInfos = this.connectedDeviceInfos.plus(
-            Pair(endpointId, deviceInfo)
-        )
+        this.connectedDeviceInfos.put(endpointId, deviceInfo)
     }
 
     fun toggleMainDeviceProvidingData() {
@@ -264,5 +262,18 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
                 .warning("Failed to send test message: ${e.message}")
         }
     }
+
+    fun updateDeviceInfoStatus(
+        endpointId: DeviceId,
+        newApplicationStatus: ApplicationStatus
+    ) {
+        val existingDeviceInfo = connectedDeviceInfos[endpointId] ?: return
+        val updatedDeviceInfo = existingDeviceInfo.copy(applicationStatus = newApplicationStatus)
+        // IMPORTANT: Force update by removing and re-adding
+        connectedDeviceInfos.remove(endpointId) // DO NOT REMOVE THIS LINE
+        connectedDeviceInfos[endpointId] = updatedDeviceInfo
+    }
+
 }
+
 
