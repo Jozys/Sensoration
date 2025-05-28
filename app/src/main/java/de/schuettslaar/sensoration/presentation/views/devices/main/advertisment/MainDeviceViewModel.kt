@@ -385,6 +385,30 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         connectedDeviceInfos[endpointId] = updatedDeviceInfo
     }
 
+
+    fun cleanUp() {
+        Logger.getLogger(this.javaClass.simpleName).info { "Cleaning up MainDeviceViewModel" }
+        if (isReceiving) {
+            stopReceiving()
+        }
+        if (thisDevice == null) {
+            Logger.getLogger(this.javaClass.simpleName).info { "No device to clean up" }
+            return
+        }
+        if (thisDevice!!.isMainDevice) {
+            (thisDevice as MainDevice).cleanUp()
+        }
+        thisDevice!!.stop { text, status ->
+            this.callback(text, status)
+        }
+
+        dataSynchronizingJob?.cancel()
+        synchronizedData.clear()
+        thisDevice = null
+        connectedDeviceInfos.clear()
+        isReceiving = false
+        mainDeviceIsProvidingData = true
+    }
 }
 
 
