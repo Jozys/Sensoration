@@ -108,20 +108,17 @@
     <string name="sensor_gravity_value_x">Force of gravity along the x axis.</string>
     <string name="sensor_gravity_value_y">Force of gravity along the y axis.</string>
     <string name="sensor_gravity_value_z">Force of gravity along the z axis.</string>
-    <string name="sensor_accelerometer_value_x">Acceleration force along the x axis (including gravity).</string>
-    <string name="sensor_accelerometer_value_y">Acceleration force along the y axis (including gravity).</string>
-    <string name="sensor_accelerometer_value_z">Acceleration force along the z axis (including gravity).</string>
-    <string name="unit_decibel" translatable="false">dB</string>
+    <string name="sensor_accelerometer_value_x">Acceleration force along the x axis.</string>
+    <string name="sensor_accelerometer_value_y">Acceleration force along the y axis.</string>
+    <string name="sensor_accelerometer_value_z">Acceleration force along the z axis.</string>
     <string name="unit_decibel" translatable="false">dBFS</string>
-    <string name="sensor_microphone_value_min">The minimum amplitude of the sound sensor.</string>
-    <string name="sensor_microphone_value_max">The maximum amplitude of the sound sensor.</string>
-    <string name="sensor_sound_pressure_value_description">The sound pressure value.</string>
+    <string name="sensor_sound_pressure_value_description">The decibels relative to full scale</string>
     <string name="table_time">Time</string>
     <string name="resume_receiving">Resume receiving</string>
     <string name="pause_receiving">Pause receiving</string>
     <string name="sensor_significant_pitch">Significant pitch</string>
     <string name="sensor_significant_pitch_description">Extracts the pitch with the highest magnitude</string>
     <string name="unit_hertz" translatable="false">Hz</string>
-    <string name="sensor_significant_pitch_value_description">in Hz</string>
+    <string name="sensor_significant_pitch_value_description" translatable="false">in Hz</string>
     <string name="sensor_significant_pitch_value_amplitude_description">Magnitude of signal</string>
 </resources>

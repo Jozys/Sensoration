@@ -100,8 +100,6 @@
     <string name="sensor_accelerometer_value_x">.)tfarkrewhcS hcilßeilhcsnie( eshcA-X red gnaltne tfarksgnuginuelhcseB</string>
     <string name="sensor_accelerometer_value_y">.)ftfarkrewhcS hcilßeilhcsnie( eshcA-Y red gnaltne tfarksgnuginuelhcseB</string>
     <string name="sensor_accelerometer_value_z">.)tfarkrewhcS hcilßeilhcsnie( eshcA-Z red gnaltne tfarksgnuginuelhcseB</string>
-    <string name="sensor_microphone_value_min">.srosneslahcS sed edutilpmA elaminim eiD</string>
-    <string name="sensor_microphone_value_max">.srosneslahcS sed edutilpmA elamixam eiD</string>
     <string name="sensor_sound_pressure_value_description">skcurdllahcS sed treW reD</string>
     <string name="table_time">tieZ</string>
     <string name="resume_receiving">nemhenfua redeiw negnafpmE</string>
