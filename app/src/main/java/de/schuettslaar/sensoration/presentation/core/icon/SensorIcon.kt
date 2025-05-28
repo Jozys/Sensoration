@@ -38,7 +38,6 @@ fun getIcon(sensorType: SensorType?): ImageVector {
         SensorType.PRESSURE -> Icons.Filled.Compress
         SensorType.ACCELEROMETER -> Icons.Filled.Speed
         SensorType.DECIBEL_FULL_SCALE -> Icons.Filled.Mic
-        SensorType.MIN_MAX_SOUND_AMPLITUDE -> Icons.Filled.Mic
         SensorType.SIGNIFICANT_PITCH -> Icons.Filled.MusicNote
 
         else -> {

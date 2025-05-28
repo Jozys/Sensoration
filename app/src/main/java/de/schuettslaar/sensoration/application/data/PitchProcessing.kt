@@ -8,6 +8,8 @@ import de.schuettslaar.sensoration.domain.sensor.RawSensorData
 class PitchDetectionClientDataProcessing : ClientDataProcessing {
     private val fftSize = 4096 // Standard (must be power of 2) (FFT can optimise this)
     private val noise = Noise.real(fftSize)
+    private val minFrequency = 80f  // Lower limit (most human voices/instruments)
+    private val maxFrequency = 5000f // Upper limit (typical music range)
 
     override fun processData(rawData: RawSensorData): ProcessedSensorData {
         val sampleRate = 44100
@@ -28,13 +30,15 @@ class PitchDetectionClientDataProcessing : ClientDataProcessing {
 
         // Find dominant frequency
         var maxMagnitudeIndex = 0
-        var maxMagnitude = 0.0f
+        var maxMagnitude = 0.1f // Start with a small threshold to avoid noise
 
-        // Process only the meaningful frequencies (up to Nyquist frequency)
-        for (i in 0 until fftSize / 2) {
-            val re = fftOutput[i * 2]
-            val im = fftOutput[i * 2 + 1]
-            val magnitude = re * re + im * im
+        // Convert frequency bounds to bin indices
+        val minBoundary = (minFrequency * fftSize / sampleRate).toInt().coerceAtLeast(1)
+        //  Process only the meaningful frequencies (up to Nyquist frequency)
+        val maxBoundary = (maxFrequency * fftSize / sampleRate).toInt().coerceAtMost(fftSize / 2)
+
+        for (i in minBoundary until maxBoundary) {
+            val magnitude = getMagnitude(fftOutput, i)
 
             if (magnitude > maxMagnitude) {
                 maxMagnitude = magnitude
@@ -42,16 +46,31 @@ class PitchDetectionClientDataProcessing : ClientDataProcessing {
             }
         }
 
-        val dominantFrequency = maxMagnitudeIndex.toFloat() * sampleRate / fftSize
+
+        // Filter out spikes
+        val interpolatedDominantFrequency =
+            if (maxMagnitudeIndex > 0 && maxMagnitudeIndex < fftSize / 2 - 1) {
+                val prev = getMagnitude(fftOutput, maxMagnitudeIndex - 1)
+                val curr = getMagnitude(fftOutput, maxMagnitudeIndex)
+                val next = getMagnitude(fftOutput, maxMagnitudeIndex + 1)
+
+                val delta = 0.5f * (next - prev) / (2 * curr - next - prev)
+                (maxMagnitudeIndex + delta) * sampleRate / fftSize
+            } else {
+                maxMagnitudeIndex.toFloat() * sampleRate / fftSize
+            }
         val maxMagnitudeDb = 20 * kotlin.math.log10(maxMagnitude)
 
-        Log.d("PitchDetection", "Dominant Frequency: $dominantFrequency Hz $maxMagnitudeDb")
+        Log.d(
+            "PitchDetection",
+            "Dominant Frequency: $interpolatedDominantFrequency Hz $maxMagnitudeDb"
+        )
 
         return ProcessedSensorData(
             timestamp = rawData.timestamp,
             sensorType = rawData.sensorType,
             processingStatus = "pitch_detection",
-            value = arrayOf(dominantFrequency, maxMagnitudeDb)
+            value = arrayOf(interpolatedDominantFrequency, maxMagnitudeDb)
         )
     }
 
@@ -64,4 +83,9 @@ class PitchDetectionClientDataProcessing : ClientDataProcessing {
         return windowed
     }
 
+    private fun getMagnitude(fftOutput: FloatArray, index: Int): Float {
+        val re = fftOutput[index * 2]
+        val im = fftOutput[index * 2 + 1]
+        return re * re + im * im
+    }
 }
