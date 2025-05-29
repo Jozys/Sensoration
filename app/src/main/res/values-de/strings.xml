@@ -97,9 +97,9 @@
     <string name="sensor_gravity_value_x">Die Schwerkraft entlang der X-Achse.</string>
     <string name="sensor_gravity_value_y">Die Schwerkraft entlang der Y-Achse.</string>
     <string name="sensor_gravity_value_z">Die Schwerkraft entlang der Z-Achse.</string>
-    <string name="sensor_accelerometer_value_x">Beschleunigung entlang der X-Achse.</string>
-    <string name="sensor_accelerometer_value_y">Beschleunigung entlang der Y-Achse.</string>
-    <string name="sensor_accelerometer_value_z">Beschleunigung entlang der Z-Achse.</string>
+    <string name="sensor_accelerometer_value_x">Beschleunigung entlang der X-Achse (einschließlich Schwerkraft).</string>
+    <string name="sensor_accelerometer_value_y">Beschleunigung entlang der Y-Achse (einschließlich Schwerkraft).</string>
+    <string name="sensor_accelerometer_value_z">Beschleunigung entlang der Z-Achse (einschließlich Schwerkraft).</string>
     <string name="sensor_sound_pressure_value_description">Der Dezibel Wert in Relation zum maximalen Ausschlag</string>
     <string name="table_time">Zeit</string>
     <string name="resume_receiving">Messung fortfahren</string>

@@ -108,9 +108,9 @@
     <string name="sensor_gravity_value_x">Force of gravity along the x axis.</string>
     <string name="sensor_gravity_value_y">Force of gravity along the y axis.</string>
     <string name="sensor_gravity_value_z">Force of gravity along the z axis.</string>
-    <string name="sensor_accelerometer_value_x">Acceleration force along the x axis.</string>
-    <string name="sensor_accelerometer_value_y">Acceleration force along the y axis.</string>
-    <string name="sensor_accelerometer_value_z">Acceleration force along the z axis.</string>
+    <string name="sensor_accelerometer_value_x">Acceleration force along the x axis (including gravity).</string>
+    <string name="sensor_accelerometer_value_y">Acceleration force along the y axis (including gravity).</string>
+    <string name="sensor_accelerometer_value_z">Acceleration force along the z axis (including gravity).</string>
     <string name="unit_decibel" translatable="false">dBFS</string>
     <string name="sensor_sound_pressure_value_description">The decibels relative to full scale</string>
     <string name="table_time">Time</string>

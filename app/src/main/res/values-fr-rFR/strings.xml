@@ -101,9 +101,9 @@
     <string name="sensor_gravity_value_x">Force de gravité sur l\'axe x.</string>
     <string name="sensor_gravity_value_y">Force de gravité sur l\'axe y.</string>
     <string name="sensor_gravity_value_z">Force de gravité sur l\'axe z.</string>
-    <string name="sensor_accelerometer_value_x">Force d\'accélération sur l\'axe x.</string>
-    <string name="sensor_accelerometer_value_y">Force d\'accélération sur l\'axe y.</string>
-    <string name="sensor_accelerometer_value_z">Force d\'accélération sur l\'axe z.</string>
+    <string name="sensor_accelerometer_value_x">Force d\'accélération sur l\'axe x (y compris la gravité).</string>
+    <string name="sensor_accelerometer_value_y">Force d\'accélération sur l\'axe y (y compris la gravité).</string>
+    <string name="sensor_accelerometer_value_z">Force d\'accélération sur l\'axe z (y compris la gravité).</string>
     <string name="sensor_sound_pressure_value_description">Les décibels relatifs à la pleine échelle</string>
     <string name="table_time">Heure</string>
     <string name="resume_receiving">Reprendre la mesure</string>
