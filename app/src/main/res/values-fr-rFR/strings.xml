@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_icon_desc">Icône de l'application</string>
+    <string name="app_icon_desc">Icône de l\'application</string>
     <string name="stop_advertising">Arrêter la diffusion</string>
     <string name="stop_discovering">Arrêter la recherche</string>
     <string name="disconnect_device">Déconnecter</string>
@@ -9,8 +9,8 @@
     <string name="disconnect_from_device">Déconnecter</string>
     <string name="current_status">Statut actuel : %1$s</string>
     <string name="connected_to">Connecté à %1$s</string>
-    <string name="remove_device_confirm">Voulez-vous vraiment supprimer l'appareil ?</string>
-    <string name="remove_device">Supprimer l'appareil</string>
+    <string name="remove_device_confirm">Voulez-vous vraiment supprimer l\'appareil ?</string>
+    <string name="remove_device">Supprimer l\'appareil</string>
     <string name="debug_send_message">Envoyer un message</string>
     <string name="welcome">Bienvenue sur Sensoration</string>
     <string name="connected_devices">Appareils connectés</string>
@@ -25,9 +25,9 @@
     <string name="settings_dark_theme_light">Thème clair</string>
     <string name="settings_dark_theme_dark">Thème sombre</string>
     <string name="settings_about">À propos</string>
-    <string name="settings_about_app">À propos de l'application</string>
+    <string name="settings_about_app">À propos de l\'application</string>
     <string name="settings_about_app_desc">Informations sur Sensoration</string>
-    <string name="settings_about_app_dialog_header">À propos de l'application</string>
+    <string name="settings_about_app_dialog_header">À propos de l\'application</string>
     <string name="settings_about_app_dialog_text">Sensoration est une application qui permet de regrouper les données de capteurs distribuées de différents appareils et de visualiser les différences entre ces données.</string>
     <string name="settings_about_devs">À propos des développeurs</string>
     <string name="settings_about_dev_desc">Informations sur les développeurs</string>
@@ -39,12 +39,12 @@
     <string name="sensor_gravity">Gravité</string>
     <string name="sensor_type_unknown">Capteur inconnu</string>
     <string name="current_sensor">Capteur actuel</string>
-    <string name="sensor_gravity_description">Ce capteur est utilisé pour déterminer l'orientation relative de l'appareil dans l'espace</string>
+    <string name="sensor_gravity_description">Ce capteur est utilisé pour déterminer l\'orientation relative de l\'appareil dans l\'espace</string>
     <string name="sensor_pressure_description">Ce capteur fournit la pression atmosphérique mesurée par votre appareil.</string>
-    <string name="sensor_type_unknown_description">Aucun capteur sélectionné actuellement. Si l'appareil principal sélectionne un capteur, cela changera.</string>
+    <string name="sensor_type_unknown_description">Aucun capteur sélectionné actuellement. Si l\'appareil principal sélectionne un capteur, cela changera.</string>
 
     <string name="sensor_accelerometer">Accéléromètre</string>
-    <string name="sensor_accelerometer_description">Données brutes de l'accéléromètre</string>
+    <string name="sensor_accelerometer_description">Données brutes de l\'accéléromètre</string>
 
     <string name="connected_devices_description">Vous avez actuellement %1$s appareils connectés</string>
     <string name="no_sensor_selected">Aucun capteur sélectionné. Choisissez-en un dans la liste pour que les autres appareils envoient les données de leurs capteurs.</string>
@@ -77,12 +77,12 @@
 
     <string name="devices_title">Appareils disponibles</string>
     <string name="no_devices_found">Aucun appareil trouvé</string>
-    <string name="searching_devices">Recherche d'appareils à proximité…</string>
+    <string name="searching_devices">Recherche d\'appareils à proximité…</string>
     <string name="device_id_format">ID : %1$s</string>
     <string name="connect_button_description">Connecter</string>
     <string name="device_entry_format">Appareil : %1$s</string>
     <string name="back_button_description">Retour</string>
-    <string name="device_info_title">Informations sur l'appareil</string>
+    <string name="device_info_title">Informations sur l\'appareil</string>
     <string name="connection_controls">Contrôles de connexion</string>
     <string name="sensor_information">Informations sur le capteur</string>
     <string name="connect_to_device">Connecter à un appareil</string>
@@ -91,19 +91,19 @@
     <string name="send_message_to_localise_device">Déclencher une alerte acoustique</string>
 
     <string name="network_concept">Comment ça marche</string>
-    <string name="network_concept_description">Les appareils clients collectent des données de capteurs et les envoient à l'appareil principal pour analyse et visualisation.</string>
+    <string name="network_concept_description">Les appareils clients collectent des données de capteurs et les envoient à l\'appareil principal pour analyse et visualisation.</string>
     <string name="view_concept">Voir comment ça marche</string>
     <string name="close">Fermer</string>
-    <string name="collect_main_device_data">Utiliser les capteurs de l'appareil principal</string>
+    <string name="collect_main_device_data">Utiliser les capteurs de l\'appareil principal</string>
     <string name="display_toggle_table">Tableau</string>
     <string name="display_toggle_chart">Graphique</string>
     <string name="sensor_pressure_value_description">Pression atmosphérique.</string>
-    <string name="sensor_gravity_value_x">Force de gravité sur l'axe x.</string>
-    <string name="sensor_gravity_value_y">Force de gravité sur l'axe y.</string>
-    <string name="sensor_gravity_value_z">Force de gravité sur l'axe z.</string>
-    <string name="sensor_accelerometer_value_x">Force d'accélération sur l'axe x.</string>
-    <string name="sensor_accelerometer_value_y">Force d'accélération sur l'axe y.</string>
-    <string name="sensor_accelerometer_value_z">Force d'accélération sur l'axe z.</string>
+    <string name="sensor_gravity_value_x">Force de gravité sur l\'axe x.</string>
+    <string name="sensor_gravity_value_y">Force de gravité sur l\'axe y.</string>
+    <string name="sensor_gravity_value_z">Force de gravité sur l\'axe z.</string>
+    <string name="sensor_accelerometer_value_x">Force d\'accélération sur l\'axe x.</string>
+    <string name="sensor_accelerometer_value_y">Force d\'accélération sur l\'axe y.</string>
+    <string name="sensor_accelerometer_value_z">Force d\'accélération sur l\'axe z.</string>
     <string name="sensor_sound_pressure_value_description">Les décibels relatifs à la pleine échelle</string>
     <string name="table_time">Heure</string>
     <string name="resume_receiving">Reprendre la mesure</string>
