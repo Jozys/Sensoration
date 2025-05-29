@@ -65,7 +65,7 @@
     <string name="index">Index</string>
     <string name="sensor_data_unit">Unité</string>
     <string name="timestamp">Heure</string>
-    <string name="no_data">Aucune donnée disponible</string>
+    <string name="no_data">Aucune donnée disponible[...]</string>
 
     <string name="advertising_title">Appareil principal (Hub)</string>
     <string name="advertising_description">Définissez cet appareil comme le hub principal qui collecte et analyse les données de capteurs de tous les appareils connectés au réseau.</string>
@@ -88,7 +88,7 @@
     <string name="connect_to_device">Connecter à un appareil</string>
     <string name="available_connections">Connexions disponibles</string>
     <string name="discovery_title">Trouver des appareils</string>
-    <string name="send_test_message">Envoyer un message test</string>
+    <string name="send_message_to_localise_device">Déclencher une alerte acoustique</string>
 
     <string name="network_concept">Comment ça marche</string>
     <string name="network_concept_description">Les appareils clients collectent des données de capteurs et les envoient à l'appareil principal pour analyse et visualisation.</string>
@@ -106,11 +106,11 @@
     <string name="sensor_accelerometer_value_z">Force d'accélération sur l'axe z.</string>
     <string name="sensor_sound_pressure_value_description">Les décibels relatifs à la pleine échelle</string>
     <string name="table_time">Heure</string>
-    <string name="resume_receiving">Reprendre la réception</string>
-    <string name="pause_receiving">Mettre en pause la réception</string>
+    <string name="resume_receiving">Reprendre la mesure</string>
+    <string name="pause_receiving">"Mettre la mesure en pause "</string>
     <string name="sensor_significant_pitch">Hauteur significative</string>
     <string name="sensor_significant_pitch_description">Extrait la hauteur avec la plus grande amplitude</string>
     <string name="sensor_significant_pitch_value_description" translatable="false">en Hz</string>
-    <string name="sensor_significant_pitch_value_amplitude_description">Amplitude du signal</string>
+    <string name="sensor_significant_pitch_value_amplitude_description">Magnitude</string>
 </resources>
 

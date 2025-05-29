@@ -85,7 +85,7 @@
     <string name="connect_to_device">nednibrev täreG menie tiM</string>
     <string name="available_connections">negnudnibreV erabgüfreV</string>
     <string name="discovery_title">etäreG edniF</string>
-    <string name="send_test_message">nednes thcirhcaN-tseT</string>
+    <string name="send_message_to_localise_device">nednes thcirhcaN-tseT</string>
     <string name="network_concept">se treinoitknuf eiW </string>
     <string name="network_concept_description">.täregpuaH sad na gnureisilausiV dnu esylanA ruz eis nednes dnu netadrosneS nessafre etäregetäregtneilC</string>
     <string name="view_concept">treinoitknuf se eiw uahcS</string>
