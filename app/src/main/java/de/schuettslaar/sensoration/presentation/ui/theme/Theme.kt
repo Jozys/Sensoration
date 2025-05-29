@@ -1,14 +1,18 @@
 package de.schuettslaar.sensoration.presentation.ui.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import de.schuettslaar.sensoration.application.data.datastore.DataStoreServiceProvider
 
 
@@ -275,6 +279,19 @@ fun SensorationTheme(
         ThemeMode.DARK -> darkScheme
     }
 
+    // Get window reference from current activity
+    val window = (LocalView.current.context as? Activity)?.window
+
+    SideEffect {
+
+        window?.let { w ->
+            // Set the appearance of the status bar icons
+            WindowCompat.getInsetsController(w, w.decorView).apply {
+                // Use light status bar (dark icons) when in light theme
+                isAppearanceLightStatusBars = (colorScheme == lightScheme)
+            }
+        }
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
