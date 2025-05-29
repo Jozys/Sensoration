@@ -751,7 +751,7 @@ fun DeviceListItem(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 ) {
-                    Text(text = stringResource(R.string.send_test_message))
+                    Text(text = stringResource(R.string.send_message_to_localise_device))
                 }
 
                 Button(
