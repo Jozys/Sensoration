@@ -20,9 +20,7 @@ class ClientDeviceViewModel(application: Application) : BaseNearbyViewModel(appl
     val possibleConnections = mutableStateMapOf<DeviceId, DiscoveredEndpointInfo>()
 
     var thisApplicationStatus by mutableStateOf(ApplicationStatus.IDLE)
-
-    var currentSensorUnavailable = mutableStateOf<Pair<SensorType, UnavailabilityType>?>(null)
-
+    
     init {
         this.thisDevice = ClientDevice(
             context = application,

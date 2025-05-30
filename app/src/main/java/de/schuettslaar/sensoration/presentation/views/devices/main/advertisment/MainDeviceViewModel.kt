@@ -14,6 +14,7 @@ import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.MainDevice
+import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
@@ -153,7 +154,23 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         mainDevice.clearSensorData()
         synchronizedData.clear()
 
-        mainDevice.startMeasurement(currentSensorType!!)
+        try {
+            mainDevice.startMeasurement(currentSensorType!!)
+        } catch (e: SensorUnavailableException) {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Sensor type ${currentSensorType!!.name} is unavailable: ${e.message}"
+            }
+            currentSensorUnavailable = mutableStateOf(
+                Pair(currentSensorType!!, e.getUnavailabilityType())
+            )
+            this.mainDeviceInfo = Pair(
+                mainDevice.ownDeviceId!!,
+                DeviceInfo(
+                    deviceName = mainDevice.ownDeviceId!!.name,
+                    applicationStatus = ApplicationStatus.IDLE
+                )
+            )
+        }
 
         isReceiving = true
         isPaused = false
@@ -197,7 +214,23 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
             return
         }
 
-        mainDevice.startMeasurement(currentSensorType!!)
+        try {
+            mainDevice.startMeasurement(currentSensorType!!)
+        } catch (e: SensorUnavailableException) {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Sensor type ${currentSensorType!!.name} is unavailable: ${e.message}"
+            }
+            // Han dle the case where the sensor is unavailable
+            // For example, you might want to show a message to the user
+            this.mainDeviceInfo = Pair(
+                mainDevice.ownDeviceId!!,
+                DeviceInfo(
+                    deviceName = mainDevice.ownDeviceId!!.name,
+                    applicationStatus = ApplicationStatus.IDLE
+                )
+            )
+            return
+        }
         isReceiving = true
 
         // Restart the data synchronizing job
@@ -311,6 +344,7 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
             Logger.getLogger(this.javaClass.simpleName).info { "Master is null" }
             return
         }
+        currentSensorUnavailable.value = null
         mainDevice.stopMeasurement()
         isReceiving = false
         dataSynchronizingJob?.cancel()
@@ -333,8 +367,17 @@ class MainDeviceViewModel(application: Application) : BaseNearbyViewModel(applic
         val mainDevice = thisDevice as? MainDevice ?: return
         val newValue = !mainDeviceIsProvidingData
         mainDeviceIsProvidingData = newValue
-        mainDevice.setMainDeviceToProvidingData(newValue)
-
+        try {
+            mainDevice.setMainDeviceToProvidingData(newValue)
+        } catch (e: SensorUnavailableException) {
+            Logger.getLogger(this.javaClass.simpleName).info {
+                "Failed to set main device providing data: ${e.message}"
+            }
+            // Handle the case where the sensor is unavailable
+            currentSensorUnavailable = mutableStateOf(
+                Pair(currentSensorType!!, e.getUnavailabilityType())
+            )
+        }
         // If we're currently measuring, restart the measurement with the new setting
         if (isReceiving && currentSensorType != null) {
             stopReceiving()

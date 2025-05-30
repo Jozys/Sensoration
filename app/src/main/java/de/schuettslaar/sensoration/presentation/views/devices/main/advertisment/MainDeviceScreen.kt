@@ -71,6 +71,7 @@ import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.core.sensor.SensorError
 import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 import kotlinx.coroutines.launch
@@ -216,7 +217,10 @@ fun LandscapeLayout(
 
                             SensorSelectionCard(
                                 sensorType = mainDeviceViewModel.currentSensorType,
-                                onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                                onSensorSelected = {
+                                    mainDeviceViewModel.currentSensorType = it
+                                    mainDeviceViewModel.currentSensorUnavailable.value = null
+                                },
                                 isReceiving = mainDeviceViewModel.isReceiving,
                                 onStartReceiving = { mainDeviceViewModel.startReceiving() },
                                 onStopReceiving = { mainDeviceViewModel.stopReceiving() },
@@ -367,7 +371,10 @@ fun PortraitLayout(
                         // Static control bar at the top
                         SensorSelectionCard(
                             sensorType = mainDeviceViewModel.currentSensorType,
-                            onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                            onSensorSelected = {
+                                mainDeviceViewModel.currentSensorType = it
+                                mainDeviceViewModel.currentSensorUnavailable.value = null
+                            },
                             isReceiving = mainDeviceViewModel.isReceiving,
                             onStartReceiving = { mainDeviceViewModel.startReceiving() },
                             onStopReceiving = { mainDeviceViewModel.stopReceiving() },
@@ -511,6 +518,14 @@ fun SensorSelectionCard(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mainDeviceViewModel.currentSensorUnavailable.value != null) {
+                    SensorError(
+                        mainDeviceViewModel.currentSensorUnavailable.value!!
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(8.dp))
 
                 MeasurementButton(
@@ -565,6 +580,14 @@ fun SensorSelectionCard(
                         checked = mainDeviceViewModel.mainDeviceIsProvidingData,
                         onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
                         enabled = !isReceiving
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mainDeviceViewModel.currentSensorUnavailable.value != null) {
+                    SensorError(
+                        mainDeviceViewModel.currentSensorUnavailable.value!!
                     )
                 }
 

@@ -15,7 +15,9 @@ import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
 import de.schuettslaar.sensoration.application.data.UnavailableSensorMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
 import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -262,7 +264,19 @@ class MainDevice : Device {
         }
 
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
-        sensorManager.startListening()
+        try {
+            sensorManager.startListening()
+        } catch (e: MissingPermissionException) {
+            Log.e(
+                this.javaClass.simpleName,
+                "Missing permission for sensor: ${sensorType.sensorId}",
+                e
+            )
+            throw SensorUnavailableException(
+                sensorType,
+                UnavailabilityType.SENSOR_PERMISSION_DENIED
+            )
+        }
 
         sensorJob = coroutineScope.launch {
             while (isActive) {
