@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_icon_desc">App-Symbol</string>
-    <string name="start_advertising">Advertising starten</string>
-    <string name="start_discovery">Suche starten</string>
-    <string name="advertising_title">Advertising</string>
-    <string name="stop_advertising">Advertising stoppen</string>
-    <string name="discovering_title">Suche</string>
+    <string name="no_data">Keine Daten verfügbar[…]</string>
+    <string name="advertising_title">Koordinator (Hub)</string>
+    <string name="stop_advertising">Sichtbarkeit stoppen</string>
+    <string name="discovering_title">Sensorgerät</string>
     <string name="stop_discovering">Suche stoppen</string>
     <string name="disconnect_device">Trennen</string>
     <string name="dialog_confirm">Bestätigen</string>
@@ -21,11 +20,11 @@
     <string name="no_connected_devices">Derzeit sind keine Geräte verbunden</string>
 
     <string name="DISCOVERING">Suchend</string>
-    <string name="ADVERTISING">Werbend</string>
+    <string name="ADVERTISING">Bekanntmachend</string>
     <string name="STOPPED">Gestoppt</string>
 
     <string name="app_description">Sensoration ermöglicht es Ihnen, mehrere Geräte miteinander zu verbinden, um Sensordaten zwischen ihnen zu teilen und zu analysieren.</string>
-    <string name="discovering_description">Das Suchen ermöglicht es Ihnen, nach einem potenziellen Hauptgerät zu suchen, das die von Ihrem Gerät gesendeten Daten empfangen und analysieren kann.</string>
+    <string name="discovering_description">Das Suchen ermöglicht es Ihnen, nach einem potenziellen Koordinator (Hub) zu suchen, das die von Ihrem Gerät gesendeten Daten empfangen und analysieren kann.</string>
     <string name="advertising_description">Advertising macht Ihr Gerät zum Hauptgerät. Dies ermöglicht anderen Geräten, sich mit Ihrem Gerät zu verbinden und Daten an Ihr Gerät zu senden.</string>
 
     <string name="settings_desc">Einstellungen</string>
@@ -72,4 +71,47 @@
     <string name="sensor_error_icon">Sensor Error Icon</string>
     <string name="open_permission_settings">Öffne die App Einstellungen</string>
 
+    <string name="sensor_sound_pressure_description">Messung des Dezibel-Vollskalenwerts, der von den Mikrofonsensoren aufgezeichnet wird.</string>
+    <string name="sensor_sound_pressure">Dezibel-Vollskalenwert</string>
+    <string name="index">Index</string>
+    <string name="sensor_data_unit">Einheit</string>
+    <string name="timestamp">Zeit</string>
+    <string name="start_advertising">Als Koordinator starten</string>
+    <string name="start_discovery">Als Sensorgerät starten</string>
+    <string name="devices_title">Verfügbare Geräte</string>
+    <string name="no_devices_found">Keine Geräte gefunden</string>
+    <string name="searching_devices">Suche nach Geräten in der Umgebung…</string>
+    <string name="device_id_format">ID: %1$s</string>
+    <string name="connect_button_description">Verbinden</string>
+    <string name="device_entry_format">Gerät: %1$s</string>
+    <string name="back_button_description">Zurück</string>
+    <string name="device_info_title">Geräteinformationen</string>
+    <string name="connection_controls">Verbindungseinstellungen</string>
+    <string name="sensor_information">Sensorinformationen</string>
+    <string name="connect_to_device">Mit einem Gerät verbinden</string>
+    <string name="available_connections">Verfügbare Geräte</string>
+    <string name="discovery_title">Geräte finden</string>
+    <string name="send_message_to_localise_device">Akustisches Signal anfordern</string>
+    <string name="network_concept">Wie funktioniert es?</string>
+    <string name="network_concept_description">Clientgeräte erfassen Sensordaten und senden sie zur Analyse und Visualisierung an das koordinierende Gerät.</string>
+    <string name="view_concept">Funktionsweise</string>
+    <string name="close">Schließen</string>
+    <string name="collect_main_device_data">Berücksichtige die Sensoren des koordinierenden Gerätes</string>
+    <string name="display_toggle_table">Tabelle</string>
+    <string name="display_toggle_chart">Diagramm</string>
+    <string name="sensor_pressure_value_description">Luftdruck</string>
+    <string name="sensor_gravity_value_x">Die Schwerkraft entlang der X-Achse.</string>
+    <string name="sensor_gravity_value_y">Die Schwerkraft entlang der Y-Achse.</string>
+    <string name="sensor_gravity_value_z">Die Schwerkraft entlang der Z-Achse.</string>
+    <string name="sensor_accelerometer_value_x">Beschleunigung entlang der X-Achse (einschließlich Schwerkraft).</string>
+    <string name="sensor_accelerometer_value_y">Beschleunigung entlang der Y-Achse (einschließlich Schwerkraft).</string>
+    <string name="sensor_accelerometer_value_z">Beschleunigung entlang der Z-Achse (einschließlich Schwerkraft).</string>
+    <string name="sensor_sound_pressure_value_description">Der Dezibel Wert in Relation zum maximalen Ausschlag</string>
+    <string name="table_time">Zeit</string>
+    <string name="resume_receiving">Messung fortfahren</string>
+    <string name="pause_receiving">Messung pausieren</string>
+    <string name="sensor_significant_pitch">Signifikante Tonhöhe</string>
+    <string name="sensor_significant_pitch_description">Extrahiere die Tonhöhe mit der höchsten Magnitude</string>
+    <string name="sensor_significant_pitch_value_description">in Hz</string>
+    <string name="sensor_significant_pitch_value_amplitude_description">Magnitude</string>
 </resources>

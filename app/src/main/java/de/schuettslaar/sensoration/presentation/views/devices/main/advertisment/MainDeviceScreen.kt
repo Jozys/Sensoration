@@ -775,24 +775,38 @@ fun DeviceListItem(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = onSendTestMessage, colors = ButtonDefaults.buttonColors(
+                    onClick = onSendTestMessage,
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    ),
+                    modifier = Modifier.weight(1f, fill = true)
                 ) {
-                    Text(text = stringResource(R.string.send_test_message))
+                    Text(
+                        text = stringResource(R.string.send_message_to_localise_device),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2,
+                        textAlign = TextAlign.Center
+                    )
                 }
 
                 Button(
-                    onClick = onDisconnect, colors = ButtonDefaults.buttonColors(
+                    onClick = onDisconnect,
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    ),
+                    modifier = Modifier.weight(1f, fill = true)
                 ) {
-                    Text(text = stringResource(R.string.disconnect_device))
+                    Text(
+                        text = stringResource(R.string.disconnect_device),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2
+                    )
                 }
             }
         }

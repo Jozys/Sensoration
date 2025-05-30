@@ -481,7 +481,7 @@ fun ConnectedState(
                             onClick = sendConnectionTestMessage,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(stringResource(R.string.send_test_message))
+                            Text(stringResource(R.string.send_message_to_localise_device))
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -556,7 +556,7 @@ fun ConnectedState(
                         onClick = sendConnectionTestMessage,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(stringResource(R.string.send_test_message))
+                        Text(stringResource(R.string.send_message_to_localise_device))
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
