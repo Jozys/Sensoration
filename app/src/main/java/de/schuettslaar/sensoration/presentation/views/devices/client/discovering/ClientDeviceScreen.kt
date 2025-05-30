@@ -55,6 +55,7 @@ import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.core.sensor.SensorError
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 
 
@@ -589,21 +590,16 @@ fun ConnectedState(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    CurrentSensor(
-                        sensorType = sensorType,
-                        shouldDisableSensorChange = true
-                    )
 
-                    if(currentSensorUnavailable != null) {
-                        StatusInformation(
-                            statusText = stringResource(
-                                when(currentSensorUnavailable.second) {
-                                    UnavailabilityType.SENSOR_NOT_SUPPORTED -> R.string.sensor_unavailable
-                                    UnavailabilityType.SENSOR_PERMISSION_DENIED -> R.string.sensor_permission_denied
-                                },
-                                currentSensorUnavailable.first.name
-                            ),
-                            modifier = Modifier.padding(16.dp)
+
+                    if (currentSensorUnavailable != null) {
+                        SensorError(
+                            currentSensorUnavailable
+                        )
+                    } else {
+                        CurrentSensor(
+                            sensorType = sensorType,
+                            shouldDisableSensorChange = true
                         )
                     }
                 }
@@ -611,6 +607,7 @@ fun ConnectedState(
         }
     }
 }
+
 @Composable
 fun ConnectedDeviceContent(deviceName: String, compact: Boolean) {
     Icon(

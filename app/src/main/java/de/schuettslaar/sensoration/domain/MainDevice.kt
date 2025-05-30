@@ -13,6 +13,7 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
+import de.schuettslaar.sensoration.application.data.UnavailableSensorMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
@@ -29,7 +30,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.logging.Logger
-import kotlin.jvm.Throws
 import kotlin.math.abs
 
 private const val RAW_BUFFER_VALUES_CAPACITY = 10
@@ -122,6 +122,9 @@ class MainDevice : Device {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)
             MessageType.PTP_MESSAGE -> processPTPMessage(message as PTPMessage, endpointId)
             MessageType.TEST_MESSAGE -> handleTestMessage(message as TestMessage)
+            MessageType.UNAVAILABLE_SENSOR -> handleUnavailableSensorMessage(
+                message as UnavailableSensorMessage
+            )
 
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
@@ -351,6 +354,17 @@ class MainDevice : Device {
         Log.i(this.javaClass.simpleName, "Test message received: ${message.content}")
         val sound = MediaActionSound()
         sound.play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
+    /**
+     * Handles an unavailable sensor message by logging the sensor type and updating the status.
+     *
+     * @param message The unavailable sensor message received.
+     */
+    private fun handleUnavailableSensorMessage(message: UnavailableSensorMessage) {
+        Log.w(this.javaClass.simpleName, "Sensor unavailable: ${message.sensorType}")
+        // Update the status of the device to indicate the sensor is unavailable
+        onStatusUpdateCallback(message.senderDeviceId, message.state)
     }
 
 }

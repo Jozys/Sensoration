@@ -15,6 +15,7 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
+import de.schuettslaar.sensoration.application.data.UnavailableSensorMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
 import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
 import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
@@ -29,7 +30,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.logging.Logger
-import kotlin.jvm.Throws
 
 class ClientDevice : Device {
     private val sensorManager: SensorManager
@@ -91,6 +91,8 @@ class ClientDevice : Device {
         }
 
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
+
+        // Check permission before starting the sensor
         try {
             sensorManager.startListening()
         } catch (e: MissingPermissionException) {
@@ -99,6 +101,7 @@ class ClientDevice : Device {
                 Pair(sensorType, UnavailabilityType.SENSOR_PERMISSION_DENIED)
             )
             applicationStatus = ApplicationStatus.IDLE
+            sendUnavailableSensorMessage(sensorType)
             return
         }
         applicationStatus = ApplicationStatus.ACTIVE
@@ -214,6 +217,7 @@ class ClientDevice : Device {
         stopSensorCollection()
     }
 
+
     @Throws(SensorUnavailableException::class)
     private fun handleMeasurementMessage(startMeasurementMessage: StartMeasurementMessage) {
         if (startMeasurementMessage.senderDeviceId != MAIN_DEVICE_ID || connectedDeviceId == null) {
@@ -232,6 +236,8 @@ class ClientDevice : Device {
             onSensorUnavailableCallback(
                 Pair(e.getSensorType(), e.getUnavailabilityType())
             )
+            applicationStatus = ApplicationStatus.IDLE
+            sendUnavailableSensorMessage(sensorType)
             return
         }
 
@@ -265,6 +271,24 @@ class ClientDevice : Device {
                 senderDeviceId = ownDeviceId!!,
                 state = applicationStatus,
                 content = "Test message from Client"
+            )
+        )
+    }
+
+    private fun sendUnavailableSensorMessage(
+        sensorType: SensorType,
+    ) {
+        Log.d(
+            this.javaClass.simpleName,
+            "Sending unavailable sensor message for $sensorType"
+        )
+        sendMessage(
+            connectedDeviceId!!,
+            UnavailableSensorMessage(
+                messageTimeStamp = clientPtpHandler.getAdjustedTime(),
+                senderDeviceId = ownDeviceId!!,
+                state = applicationStatus,
+                sensorType = sensorType,
             )
         )
     }

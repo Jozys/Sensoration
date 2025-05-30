@@ -25,6 +25,7 @@ enum class MessageType {
 
     PTP_MESSAGE,
     TEST_MESSAGE,
+    UNAVAILABLE_SENSOR,
 }
 
 /**
@@ -98,4 +99,16 @@ data class TestMessage(
     val content: String
 ) : Message {
     override val messageType = MessageType.TEST_MESSAGE
+}
+
+/**
+ * Message to inform the main device that a sensor is unavailable
+ * */
+data class UnavailableSensorMessage(
+    override val messageTimeStamp: Long,
+    override val senderDeviceId: DeviceId,
+    override val state: ApplicationStatus,
+    val sensorType: SensorType,
+) : Message {
+    override val messageType = MessageType.UNAVAILABLE_SENSOR
 }

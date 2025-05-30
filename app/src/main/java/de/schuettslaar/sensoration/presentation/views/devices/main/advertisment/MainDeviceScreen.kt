@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
@@ -264,12 +265,16 @@ fun LandscapeLayout(
                 ) {
 
                     if (mainDeviceViewModel.isReceiving) {
-                        DataDisplay(
-                            sensorType = mainDeviceViewModel.currentSensorType,
-                            devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                        var devices =
+                            if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                                 mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                             } else {
                                 mainDeviceViewModel.connectedDeviceInfos
+                            }
+                        DataDisplay(
+                            sensorType = mainDeviceViewModel.currentSensorType,
+                            devices = devices.filter {
+                                it.value.applicationStatus != ApplicationStatus.ACTIVE
                             },
                             timeBuckets = mainDeviceViewModel.synchronizedData,
                             activeDevices = mainDeviceViewModel.getActiveDevices()
@@ -402,12 +407,16 @@ fun PortraitLayout(
                 .verticalScroll(contentScrollState)
         ) {
             if (mainDeviceViewModel.isReceiving) {
-                DataDisplay(
-                    sensorType = mainDeviceViewModel.currentSensorType,
-                    devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                var devices =
+                    if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                         mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                     } else {
                         mainDeviceViewModel.connectedDeviceInfos
+                    }
+                DataDisplay(
+                    sensorType = mainDeviceViewModel.currentSensorType,
+                    devices = devices.filter {
+                        it.value.applicationStatus == ApplicationStatus.ACTIVE
                     },
                     timeBuckets = mainDeviceViewModel.synchronizedData,
                     activeDevices = mainDeviceViewModel.getActiveDevices()

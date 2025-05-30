@@ -123,6 +123,8 @@
     <string name="unit_hertz" translatable="false">Hz</string>
     <string name="sensor_significant_pitch_value_description">in Hz</string>
     <string name="sensor_significant_pitch_value_amplitude_description">Magnitude of signal</string>
-    <string name="sensor_unavailable">Current sensor not available on this device</string>
-    <string name="sensor_permission_denied">"Permission was denied for this type of sensor. "</string>
+    <string name="sensor_unavailable">%1$s not available on this device</string>
+    <string name="sensor_permission_denied">"Permission was denied for %1$s sensor. "</string>
+    <string name="sensor_error_icon">Error Icon</string>
+    <string name="open_permission_settings">Open App permission settings</string>
 </resources>
