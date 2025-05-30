@@ -112,5 +112,9 @@
     <string name="sensor_significant_pitch_description">Extrait la hauteur avec la plus grande amplitude</string>
     <string name="sensor_significant_pitch_value_description" translatable="false">en Hz</string>
     <string name="sensor_significant_pitch_value_amplitude_description">Magnitude</string>
+    <string name="sensor_unavailable">"%1$s n'est pas disponible sur cet appareil "</string>
+    <string name="sensor_permission_denied">"L'autorisation a été refusée pour le capteur %1$s. "</string>
+    <string name="sensor_error_icon">Ouvrir les paramètres d\'autorisation de l\'application</string>
+    <string name="open_permission_settings">Ouvrir les paramètres d\'autorisation de l\'application</string>
 </resources>
 
