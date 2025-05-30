@@ -3,6 +3,8 @@ package de.schuettslaar.sensoration.domain
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.adapter.nearby.NearbyWrapper
 import de.schuettslaar.sensoration.application.data.Message
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
@@ -15,6 +17,8 @@ abstract class Device {
     internal var applicationStatus: ApplicationStatus = ApplicationStatus.INIT
     internal var connectedDeviceId: DeviceId? = null
     internal var ownDeviceId: DeviceId? = null
+
+    internal lateinit var onSensorUnavailableCallback : (Pair<SensorType, UnavailabilityType>) -> Unit
 
     internal var connectedDevices = mutableSetOf<DeviceId>()
 

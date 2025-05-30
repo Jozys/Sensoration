@@ -65,6 +65,12 @@
     <string name="data_display_legend">Legende</string>
     <string name="data_display_title">Sensordaten</string>
     <string name="stop_receiving_data">Stoppen</string>
+
+    <string name="sensor_unavailable">Auf diesem Gerät ist der %1$s Sensor nicht verfügbar</string>
+    <string name="sensor_permission_denied">"Die Berechtigung für den %1$s Sensor fehlt "</string>
+    <string name="sensor_error_icon">Sensor Error Icon</string>
+    <string name="open_permission_settings">Öffne die App Einstellungen</string>
+
     <string name="sensor_sound_pressure_description">Messung des Dezibel-Vollskalenwerts, der von den Mikrofonsensoren aufgezeichnet wird.</string>
     <string name="sensor_sound_pressure">Dezibel-Vollskalenwert</string>
     <string name="index">Index</string>

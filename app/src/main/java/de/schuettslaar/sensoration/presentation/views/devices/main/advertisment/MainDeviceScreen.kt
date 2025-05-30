@@ -65,11 +65,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
+import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.data.DataDisplay
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.core.sensor.SensorError
 import de.schuettslaar.sensoration.presentation.views.devices.main.advertisment.model.DeviceInfo
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 import kotlinx.coroutines.launch
@@ -215,7 +217,10 @@ fun LandscapeLayout(
 
                             SensorSelectionCard(
                                 sensorType = mainDeviceViewModel.currentSensorType,
-                                onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                                onSensorSelected = {
+                                    mainDeviceViewModel.currentSensorType = it
+                                    mainDeviceViewModel.currentSensorUnavailable.value = null
+                                },
                                 isReceiving = mainDeviceViewModel.isReceiving,
                                 onStartReceiving = { mainDeviceViewModel.startReceiving() },
                                 onStopReceiving = { mainDeviceViewModel.stopReceiving() },
@@ -264,12 +269,16 @@ fun LandscapeLayout(
                 ) {
 
                     if (mainDeviceViewModel.isReceiving) {
-                        DataDisplay(
-                            sensorType = mainDeviceViewModel.currentSensorType,
-                            devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                        var devices =
+                            if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                                 mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                             } else {
                                 mainDeviceViewModel.connectedDeviceInfos
+                            }
+                        DataDisplay(
+                            sensorType = mainDeviceViewModel.currentSensorType,
+                            devices = devices.filter {
+                                it.value.applicationStatus != ApplicationStatus.ACTIVE
                             },
                             timeBuckets = mainDeviceViewModel.synchronizedData,
                             activeDevices = mainDeviceViewModel.getActiveDevices()
@@ -362,7 +371,10 @@ fun PortraitLayout(
                         // Static control bar at the top
                         SensorSelectionCard(
                             sensorType = mainDeviceViewModel.currentSensorType,
-                            onSensorSelected = { mainDeviceViewModel.currentSensorType = it },
+                            onSensorSelected = {
+                                mainDeviceViewModel.currentSensorType = it
+                                mainDeviceViewModel.currentSensorUnavailable.value = null
+                            },
                             isReceiving = mainDeviceViewModel.isReceiving,
                             onStartReceiving = { mainDeviceViewModel.startReceiving() },
                             onStopReceiving = { mainDeviceViewModel.stopReceiving() },
@@ -402,12 +414,16 @@ fun PortraitLayout(
                 .verticalScroll(contentScrollState)
         ) {
             if (mainDeviceViewModel.isReceiving) {
-                DataDisplay(
-                    sensorType = mainDeviceViewModel.currentSensorType,
-                    devices = if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
+                var devices =
+                    if (mainDeviceViewModel.mainDeviceIsProvidingData && mainDeviceViewModel.mainDeviceInfo != null) {
                         mainDeviceViewModel.connectedDeviceInfos + mainDeviceViewModel.mainDeviceInfo!!
                     } else {
                         mainDeviceViewModel.connectedDeviceInfos
+                    }
+                DataDisplay(
+                    sensorType = mainDeviceViewModel.currentSensorType,
+                    devices = devices.filter {
+                        it.value.applicationStatus == ApplicationStatus.ACTIVE
                     },
                     timeBuckets = mainDeviceViewModel.synchronizedData,
                     activeDevices = mainDeviceViewModel.getActiveDevices()
@@ -502,6 +518,14 @@ fun SensorSelectionCard(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mainDeviceViewModel.currentSensorUnavailable.value != null) {
+                    SensorError(
+                        mainDeviceViewModel.currentSensorUnavailable.value!!
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(8.dp))
 
                 MeasurementButton(
@@ -556,6 +580,14 @@ fun SensorSelectionCard(
                         checked = mainDeviceViewModel.mainDeviceIsProvidingData,
                         onCheckedChange = { mainDeviceViewModel.toggleMainDeviceProvidingData() },
                         enabled = !isReceiving
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mainDeviceViewModel.currentSensorUnavailable.value != null) {
+                    SensorError(
+                        mainDeviceViewModel.currentSensorUnavailable.value!!
                     )
                 }
 

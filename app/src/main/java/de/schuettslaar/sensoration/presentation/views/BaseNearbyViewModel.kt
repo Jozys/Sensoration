@@ -11,6 +11,7 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.Device
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import java.util.logging.Logger
 
@@ -22,6 +23,7 @@ abstract class BaseNearbyViewModel(application: Application) : AndroidViewModel(
     var connectedDevices by mutableStateOf(mapOf<DeviceId, String>())
     var isLoading by mutableStateOf(false)
     var currentSensorType by mutableStateOf<SensorType?>(null)
+    var currentSensorUnavailable = mutableStateOf<Pair<SensorType, UnavailabilityType>?>(null)
 
     fun callback(text: String, status: NearbyStatus) {
         this.text = text

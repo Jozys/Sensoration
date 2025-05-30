@@ -51,9 +51,11 @@ import de.schuettslaar.sensoration.R
 import de.schuettslaar.sensoration.adapter.nearby.NearbyStatus
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.core.StatusInformation
 import de.schuettslaar.sensoration.presentation.core.sensor.CurrentSensor
+import de.schuettslaar.sensoration.presentation.core.sensor.SensorError
 import de.schuettslaar.sensoration.utils.getStringResourceByName
 
 
@@ -103,10 +105,12 @@ fun ClientDeviceScreen(onBack: () -> Unit) {
                 sensorType = viewModel.currentSensorType,
                 isLandscape = isLandscape,
                 compact = compact,
-                spacing = verticalSpacing
+                spacing = verticalSpacing,
+                currentSensorUnavailable = viewModel.currentSensorUnavailable.value
             )
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -435,7 +439,8 @@ fun ConnectedState(
     deviceStatus: ApplicationStatus,
     isLandscape: Boolean,
     compact: Boolean,
-    spacing: Dp
+    spacing: Dp,
+    currentSensorUnavailable: Pair<SensorType, UnavailabilityType>? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -585,10 +590,18 @@ fun ConnectedState(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    CurrentSensor(
-                        sensorType = sensorType,
-                        shouldDisableSensorChange = true
-                    )
+
+
+                    if (currentSensorUnavailable != null) {
+                        SensorError(
+                            currentSensorUnavailable
+                        )
+                    } else {
+                        CurrentSensor(
+                            sensorType = sensorType,
+                            shouldDisableSensorChange = true
+                        )
+                    }
                 }
             }
         }

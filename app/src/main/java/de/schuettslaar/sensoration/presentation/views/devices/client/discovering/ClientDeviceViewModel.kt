@@ -10,6 +10,8 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import de.schuettslaar.sensoration.domain.ApplicationStatus
 import de.schuettslaar.sensoration.domain.ClientDevice
 import de.schuettslaar.sensoration.domain.DeviceId
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
+import de.schuettslaar.sensoration.domain.sensor.SensorType
 import de.schuettslaar.sensoration.presentation.views.BaseNearbyViewModel
 import java.util.logging.Logger
 
@@ -18,7 +20,7 @@ class ClientDeviceViewModel(application: Application) : BaseNearbyViewModel(appl
     val possibleConnections = mutableStateMapOf<DeviceId, DiscoveredEndpointInfo>()
 
     var thisApplicationStatus by mutableStateOf(ApplicationStatus.IDLE)
-
+    
     init {
         this.thisDevice = ClientDevice(
             context = application,
@@ -50,11 +52,18 @@ class ClientDeviceViewModel(application: Application) : BaseNearbyViewModel(appl
                 this.onDisconnectedCallback(endpointId, status)
             },
             onSensorTypeChanged = { sensorType ->
+                this.currentSensorUnavailable = mutableStateOf(null)
                 this.currentSensorType = sensorType
             },
             onApplicationStatusChanged = { applicationStatus ->
                 thisApplicationStatus = applicationStatus
             },
+            onSensorUnavailableCallback = { sensorType ->
+                Logger.getLogger(this.javaClass.simpleName).info {
+                    "Sensor type $sensorType is unavailable"
+                }
+                this.currentSensorUnavailable.value = sensorType
+            }
         )
         this.thisDevice?.start { text, status ->
             this.callback(text, status)

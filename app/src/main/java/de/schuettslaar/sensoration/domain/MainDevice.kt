@@ -13,7 +13,11 @@ import de.schuettslaar.sensoration.application.data.PTPMessage
 import de.schuettslaar.sensoration.application.data.StartMeasurementMessage
 import de.schuettslaar.sensoration.application.data.StopMeasurementMessage
 import de.schuettslaar.sensoration.application.data.TestMessage
+import de.schuettslaar.sensoration.application.data.UnavailableSensorMessage
 import de.schuettslaar.sensoration.application.data.WrappedSensorData
+import de.schuettslaar.sensoration.domain.exception.MissingPermissionException
+import de.schuettslaar.sensoration.domain.exception.SensorUnavailableException
+import de.schuettslaar.sensoration.domain.exception.UnavailabilityType
 import de.schuettslaar.sensoration.domain.sensor.ProcessedSensorData
 import de.schuettslaar.sensoration.domain.sensor.SensorManager
 import de.schuettslaar.sensoration.domain.sensor.SensorType
@@ -120,6 +124,9 @@ class MainDevice : Device {
             MessageType.SENSOR_DATA -> processSensorData(message as WrappedSensorData, endpointId)
             MessageType.PTP_MESSAGE -> processPTPMessage(message as PTPMessage, endpointId)
             MessageType.TEST_MESSAGE -> handleTestMessage(message as TestMessage)
+            MessageType.UNAVAILABLE_SENSOR -> handleUnavailableSensorMessage(
+                message as UnavailableSensorMessage
+            )
 
             else -> {
                 Logger.getLogger(this.javaClass.simpleName).warning("Unknown message type received")
@@ -157,6 +164,7 @@ class MainDevice : Device {
             .info("Broadcasted message $message to ${connectedDevices.size} devices: $connectedDevices")
     }
 
+    @Throws(SensorUnavailableException::class)
     fun startMeasurement(sensorType: SensorType) {
         var startMeasurementMessage = StartMeasurementMessage(
             messageTimeStamp = System.currentTimeMillis().toLong(),
@@ -170,7 +178,6 @@ class MainDevice : Device {
 
         if (isMainProvidingSensorData) {
             startSensorCollectionOnMainDevice(sensorType, sensorType.processingDelay)
-
         }
 
 
@@ -244,6 +251,7 @@ class MainDevice : Device {
         }
     }
 
+    @Throws(SensorUnavailableException::class)
     private fun startSensorCollectionOnMainDevice(sensorType: SensorType, intervalMs: Long = 100) {
         if (!isMainProvidingSensorData) {
             Log.d(this.javaClass.simpleName, "Main Device does not provide sensor data")
@@ -252,11 +260,23 @@ class MainDevice : Device {
 
         if (!sensorManager.checkDeviceSupportsSensorType(sensorType.sensorId)) {
             Log.d(this.javaClass.simpleName, "Main Device does not has sensor type: $sensorType")
-            return
+            throw SensorUnavailableException(sensorType)
         }
 
         sensorManager.registerSensor(sensorType.sensorId, sensorType.clientDataProcessing)
-        sensorManager.startListening()
+        try {
+            sensorManager.startListening()
+        } catch (e: MissingPermissionException) {
+            Log.e(
+                this.javaClass.simpleName,
+                "Missing permission for sensor: ${sensorType.sensorId}",
+                e
+            )
+            throw SensorUnavailableException(
+                sensorType,
+                UnavailabilityType.SENSOR_PERMISSION_DENIED
+            )
+        }
 
         sensorJob = coroutineScope.launch {
             while (isActive) {
@@ -348,6 +368,17 @@ class MainDevice : Device {
         Log.i(this.javaClass.simpleName, "Test message received: ${message.content}")
         val sound = MediaActionSound()
         sound.play(MediaActionSound.START_VIDEO_RECORDING)
+    }
+
+    /**
+     * Handles an unavailable sensor message by logging the sensor type and updating the status.
+     *
+     * @param message The unavailable sensor message received.
+     */
+    private fun handleUnavailableSensorMessage(message: UnavailableSensorMessage) {
+        Log.w(this.javaClass.simpleName, "Sensor unavailable: ${message.sensorType}")
+        // Update the status of the device to indicate the sensor is unavailable
+        onStatusUpdateCallback(message.senderDeviceId, message.state)
     }
 
 }
