@@ -25,7 +25,11 @@ private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_FLOAT
 private const val BUFFER_SIZE_FACTOR = 2
 private const val SAMPLE_RATE = 44100
 
-class MicrophoneSensorHandler(private val context: Context, private val ptpHandler: PTPHandler) :
+class MicrophoneSensorHandler(
+    private val context: Context,
+    private val ptpHandler: PTPHandler,
+    private val sensorType: Int
+) :
     SensorHandler {
     private val TAG = "MicrophoneSensorHandler"
 
@@ -109,7 +113,7 @@ class MicrophoneSensorHandler(private val context: Context, private val ptpHandl
                     if (readResult > 0) {
                         val rawData = RawSensorData(
                             timestamp = ptpHandler.getAdjustedTime(),
-                            sensorType = SensorType.SOUND_PRESSURE.sensorId,
+                            sensorType = sensorType,
                             value = buffer
                         )
 

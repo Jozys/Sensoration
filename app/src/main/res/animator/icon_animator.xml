@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="1200"
+    android:interpolator="@android:interpolator/accelerate_decelerate">
+
+    <propertyValuesHolder
+        android:propertyName="rotation"
+        android:valueFrom="0.0"
+        android:valueTo="720.0"
+        android:valueType="floatType">
+        <keyframe
+            android:fraction="0.0"
+            android:value="0.0" />
+        <keyframe
+            android:fraction="0.6"
+            android:value="540.0" />
+        <keyframe
+            android:fraction="1.0"
+            android:value="720.0" />
+    </propertyValuesHolder>
+
+    <propertyValuesHolder
+        android:propertyName="alpha"
+        android:valueFrom="0.0"
+        android:valueTo="1.0"
+        android:valueType="floatType">
+        <keyframe
+            android:fraction="0.0"
+            android:value="0.0" />
+        <keyframe
+            android:fraction="0.3"
+            android:value="1.0" />
+    </propertyValuesHolder>
+</objectAnimator>

@@ -110,6 +110,7 @@ dependencies {
 
     // Nearby Connections
     implementation(libs.play.services.nearby)
+    implementation(libs.androidx.core.splashscreen)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
@@ -119,6 +120,9 @@ dependencies {
 
     // Preferences / Settings
     implementation(libs.compose.prefs3)
+
+    // FFT
+    implementation("com.github.paramsen:noise:2.0.0")
 
     // Utility
     implementation(libs.kotlinx.serialization.json)

@@ -28,7 +28,18 @@ class SensorManager(private val context: Context, private val ptpHandler: PTPHan
     }
 
     private fun obtainHandlerForSensorType(sensorType: Int): SensorHandler = when (sensorType) {
-        SensorType.SOUND_PRESSURE.sensorId -> MicrophoneSensorHandler(context, ptpHandler)
+        SensorType.DECIBEL_FULL_SCALE.sensorId -> MicrophoneSensorHandler(
+            context,
+            ptpHandler,
+            sensorType
+        )
+
+        SensorType.SIGNIFICANT_PITCH.sensorId -> MicrophoneSensorHandler(
+            context,
+            ptpHandler,
+            sensorType
+        )
+
         else -> HardwareSensorHandler(context, sensorType, ptpHandler)
     }
 
